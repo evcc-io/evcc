@@ -64,7 +64,7 @@ export default defineComponent({
 	name: "MultiSelect",
 	props: {
 		id: String,
-		value: { type: Array as PropType<string[] | number[]>, default: () => [] },
+		modelValue: { type: Array as PropType<string[] | number[]>, default: () => [] },
 		options: { type: Array as PropType<SelectOption<string | number>[]>, default: () => [] },
 		selectAllLabel: String,
 		isTopLevel: Boolean,
@@ -72,7 +72,7 @@ export default defineComponent({
 	emits: ["open", "update:modelValue"],
 	data() {
 		return {
-			internalValue: [...this.value],
+			internalValue: [...this.modelValue],
 		};
 	},
 	computed: {

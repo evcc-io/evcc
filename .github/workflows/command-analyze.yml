@@ -21,7 +21,6 @@ jobs:
       issues: write # comment + minimize the calling comment
       pull-requests: write # comment on PR conversations
       discussions: read # read referenced discussions
-      id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml
     with:
@@ -29,4 +28,5 @@ jobs:
       mode: analyze
       comment_id: ${{ github.event.comment.id }}
       comment_node_id: ${{ github.event.comment.node_id }}
-    secrets: inherit
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

@@ -415,6 +415,7 @@
       "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
+      "configured": "Konfiguriert",
       "confirmDisable": "Dieses Gerät deaktivieren? Es wird nach dem nächsten Neustart ignoriert.",
       "confirmEnable": "Dieses Gerät wieder aktivieren?",
       "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
@@ -426,7 +427,9 @@
       "delete": "Löschen",
       "disable": "Deaktivieren",
       "disabled": "deaktiviert",
-      "dismiss": "Ausblenden",
+      "dismiss": "Ignorieren",
+      "dismissAll": "Alle ignorieren",
+      "dismissed": "Ignoriert",
       "docsLink": "Siehe Dokumentation.",
       "dragHandle": "Verschieben",
       "dragItem": "Verschiebbar: {title}",
@@ -1220,7 +1223,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Ladung",
       "charged": "Geladen",
+      "discharge": "Entladung",
       "discharged": "Entladen"
     },
     "consumers": {
@@ -1244,8 +1249,8 @@
         "energy": "Verbraucht"
       },
       "grid": {
-        "energy": "Bezug",
-        "returnEnergy": "Einspeisung"
+        "energy": "Bezogen",
+        "returnEnergy": "Eingespeist"
       },
       "heating": {
         "energy": "Verbraucht"
@@ -1256,6 +1261,9 @@
       "meter": {
         "energy": "Energie",
         "returnEnergy": "Energie (rückwärts)"
+      },
+      "pv": {
+        "energy": "Erzeugt"
       }
     },
     "empty": {
@@ -1275,6 +1283,7 @@
       "overview": "Übersicht",
       "pv": "Erzeugung",
       "title": "Energiefluss",
+      "totalConsumption": "Gesamtverbrauch",
       "usage": "Verwendung",
       "withdrawal": "Entnahme"
     },
@@ -1328,7 +1337,6 @@
       "co2Saved": "CO₂ gespart",
       "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
       "configure": "Jetzt einrichten",
-      "energy": "Energie",
       "fromGrid": "{value} aus dem Netz",
       "noCo2": "Keine CO₂-Daten.",
       "noPrice": "Keine Preisdaten.",
@@ -1931,10 +1939,9 @@
       "title": "Gibt es eine Hausbatterie?"
     },
     "checklist": {
-      "dismiss": "Ausblenden",
       "legacyTariffs": "Veraltete Tarifkonfiguration aktiv.",
-      "progress": "{done} von {total} erledigt",
-      "title": "Einrichtung abschließen"
+      "suggestions": "1 Vorschlag | {count} Vorschläge",
+      "title": "Deine Einrichtung"
     },
     "control": {
       "description": "Beginne mit dem ersten. Weitere lassen sich später auf der Konfigurationsseite ergänzen.",
@@ -2207,7 +2214,6 @@
   "tabBar": {
     "battery": "Batterie",
     "charge": "Laden",
-    "comingSoon": "Diese Seite ist in Arbeit.",
     "energy": "Energie",
     "forecast": "Vorhersage",
     "more": "Mehr",

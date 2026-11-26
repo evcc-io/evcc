@@ -108,29 +108,31 @@ function chart(page: Page, group: string): Locator {
 }
 
 // Y-axis labels rendered by echarts: position=right uses text-anchor=start.
-// DOM order: axis name first, then ticks bottom→top (min, ..., max).
+// DOM order: axis name first, then ticks bottom→top (min, ..., max). The rotated
+// lower side label shares the anchor
 async function yAxis(c: Locator): Promise<string[]> {
   const els = c.locator('svg text[text-anchor="start"]');
   await els.first().waitFor();
-  return els.allTextContents();
+  return (await els.allTextContents()).filter((t) => t !== "Discharge");
 }
 
 test.describe("axis and units", () => {
   test("battery ±3 kW, 1 decimal", async ({ page }) => {
     await gotoDay(page, 2026, 4, 3);
+    // discharge below the baseline is positive power
     expect(await yAxis(chart(page, "battery"))).toEqual([
       "kW",
-      "-3.0",
-      "-1.5",
-      "0.0",
-      "1.5",
       "3.0",
+      "1.5",
+      "0.0",
+      "-1.5",
+      "-3.0",
     ]);
   });
 
   test("battery ±6 kW, integer labels", async ({ page }) => {
     await gotoDay(page, 2026, 4, 4);
-    expect(await yAxis(chart(page, "battery"))).toEqual(["kW", "-6", "-3", "0", "3", "6"]);
+    expect(await yAxis(chart(page, "battery"))).toEqual(["kW", "6", "3", "0", "-3", "-6"]);
   });
 
   test("unidirectional axis stays positive", async ({ page }) => {
@@ -147,14 +149,8 @@ test.describe("axis and units", () => {
 
   test("month view uses kWh unit", async ({ page }) => {
     await gotoMonth(page, 2026, 6);
-    expect(await yAxis(chart(page, "battery"))).toEqual([
-      "kWh",
-      "-2.0",
-      "-1.0",
-      "0.0",
-      "1.0",
-      "2.0",
-    ]);
+    // energy amounts, unsigned
+    expect(await yAxis(chart(page, "battery"))).toEqual(["kWh", "2.0", "1.0", "0.0", "1.0", "2.0"]);
   });
 });
 

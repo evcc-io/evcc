@@ -421,6 +421,7 @@
       "change": "Mainīt",
       "clear": "Notīrīt",
       "close": "Aizvērt",
+      "configured": "Konfigurēts",
       "confirmDisable": "Atspējot šo ierīci? Tā tiks ignorēta pēc nākamās restartēšanas.",
       "confirmEnable": "Vai atkal iespējot šo ierīci?",
       "confirmSave": "Ir nesaglabātas izmaiņas. Saglabāt tagad?",
@@ -433,6 +434,8 @@
       "disable": "Atspējot",
       "disabled": "atspējots",
       "dismiss": "Noraidīt",
+      "dismissAll": "Noraidīt visus",
+      "dismissed": "Noraidīts",
       "docsLink": "Skatīt dokumentāciju.",
       "dragHandle": "Vilkt",
       "dragItem": "Velkams: {title}",
@@ -1236,7 +1239,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Uzlāde",
       "charged": "Uzlādēts",
+      "discharge": "Izlāde",
       "discharged": "Izlādēts"
     },
     "consumers": {
@@ -1266,8 +1271,8 @@
         "energy": "Patērēts"
       },
       "grid": {
-        "energy": "importēts",
-        "returnEnergy": "eksportēts"
+        "energy": "Importēts",
+        "returnEnergy": "Eksportēts"
       },
       "heating": {
         "energy": "Patērēts"
@@ -1278,6 +1283,9 @@
       "meter": {
         "energy": "Enerģija",
         "returnEnergy": "Enerģija (atpakaļvirzienā)"
+      },
+      "pv": {
+        "energy": "Saražots"
       }
     },
     "empty": {
@@ -1358,7 +1366,6 @@
       "co2Saved": "Ietaupītais CO₂",
       "co2SavedTooltip": "Salīdzinot ar patērētās {energy} iegūšanu no tīkla.",
       "configure": "Konfigurēt tagad",
-      "energy": "Enerģija",
       "fromGrid": "{value} no tīkla",
       "noCo2": "Nav CO₂ datu.",
       "noPrice": "Nav cenu datu.",
@@ -1680,7 +1687,7 @@
       "selectAll": "Izvēlēties visus",
       "strategy": {
         "label": "Stratēģija",
-        "optimizerHint": "{optimizer} vēl neņem vērā stratēģijas iestatījumus un vienmēr izvēlas lētākos laika posmus. Ja tie jums ir nepieciešami, ierobežojiet automātisko vadību ar “Mājas akumulators”."
+        "optimizerHint": "{optimizer} vēl neņem vērā optimizācijas iestatījumu un vienmēr izvēlas lētākos laika posmus. Ierobežojiet automātisko vadību tikai ar “Mājas akumulators”, ja tā jums ir nepieciešama."
       },
       "time": "Laiks",
       "title": "Plāns",
@@ -1972,7 +1979,8 @@
       "dismiss": "Noraidīt",
       "legacyTariffs": "Tiek izmantota vecā tarifu konfigurācija.",
       "progress": "{done} no {total} pabeigts",
-      "title": "Pabeidziet iestatīšanu"
+      "suggestions": "1 ieteikums | {count} ieteikumi",
+      "title": "Jūsu iestatījumi"
     },
     "control": {
       "description": "Sāciet ar pirmo. Vairāk varēs pievienot vēlāk konfigurācijas lapā.",

@@ -33,12 +33,39 @@ test.describe("opening logs", async () => {
     await page.getByRole("link", { name: "View full logs" }).click();
     await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
   });
+  test("via notification area", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => window.app.raise({ message: "Fake Error", area: "site" }));
+    await page.getByTestId("notification-icon").click();
+    await page.getByRole("link", { name: "site" }).click();
+    await expect(page).toHaveURL(/areas=site/);
+    await page.getByRole("button", { name: "site" }).click();
+    await expect(page.getByRole("checkbox", { name: "site" })).toBeChecked();
+    await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
+  });
   test("via need help", async ({ page }) => {
     await page.goto("/");
     const menu = await openMoreMenu(page);
     await menu.getByRole("button", { name: "Need Help?" }).click();
     await page.getByRole("link", { name: "View logs" }).click();
     await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
+  });
+});
+
+test.describe("notifications", async () => {
+  test("dedupe by number", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => {
+      window.app.raise({ message: "timeout after 10.5s" });
+      window.app.raise({ message: "other error" });
+      window.app.raise({ message: "timeout after 12s" });
+    });
+    await page.getByTestId("notification-icon").click();
+    const modal = page.getByRole("dialog");
+    await expect(modal.getByText("timeout after 12s")).toBeVisible();
+    await expect(modal.getByText("timeout after 10.5s")).toHaveCount(0);
+    await expect(modal.getByText("other error")).toBeVisible();
+    await expect(modal.getByText("2", { exact: true })).toBeVisible();
   });
 });
 
@@ -59,6 +86,12 @@ test.describe("areas", async () => {
     await page.getByRole("checkbox", { name: "lp-1 (Carport)" }).check();
     await expect(page).toHaveURL(/areas=lp-1/);
     await expect(page.getByRole("button", { name: "lp-1 (Carport)" })).toBeVisible();
+  });
+  test("unknown area from url", async ({ page }) => {
+    await page.goto("/#/log?areas=foo");
+    await page.getByRole("button", { name: "foo" }).click();
+    await expect(page.getByRole("checkbox", { name: "foo" })).toBeChecked();
+    await expect(page).toHaveURL(/areas=foo/);
   });
 });
 

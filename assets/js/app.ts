@@ -55,6 +55,10 @@ if (!window.CSS.supports("scroll-behavior", "smooth")) {
   });
 }
 
+// messages that differ only in numbers count as the same notification
+const dedupeKey = (message: string | string[]) =>
+  JSON.stringify(message).replace(/\d+([.,]\d+)*/g, "#");
+
 const app = createApp(
   defineComponent({
     data() {
@@ -76,12 +80,16 @@ const app = createApp(
         if (this.offline) return;
         if (!msg.level) msg.level = "error";
         const now = new Date();
+        const key = dedupeKey(msg.message);
         const existingMsg = this.notifications.find(
-          (n: Notification) => n.message === msg.message && n.lp === msg.lp
+          (n: Notification) =>
+            dedupeKey(n.message) === key && n.lp === msg.lp && n.area === msg.area
         );
         if (existingMsg) {
           existingMsg.count++;
           existingMsg.time = now;
+          existingMsg.message = msg.message;
+          existingMsg.level = msg.level;
           // move to front
           this.notifications = [
             existingMsg,

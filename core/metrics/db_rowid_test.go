@@ -56,6 +56,11 @@ func TestMeterWithoutRowidMigration(t *testing.T) {
 	require.False(t, db.Instance.Migrator().HasTable("meters_rowid"))
 	require.False(t, db.Instance.Migrator().HasIndex(new(meter), "meters_meter_ts"))
 
+	// the pages of the dropped table are returned
+	var free int
+	require.NoError(t, db.Instance.Raw(`PRAGMA freelist_count`).Scan(&free).Error)
+	require.Zero(t, free)
+
 	var rows []meter
 	require.NoError(t, db.Instance.Order("meter, ts").Find(&rows).Error)
 	require.Len(t, rows, 3)

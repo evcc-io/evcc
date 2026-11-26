@@ -2,14 +2,17 @@ package niko
 
 import (
 	"cmp"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
-	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/server/service"
@@ -76,34 +79,47 @@ func listDevices(host, user, token string) ([]Device, error) {
 
 	res := make(chan []Device, 1)
 
-	options := paho.NewClientOptions()
-	options.AddBroker(Broker(host))
-	options.SetUsername(user)
-	options.SetPassword(token)
-	options.SetClientID(mqtt.ClientID())
-	options.SetCleanSession(true)
-	options.SetConnectTimeout(request.Timeout)
-	options.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
-
-	client := paho.NewClient(options)
-	if err := wait(client.Connect()); err != nil {
-		return nil, err
-	}
-	defer client.Disconnect(0)
-
-	if err := wait(client.Subscribe(TopicRsp, 1, func(_ paho.Client, m paho.Message) {
-		var msg Message
-		if err := json.Unmarshal(m.Payload(), &msg); err == nil && msg.Method == MethodList {
-			select {
-			case res <- msg.Devices():
-			default:
-			}
-		}
-	})); err != nil {
+	u, err := url.Parse(Broker(host))
+	if err != nil {
 		return nil, err
 	}
 
-	if err := wait(client.Publish(TopicCmd, 1, false, ListRequest())); err != nil {
+	// requests are limited by the packet timeout
+	ctx := context.Background()
+
+	client, err := mqtt.Connect(ctx, autopaho.ClientConfig{
+		ServerUrls:                    []*url.URL{u},
+		TlsCfg:                        &tls.Config{InsecureSkipVerify: true},
+		CleanStartOnInitialConnection: true,
+		ConnectTimeout:                request.Timeout,
+		ConnectUsername:               user,
+		ConnectPassword:               []byte(token),
+		ClientConfig: paho.ClientConfig{
+			ClientID:      mqtt.ClientID(),
+			PacketTimeout: request.Timeout,
+			OnPublishReceived: mqtt.OnPublish(func(m *paho.Publish) {
+				var msg Message
+				if err := json.Unmarshal(m.Payload, &msg); err == nil && msg.Method == MethodList {
+					select {
+					case res <- msg.Devices():
+					default:
+					}
+				}
+			}),
+		},
+	}, request.Timeout)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = client.Disconnect(ctx) }()
+
+	if _, err := client.Subscribe(ctx, &paho.Subscribe{
+		Subscriptions: []paho.SubscribeOptions{{Topic: TopicRsp, QoS: 1}},
+	}); err != nil {
+		return nil, err
+	}
+
+	if _, err := client.Publish(ctx, &paho.Publish{Topic: TopicCmd, QoS: 1, Payload: []byte(ListRequest())}); err != nil {
 		return nil, err
 	}
 
@@ -113,11 +129,4 @@ func listDevices(host, user, token string) ([]Device, error) {
 	case <-time.After(request.Timeout):
 		return nil, api.ErrTimeout
 	}
-}
-
-func wait(token paho.Token) error {
-	if !token.WaitTimeout(request.Timeout) {
-		return api.ErrTimeout
-	}
-	return token.Error()
 }

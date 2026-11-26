@@ -26,9 +26,11 @@ type Connector struct {
 	statusC  chan struct{}
 	rebooted bool
 
-	meterUpdated   time.Time // local receive time, drives watchdog and timeout
-	meterTimestamp time.Time // charger sample time, orders incoming meter values
-	measurements   map[types.Measurand]types.SampledValue
+	meterUpdated      time.Time // local receive time, drives watchdog and timeout
+	meterTimestamp    time.Time // charger sample time, orders incoming meter values
+	energyTimestamp   time.Time // charger time of the total energy register, orders meterStart against samples
+	meterStartUpdated time.Time // local receive time of meterStart, keeps the baseline readable after idle
+	measurements      map[types.Measurand]types.SampledValue
 
 	txnId int
 	idTag string
@@ -212,7 +214,13 @@ func (conn *Connector) isWaitingForAuth() bool {
 // isMeterTimeout checks if meter values are outdated.
 // Must only be called while holding lock.
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.clock.Since(conn.meterUpdated) > max(conn.meterInterval+10*time.Second, Timeout)
+	return conn.isStale(conn.meterUpdated)
+}
+
+// isStale checks if a local receive time is older than the meter timeout.
+// Must only be called while holding lock.
+func (conn *Connector) isStale(t time.Time) bool {
+	return conn.clock.Since(t) > max(conn.meterInterval+10*time.Second, Timeout)
 }
 
 var _ api.CurrentGetter = (*Connector)(nil)
@@ -336,7 +344,7 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 	defer conn.mu.Unlock()
 
 	// fallthrough for last value on timeout when no transaction is running
-	if conn.txnId != 0 && conn.isMeterTimeout() {
+	if conn.txnId != 0 && conn.isMeterTimeout() && conn.isStale(conn.meterStartUpdated) {
 		return 0, api.ErrTimeout
 	}
 

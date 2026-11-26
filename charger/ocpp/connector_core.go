@@ -152,9 +152,16 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 
 					sample.Value = strings.TrimSpace(sample.Value)
 
-					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions
-					if !isZeroEnergy(sample) {
-						conn.measurements[getSampleKey(sample)] = sample
+					key := getSampleKey(sample)
+					isTotal := key == types.MeasurandEnergyActiveImportRegister
+
+					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions.
+					// A total older than the meterStart baseline must not replace it.
+					if !isZeroEnergy(sample) && (!isTotal || !meterValue.Timestamp.Time.Before(conn.energyTimestamp)) {
+						conn.measurements[key] = sample
+						if isTotal {
+							conn.energyTimestamp = meterValue.Timestamp.Time
+						}
 					}
 
 					conn.meterTimestamp = meterValue.Timestamp.Time
@@ -170,7 +177,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 
 func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
 	txnId := int(conn.cp.cs.txnId.Add(1))
-	conn.startTransaction(txnId, request.IdTag)
+	conn.startTransaction(txnId, request)
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
@@ -183,15 +190,41 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 }
 
 // startTransaction records a transaction issued by evcc or by an upstream central system.
-func (conn *Connector) startTransaction(txnId int, idTag string) {
+func (conn *Connector) startTransaction(txnId int, request *core.StartTransactionRequest) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
 	conn.txnId = txnId
-	conn.idTag = idTag
+	conn.idTag = request.IdTag
 
 	// a transaction started after the boot is fresh and must survive the first status
 	conn.rebooted = false
+
+	conn.setStartEnergy(request.MeterStart, request.Timestamp)
+}
+
+// setStartEnergy takes meterStart as the authoritative energy register, even if it is lower
+// than the last reading (ABB Terra AC resets the register per transaction).
+func (conn *Connector) setStartEnergy(wh int, ts *types.DateTime) {
+	// a total created from meterStart would shadow phase-only registers
+	if _, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]; !ok {
+		return
+	}
+
+	// a StartTransaction queued while offline carries an outdated meterStart
+	if ts != nil && ts.Time.Before(conn.energyTimestamp) {
+		return
+	}
+
+	conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{
+		Value: strconv.Itoa(wh),
+		Unit:  types.UnitOfMeasureWh,
+	}
+
+	if ts != nil {
+		conn.energyTimestamp = ts.Time
+	}
+	conn.meterStartUpdated = conn.clock.Now()
 }
 
 // clearTransaction resets transaction state and zeroes reported power.

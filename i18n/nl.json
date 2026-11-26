@@ -421,6 +421,7 @@
       "change": "Wijzigen",
       "clear": "Leegmaken",
       "close": "Sluiten",
+      "configured": "Geconfigureerd",
       "confirmDisable": "Dit apparaat deactiveren? Het zal genegeerd worden na de volgende herstart.",
       "confirmEnable": "Dit apparaat heractiveren?",
       "confirmSave": "Er zijn niet-opgeslagen wijzigingen. Nu opslaan?",
@@ -433,6 +434,8 @@
       "disable": "Uitschakelen",
       "disabled": "uitgeschakeld",
       "dismiss": "Negeren",
+      "dismissAll": "Alles afwijzen",
+      "dismissed": "Afgewezen",
       "docsLink": "Zie documentatie.",
       "dragHandle": "Schuifknop",
       "dragItem": "Verschuifbaar:{title}",
@@ -1265,8 +1268,8 @@
         "energy": "Verbruikt"
       },
       "grid": {
-        "energy": "geimporteerd",
-        "returnEnergy": "geexporteerd"
+        "energy": "Geïmporteerd",
+        "returnEnergy": "Geëxporteerd"
       },
       "heating": {
         "energy": "Verbruikt"
@@ -1277,6 +1280,9 @@
       "meter": {
         "energy": "Energie",
         "returnEnergy": "Energie (omgekeerd)"
+      },
+      "pv": {
+        "energy": "Geproduceerd"
       }
     },
     "empty": {
@@ -1357,7 +1363,6 @@
       "co2Saved": "CO₂ bespaard",
       "co2SavedTooltip": "Vergeleken met het afnemen van de verbruikte {energy} van het net.",
       "configure": "Nu configureren",
-      "energy": "Energie",
       "fromGrid": "{value} van het net",
       "noCo2": "Geen CO₂-gegevens.",
       "noPrice": "Geen prijsgegevens.",
@@ -1971,7 +1976,7 @@
       "dismiss": "Afwijzen",
       "legacyTariffs": "Er wordt een verouderde tariefconfiguratie gebruikt.",
       "progress": "{done} uit {total} voltooid",
-      "title": "Configuratie afronden"
+      "title": "Jouw configuratie"
     },
     "control": {
       "description": "Begin met de eerste. Meerdere exemplaren kunnen later toegevoegd worden op de configuratiepagina.",

@@ -143,6 +143,8 @@ export function attachSwipeHandler(el: HTMLElement, options: SwipeOptions): () =
   let startY = 0;
   let startTime = 0;
   let ignored = false;
+  // the gesture's direction, decided once the finger left the slop
+  let horizontal: boolean | null = null;
 
   const onTouchStart = (e: TouchEvent) => {
     if (e.touches.length !== 1) {
@@ -150,9 +152,24 @@ export function attachSwipeHandler(el: HTMLElement, options: SwipeOptions): () =
       return;
     }
     ignored = false;
+    horizontal = null;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     startTime = Date.now();
+  };
+
+  // a horizontal swipe does not scroll the page: its vertical drift would carry
+  // momentum into the period switch and fight the scroll hold
+  const onTouchMove = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (ignored || horizontal === false || !touch) return;
+    if (horizontal === null) {
+      const dx = Math.abs(touch.clientX - startX);
+      const dy = Math.abs(touch.clientY - startY);
+      if (Math.max(dx, dy) < DWELL_SLOP_PX) return;
+      horizontal = dx > dy;
+    }
+    if (horizontal && e.cancelable) e.preventDefault();
   };
 
   const onTouchEnd = (e: TouchEvent) => {
@@ -171,10 +188,12 @@ export function attachSwipeHandler(el: HTMLElement, options: SwipeOptions): () =
   // capture phase, so the touch tooltip gate's stopPropagation on chart elements
   // cannot starve the swipe detection
   el.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+  el.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
   el.addEventListener("touchend", onTouchEnd, { capture: true, passive: true });
 
   return () => {
     el.removeEventListener("touchstart", onTouchStart, { capture: true });
+    el.removeEventListener("touchmove", onTouchMove, { capture: true });
     el.removeEventListener("touchend", onTouchEnd, { capture: true });
   };
 }

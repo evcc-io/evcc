@@ -25,8 +25,8 @@ func SurplusFlexible(lp API) bool {
 
 // PlanGoal is a vehicle plan's soc goal and finish time
 type PlanGoal struct {
-	Time time.Time
-	Soc  int
+	Time time.Time `json:"time"`
+	Soc  int       `json:"soc"`
 }
 
 // API is the external loadpoint API

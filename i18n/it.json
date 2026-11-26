@@ -152,7 +152,7 @@
       "titleEdit": {
         "charging": "Modifica caricabatterie",
         "heating": "Modifica dispositivo di riscaldamento",
-        "switch": "Aggiungi presa commutabile"
+        "switch": "Modifica presa commutabile"
       },
       "type": {
         "custom": {
@@ -190,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Aggiungi il circuito di rete principale",
       "addSubCircuit": "Aggiungi sotto-circuito",
+      "assignHere": "Assegna qui",
+      "assignmentFailed": "Non è stato possibile salvare l'assegnazione. Riprova.",
       "description": "Garantisce che la somma dei carichi connessi ad un circuito non superi i limiti di corrente configurati. I circuiti possono essere annidati in una struttura gerarchica.",
+      "destination": "Circuito {title}",
+      "dragHint": "Trascina su un circuito o tocca per selezionare.",
+      "dropAssign": "Trascina per assegnare",
+      "dropRemove": "Trascina qui per rimuovere dal circuito.",
       "legacyWarning": "Nuova configurazione dei circuiti disponibile! Rimuovere e salvare la configurazione qui per utilizzare il nuovo processo guidato. E' necessario un riavvio al termine.",
       "meterDedicated": "Contatore",
       "meterGrid": "Rete",
+      "moveHere": "Sposta qui",
+      "notAssigned": "Non assegnato",
+      "selectAssign": "Tocca un circuito per assegnare {title}.",
+      "selectMove": "Tocca un circuito per spostare {title} oppure l'area sottostante per rimuovere l'assegnazione.",
       "title": "Gestione del carico",
       "usableMeters": "Riferimenti dei contatori utilizzabili"
     },
@@ -212,7 +222,7 @@
     },
     "control": {
       "description": "Normalmente le impostazioni di default sono adeguate. Modificale solo se sai cosa stai facendo.",
-      "descriptionInterval": "Ciclo di aggiornamento in secondi. Definisce la frequenza con cui evcc legge i dati del contatore e regola la ricarica. L'impostazione predefinita di 30 secondi è una scelta sicura. Dispositivi come veicoli, wallbox e inverter richiedono in genere diversi secondi per regolare il loro comportamento. Se i componenti reagiscono rapidamente, è possibile utilizzare valori inferiori. Si consiglia vivamente di non scendere al di sotto dei 10 secondi. Se si osserva un comportamento di controllo irregolare o valori di potenza instabili, scegliere un intervallo maggiore.",
+      "descriptionInterval": "Ciclo di aggiornamento in secondi. Definisce la frequenza con cui evcc legge i dati del contatore e regola la ricarica. L'impostazione predefinita di 30 secondi è una scelta sicura. Dispositivi come veicoli, caricatori e inverter richiedono in genere diversi secondi per regolare il loro comportamento. Se i componenti reagiscono rapidamente, è possibile utilizzare valori inferiori. Si consiglia vivamente di non scendere al di sotto dei 10 secondi. Se si osserva un comportamento di controllo irregolare o valori di potenza instabili, scegliere un intervallo maggiore.",
       "descriptionResidualPower": "Modifica la soglia di corrente per il ciclo di controllo. Se hai una batteria è consigliabile impostare un valore minimo di 100W: in questo modo la batteria riceverà una priorità rispetto all'uso della rete elettrica.",
       "labelInterval": "Intervallo di aggiornamento",
       "labelResidualPower": "Potenza residua",
@@ -351,6 +361,7 @@
       "auxMeter": "Dispositivo smart",
       "batteryStorage": "Batteria di accumulo",
       "consumer": "Consumatore",
+      "extMeter": "Contatore aggiuntivo",
       "solarSystem": "Sistema fotovoltaico"
     },
     "editor": {
@@ -972,6 +983,7 @@
       "noClients": "Nessun client finora. Nessuno può ancora connettersi.",
       "password": "Password",
       "passwordOnce": "Questa password viene mostrata solo una volta. Scansiona il QR code o copiala adesso. Non la vedrai di nuovo.",
+      "print": "Stampa / PDF",
       "privacy": "Abilitando questa funzione, accetti la nostra {0}.",
       "privacyLink": "informativa sulla privacy",
       "qrInstall": "Installa l'app di evcc per {ios} o {android}.",
@@ -1245,16 +1257,29 @@
         "energy": "caricati",
         "returnEnergy": "scaricati"
       },
+      "consumer": {
+        "energy": "Consumati"
+      },
       "grid": {
         "energy": "Prelievo",
         "returnEnergy": "Immissione"
+      },
+      "heating": {
+        "energy": "Consumati"
+      },
+      "loadpoint": {
+        "energy": "Caricati"
       },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (inversa)"
       }
     },
-    "empty": "Nessun dato sull'energia disponibile per questo periodo.",
+    "empty": {
+      "description": "Nessun dato per questo periodo.",
+      "descriptionCurrent": "Ancora nessun dato. I valori compaiono una volta acquisita la prima misurazione.",
+      "showCurrent": "Mostra il periodo attuale"
+    },
     "flow": {
       "battery": "Batteria",
       "batteryCharge": "Carica della batteria",
@@ -1304,6 +1329,7 @@
     },
     "socTemp": {
       "charged": "caricati",
+      "power": "Potenza",
       "soc": "carica",
       "temperature": "temperatura",
       "used": "consumati"
@@ -1326,12 +1352,15 @@
       "co2Saved": "CO₂ risparmiata",
       "co2SavedTooltip": "Rispetto al prelievo dalla rete dei {energy} consumati.",
       "configure": "Configura ora",
+      "energy": "Energia",
+      "fromGrid": "{value} dalla rete",
       "noCo2": "Nessun dato CO₂.",
       "noPrice": "Nessun dato sui prezzi.",
       "savings": "Risparmio",
       "savingsTooltip": "Rispetto all'acquisto dalla rete dei {energy} consumati.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Riepilogo",
     "title": "Energia"
   },
   "footer": {
@@ -1443,6 +1472,7 @@
     "price": {
       "average": "Media",
       "constant": "Prezzo",
+      "estimate": "stima",
       "lowestHour": "Ora più economica",
       "range": "Intervallo"
     },
@@ -1474,6 +1504,7 @@
     "cancel": "Annulla",
     "download": "Download",
     "error": "Errore",
+    "loading": "Caricamento",
     "none": "nessuno",
     "note": "Nota:",
     "warning": "Avviso"
@@ -1642,7 +1673,8 @@
       "repeatingPlans": "Piani ricorrenti",
       "selectAll": "Seleziona tutti",
       "strategy": {
-        "label": "Strategia"
+        "label": "Strategia",
+        "optimizerHint": "L'{optimizer} non considera ancora l'impostazione di ottimizzazione e sceglie sempre gli slot più economici. Limita il controllo automatico a “Batteria domestica” se ne hai bisogno."
       },
       "time": "Ora",
       "title": "Piano",
@@ -1668,6 +1700,7 @@
       "forecast": "Previsioni",
       "forecastTooltip": "previsioni: produzione solare rimanente per oggi",
       "gridImport": "Uso della rete",
+      "heaters": "Riscaldatore | Riscaldatori",
       "homePower": "Consumo",
       "loadpoints": "Caricabatterie| Caricabatterie | {count} caricabatterie",
       "loadpointsLimit": "{limit} limite",
@@ -1696,18 +1729,22 @@
       "avgPrice": "⌀ Prezzo",
       "charged": "Caricato",
       "co2": "⌀ CO₂",
+      "consumed": "Consumati",
       "duration": "Durata",
       "emission": "Emissione",
       "fallbackName": "Punto di ricarica",
       "finished": "Ora di fine",
       "last24hEnergy": "Ultime 24h",
+      "last24hShort": "24 ore",
       "last7dEnergy": "Ultimi 7 giorni",
+      "last7dShort": "7 gg",
       "phasesMismatch": "Più fasi attive di quelle configurate. Controlla la configurazione delle fasi.",
       "power": "Potenza",
       "price": "Costo",
       "remaining": "Rimanenti",
       "remoteDisabledHard": "{source}: Disabilitato",
       "remoteDisabledSoft": "{source}: Ricarica FV adattiva disabilitata",
+      "session": "Sessione",
       "solar": "Solare",
       "todayEnergy": "Oggi"
     },

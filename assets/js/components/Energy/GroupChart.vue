@@ -230,6 +230,14 @@ export default defineComponent({
 		isBidirectional(): boolean {
 			return isBidirectional(this.group, this.series);
 		},
+		// grid export goes up like the overview's export band, import hangs below
+		mirrored(): boolean {
+			return this.group === "grid";
+		},
+		// day view axis follows the meter convention: grid import and battery discharge are positive
+		powerSign(): number {
+			return this.group === "grid" || this.group === "battery" ? -1 : 1;
+		},
 		// day view: soc or temperature per category from the first visible series carrying it
 		socTempValues(): (number | null)[] | null {
 			if (this.period !== PERIODS.DAY || !this.socTemp) return null;
@@ -265,12 +273,16 @@ export default defineComponent({
 		sideLabels(): Record<string, unknown>[][] {
 			const has = (key: "energy" | "returnEnergy") =>
 				this.series.some((s) => s.data.some((slot) => slot[key] > 0));
+			const [up, down] = this.upperFirst<"energy" | "returnEnergy">([
+				"energy",
+				"returnEnergy",
+			]);
 			// each area runs from the baseline to its axis end (an infinite value is
 			// clipped to it) and carries its label on the outer corner: at the left edge of
 			// the grid's inset, and shifted along the rotated text
 			// (positive is up) to the chart's own top and bottom
 			return [
-				...(this.upperLabel && has("energy")
+				...(this.upperLabel && has(up)
 					? [
 							[
 								{
@@ -286,7 +298,7 @@ export default defineComponent({
 							],
 						]
 					: []),
-				...(this.lowerLabel && has("returnEnergy")
+				...(this.lowerLabel && has(down)
 					? [
 							[
 								{
@@ -295,7 +307,8 @@ export default defineComponent({
 									label: {
 										position: [-30, "100%"],
 										align: "left",
-										offset: [-17, 0],
+										// a panel below has its own axis labels in the inset
+										offset: [this.subPanel ? 0 : -17, 0],
 									},
 								},
 								{ yAxis: -Infinity },
@@ -450,6 +463,9 @@ export default defineComponent({
 			const slotKey = (start: string) => this.timestampKey(new Date(start).getTime());
 			const radius = 2;
 			const factor = this.valueFactor;
+			const mirror = this.mirrored ? -1 : 1;
+			const capUp = [radius, radius, 0, 0];
+			const capDown = [0, 0, radius, radius];
 
 			const result: Record<string, unknown>[] = [];
 
@@ -643,8 +659,9 @@ export default defineComponent({
 						!this.stackEntities ||
 						topEnergyPerSlot[idx] === i ||
 						this.focusedEntity === stableIdx;
-					if (!isTop) return v;
-					return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
+					const value = v * mirror;
+					if (!isTop) return value;
+					return { value, itemStyle: { borderRadius: mirror > 0 ? capUp : capDown } };
 				});
 				const returnEnergyData: (
 					| number
@@ -656,8 +673,9 @@ export default defineComponent({
 						!this.stackEntities ||
 						topReturnEnergyPerSlot[idx] === i ||
 						this.focusedEntity === stableIdx;
-					if (!isBottom) return v;
-					return { value: v, itemStyle: { borderRadius: [0, 0, radius, radius] } };
+					const value = v * mirror;
+					if (!isBottom) return value;
+					return { value, itemStyle: { borderRadius: mirror > 0 ? capDown : capUp } };
 				});
 				result.push({
 					id: `entity-${stableIdx}-${i}-energy`,
@@ -761,7 +779,7 @@ export default defineComponent({
 			const label = (direction: "energy" | "returnEnergy") =>
 				energyLabel((key) => this.$t(key), this.group, this.series[0]?.isTemp, direction);
 			return this.isBidirectional && !this.singleValue
-				? [label("energy"), label("returnEnergy")]
+				? this.upperFirst([label("energy"), label("returnEnergy")])
 				: [label("energy")];
 		},
 		tooltipDateLabel(): (t: number) => string {
@@ -871,7 +889,7 @@ export default defineComponent({
 							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
 							// a single value covers both sides, a sink can draw from above and below
 							const cols = twoCols
-								? [t.energy, t.returnEnergy]
+								? this.upperFirst([t.energy, t.returnEnergy])
 								: [t.energy + t.returnEnergy];
 							return cols.map((v) => (v * 1000) / factor);
 						});
@@ -931,7 +949,10 @@ export default defineComponent({
 							const { import: imported, feedin } = this.prices;
 							const money = (v: number) => this.fmtMoneyWithSymbol(v, this.currency);
 							const price = (v: number) => this.fmtPricePerKWh(v, this.currency);
-							const amounts = [at(imported?.cost, money), at(feedin?.cost, money)];
+							const amounts = this.upperFirst([
+								at(imported?.cost, money),
+								at(feedin?.cost, money),
+							]);
 							if (amounts.some((v) => v !== "")) {
 								rows.push({ name: this.$t("energy.grid.amount"), values: amounts });
 							}
@@ -941,7 +962,10 @@ export default defineComponent({
 									this.period === PERIODS.DAY
 										? this.$t("energy.grid.price")
 										: `ø ${this.$t("energy.grid.price")}`,
-								values: [at(imported?.avg, price), at(feedin?.avg, price)],
+								values: this.upperFirst([
+									at(imported?.avg, price),
+									at(feedin?.avg, price),
+								]),
 							});
 						}
 						if (several) {
@@ -1013,9 +1037,15 @@ export default defineComponent({
 							hideOverlap: true,
 							formatter: (v: number): string => {
 								const { unit, digits } = this.axisScale;
+								// longer periods show energy amounts, unsigned
 								return this.period === PERIODS.DAY
-									? this.fmtW(v * 1000, unit, false, digits)
-									: this.fmtWh(v * 1000, unit, false, digits);
+									? this.fmtW(
+											(v * this.powerSign || 0) * 1000,
+											unit,
+											false,
+											digits
+										)
+									: this.fmtWh(Math.abs(v) * 1000, unit, false, digits);
 							},
 						},
 					}),
@@ -1148,6 +1178,10 @@ export default defineComponent({
 			if (this.period === PERIODS.YEAR) return `m${d.getMonth()}`;
 			if (this.period === PERIODS.MONTH) return `d${d.getDate()}`;
 			return `t${d.getHours()}:${d.getMinutes()}`;
+		},
+		// an energy and returnEnergy pair in the order the bars stack, top first
+		upperFirst<T>(pair: [T, T]): [T, T] {
+			return this.mirrored ? [pair[1], pair[0]] : pair;
 		},
 		directionLabel(s: HistorySeries, dir: "energy" | "returnEnergy"): string {
 			const key = `energy.direction.${s.group}.${dir}`;

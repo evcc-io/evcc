@@ -38,13 +38,14 @@ export default defineComponent({
 				format: (v: number) => this.fmtKWh(v),
 				sub: money === undefined ? "" : this.fmtMoneyWithSymbol(money, this.currency),
 			});
+			// export first, the grid chart draws it above the baseline
 			return [
-				stat("energy", this.importEnergy, cost?.import),
 				{
 					...stat("returnEnergy", this.exportEnergy, cost?.export),
 					// the yellow reads on dark only, on light the number keeps the text color
 					accent: colors.dark ? "text-export" : undefined,
 				},
+				stat("energy", this.importEnergy, cost?.import),
 			];
 		},
 	},

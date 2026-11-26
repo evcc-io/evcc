@@ -190,11 +190,13 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 
 // surplusRegime indicates that the suggested charge power matches the forecast
 // surplus, leaving the loadpoint to the pv loop instead of pinning it to a setpoint.
-// This includes full power covered by forecast pv: pinned, a pv shortfall would be
-// drawn from home battery and grid. A charge the home battery covers does not count:
-// the pv loop sees its discharge as deficit.
+// This includes full power covered by forecast pv, also with export left over: pinned,
+// a pv shortfall would be drawn from home battery and grid. A charge the home battery
+// covers does not count: the pv loop sees its discharge as deficit.
 func (lp *Loadpoint) surplusRegime(s *types.Suggestion) bool {
-	return s.Action == actionCharge && math.Abs(s.Grid) <= suggestionThreshold && s.BatteryDischarge <= suggestionThreshold
+	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
+	covered := math.Abs(s.Grid) <= suggestionThreshold || full && s.Grid < 0
+	return s.Action == actionCharge && covered && s.BatteryDischarge <= suggestionThreshold
 }
 
 // optimizerCharging applies the optimizer's charging decision. It returns false

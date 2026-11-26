@@ -1202,6 +1202,7 @@ export interface Notification {
   message: string;
   time: Date;
   level: string;
+  area?: string;
   lp: number;
   count: number;
 }
@@ -1663,6 +1664,7 @@ export interface BatteryDetail {
   title: string; // Display title
   name: string; // Internal name/identifier
   capacity: number; // Battery capacity (kWh)
+  planGoals?: { time: string; soc: number }[]; // Vehicle plan goals within the horizon (%), not capped at the limit
 }
 
 // Single profile summarized into the household demand time series

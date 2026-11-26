@@ -421,6 +421,7 @@
       "change": "Změnit",
       "clear": "Jasné",
       "close": "Zavřít",
+      "configured": "Nastaveno",
       "confirmDisable": "Zakázat toto zařízení? Po restartu bude ignorováno.",
       "confirmEnable": "Povolit toto zařízení?",
       "confirmSave": "Máte neuložené změny. Chcete pokračovat?",
@@ -433,6 +434,8 @@
       "disable": "Zakázat",
       "disabled": "zakázáno",
       "dismiss": "Zahodit",
+      "dismissAll": "Zrušit vše",
+      "dismissed": "Zahozené",
       "docsLink": "Další informace jsou uvedeny v dokumentaci.",
       "dragHandle": "Tažná rukojeť",
       "dragItem": "Přetahovatelné: {title}",
@@ -571,7 +574,17 @@
         "description": "Jak optimalizátor předpovídá budoucí spotřebu na základě předchozí.",
         "label": "Profil",
         "noTempTariff": "Vyžaduje předpověď teploty.",
-        "noTempTariffLink": "Přidat předpovědní model"
+        "noTempTariffLink": "Přidat předpovědní model",
+        "profilesGroup": "Profily",
+        "temperature": {
+          "description": "Minulá spotřeba za podobných venkovních teplot. Pro topná zařízení jako jsou třeba tepelná čerpadla.",
+          "label": "Teplota"
+        },
+        "title": "Předpověď spotřeby",
+        "weekday": {
+          "description": "Průměr stejného dne v týdnu. Pro zařízení s týdenním rozvrhem, jako třeba bazénová topidla.",
+          "label": "Den v týdnu"
+        }
       },
       "electricalSubtitle": "Pokud váháte, konzultujte se svým elektrikářem.",
       "electricalTitle": "Elektřina",
@@ -609,19 +622,19 @@
       "priorityHelp": "Zařízení s vyšší prioritou mají přednostní přístup k solárním přebytkům.",
       "priorityLabel": "Priorita",
       "save": "Uložit",
-      "solarShareReset": "Odeberte prahové hodnoty",
+      "solarShareReset": "Odebrat prahové hodnoty",
       "solarTitle": "Chování při solárním přebytku",
       "temperatureRangeHelp": "Zobrazit rozsah pro teplotu. Neovlivňuje řízení.",
       "temperatureRangeTitle": "Rozsah teplot",
       "thresholdDisableDelayHelp": "Zastaví se, pokud po dobu {delay} není dostatek přebytku.",
       "thresholdDisableDelayLabel": "Zpoždění vypnutí",
       "thresholdDisableHelpInvalid": "Použijte prosím kladnou hodnotu.",
-      "thresholdDisableHelpPositive": "Zastavit, pokud je ze sítě odebíráno více než {power} po dobu {delay}.",
+      "thresholdDisableHelpPositive": "Zastaví, pokud je ze sítě odebíráno více než {power} po dobu {delay}.",
       "thresholdDisableLabel": "Vypnout napájení ze sítě",
       "thresholdEnableDelayHelp": "Spustí se, pokud je po dobu {delay} dostatek přebytku.",
       "thresholdEnableDelayLabel": "Zpoždění zapnutí",
       "thresholdEnableHelpInvalid": "Použijte prosím zápornou hodnotu.",
-      "thresholdEnableHelpNegative": "Spustit, pokud je k dispozici přebytek {surplus} po dobu {delay}.",
+      "thresholdEnableHelpNegative": "Spustí, pokud je k dispozici přebytek {surplus} po dobu {delay}.",
       "thresholdEnableLabel": "Povolit napájení ze sítě",
       "thresholdsNote": {
         "charging": "Pro řízení odběru ze sítě při solárním nabíjení použijte posuvník {slider} v nastavení nabíjecího místa na stránce {page}. Hodnoty zde nastavujte jen ve zvláštních případech.",
@@ -844,7 +857,7 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionExternalUrl": "Adresa pro ostatní zařízení, která se chtějí připojit k EVCC a pro automatickou detekci aplikace EVCC.",
+      "descriptionExternalUrl": "Adresa pro ostatní zařízení, která se chtějí připojit k evcc a pro automatickou detekci aplikace evcc.",
       "descriptionHost": "Použito k označení EVCC ve Vaší LAN (lokální síti).",
       "descriptionInternalUrl": "Lokální adresa EVCC.",
       "descriptionPort": "Port pro webové rozhraní a API. Pokud tuto hodnotu změníte, budete muset aktualizovat URL ve vašem prohlížeči.",
@@ -915,7 +928,7 @@
       },
       "controlled": "Vypnuto automatickým řízením. Místo toho rozhoduje {optimizer}.",
       "controls": "Řídí",
-      "description": "Analyzuje solární předpověď, ceny elektřiny a vaše vzorce spotřeby, aby optimalizoval strategii baterie a nabíjení. Data jsou odesílána do optimalizační služby evcc ke zpracování. Aktuálně pouze počítá a vizualizuje. Zařízení zatím neovládá.",
+      "description": "Využívá sluneční prognózu, ceny energií a predikci spotřeby pro plánování baterie a nabíjení. Data je odeslána do optimalizátoru evcc.",
       "enable": "Povolit optimalizátor",
       "info": "U nových instalací může trvat až 24 hodin, než evcc shromáždí dostatek dat.",
       "linkWord": "optimalizátor",
@@ -972,7 +985,8 @@
       "manualLogin": "Nebo se přihlaste ručně v prohlížeči na adrese {url} pomocí těchto přihlašovacích údajů:",
       "noClients": "Zatím žádní klienti. Nikdo se zatím nemůže připojit.",
       "password": "Heslo",
-      "passwordOnce": "Toto heslo se zobrazí pouze jednou. Naskenujte QR kód nebo si jej nyní zkopírujte. Později už ho znovu neuvidíte.",
+      "passwordOnce": "Toto heslo se zobrazí pouze jednou. Naskenujte QR kód nebo si jej nyní zkopírujte či vytiskněte. Později už ho znovu neuvidíte.",
+      "print": "Vytisknout / PDF",
       "privacy": "Povolením této funkce souhlasíte s našimi {0}.",
       "privacyLink": "zásady ochrany osobních údajů",
       "qrInstall": "Nainstalujte si aplikaci evcc pro {ios} nebo {android}.",
@@ -1165,6 +1179,7 @@
       "template": "Poskytovatel",
       "title": "Tarify a Předpovědní modely",
       "titleChoice": "Co chcete přidat?",
+      "titleSub": "Podřadný tarif",
       "type": {
         "co2": "Intenzita uhlíkové stopy",
         "feedIn": "Výkupní cena elektřiny do sítě",
@@ -1224,7 +1239,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Nabití",
       "charged": "Nabito",
+      "discharge": "Vybito",
       "discharged": "Vybito"
     },
     "consumers": {
@@ -1237,24 +1254,40 @@
       "title": "Spotřebiče",
       "view": {
         "river": "Tok",
-        "treemap": "Stromová mapa"
+        "treemap": "Mapa"
       }
     },
     "direction": {
       "battery": {
-        "energy": "nabito",
+        "energy": "Nabito",
         "returnEnergy": "Vybito"
       },
+      "consumer": {
+        "energy": "Spotřebováno"
+      },
       "grid": {
-        "energy": "nakoupeno z distribuce",
-        "returnEnergy": "prodáno do distribuce"
+        "energy": "Odebráno ze sítě",
+        "returnEnergy": "Dodáno do sítě"
+      },
+      "heating": {
+        "energy": "Spotřebováno"
+      },
+      "loadpoint": {
+        "energy": "Nabito"
       },
       "meter": {
         "energy": "Energie",
         "returnEnergy": "Energie (reverse)"
+      },
+      "pv": {
+        "energy": "Vyrobeno"
       }
     },
-    "empty": "Pro toto období nejsou k dispozici žádná data o energii.",
+    "empty": {
+      "description": "Žádná data o toku energií během tohoto období.",
+      "descriptionCurrent": "Zatím žádná data. Hodnoty se zde objeví jakmile budou provedena první měření.",
+      "showCurrent": "Zobrazit současné období"
+    },
     "flow": {
       "battery": "Baterie",
       "batteryCharge": "Nabíjení baterie",
@@ -1262,7 +1295,7 @@
       "charging": "Nabíjení",
       "export": "Export do sítě",
       "grid": "Odběr ze sítě",
-      "heating": "Topení",
+      "heating": "Vytápění",
       "home": "Spotřeba",
       "overview": "Přehled",
       "pv": "Výroba",
@@ -1271,12 +1304,13 @@
       "withdrawal": "Odběr"
     },
     "grid": {
-      "amount": "Částka",
+      "amount": "Množství",
       "cost": "Náklady za síť",
       "energy": "Energie",
+      "export": "Export",
       "exportPrice": "Výkupní cena",
-      "import": "Nakoupeno z distribuce",
-      "importPrice": "Cena odběru",
+      "import": "Odebráno ze sítě",
+      "importPrice": "Cena dodávky",
       "price": "Cena",
       "revenue": "Výnos z výkupu",
       "title": "Síť"
@@ -1292,7 +1326,7 @@
     },
     "production": {
       "above": "o {value} více",
-      "accuracy": "Přesnost předpovědi",
+      "accuracy": "přesnost",
       "below": "o {value} méně",
       "deviation": "Odchylka",
       "expectedTomorrow": "očekáváno zítra",
@@ -1304,8 +1338,9 @@
     },
     "socTemp": {
       "charged": "nabito",
-      "soc": "nabití",
-      "temperature": "teplota",
+      "power": "Výkon",
+      "soc": "Nabití",
+      "temperature": "Teplota",
       "used": "spotřebováno"
     },
     "sources": {
@@ -1326,7 +1361,6 @@
       "co2Saved": "Ušetřené CO₂",
       "co2SavedTooltip": "Ve srovnání s odběrem spotřebovaných {energy} ze sítě.",
       "configure": "Nastavit nyní",
-      "energy": "Energie",
       "noCo2": "Žádná data o CO₂.",
       "noPrice": "Žádná data o cenách.",
       "savings": "Úspory",
@@ -1400,7 +1434,7 @@
       "optInSponsorship": "Vyžadován sponzorský token."
     },
     "version": {
-      "availableLong": "nová verze je k dispozici",
+      "availableLong": "aktualizace je k dispozici",
       "community": "evcc komunita",
       "labelEmail": "Email",
       "labelPhone": "Telefon",
@@ -1434,7 +1468,7 @@
     },
     "empty": {
       "co2": "Zjistěte, kdy je elektřina ze sítě ve vašem regionu ekologičtější. Nabíjecí plány budou optimalizovány pro nižší emise a vypočítají úsporu CO₂.",
-      "price": "Nastavte svůj dynamický tarif elektřiny, aby se nabíjecí plány automaticky optimalizovaly a počítaly úspory.",
+      "price": "Nastavte svůj dynamický tarif, aby se nabíjecí plány automaticky optimalizovaly a počítaly úspory.",
       "setup": "Nastavit tarify a předpovědi",
       "solar": "Zobrazte očekávanou solární výrobu pro dnešek a následující dny. V budoucnu bude také využita pro automatickou optimalizaci nabíjení.",
       "temperature": "Zobrazit očekávanou venkovní teplotu ve vaší lokalitě. Použije se pro prediktivní model vytápění."
@@ -1444,6 +1478,7 @@
     "price": {
       "average": "Průměr",
       "constant": "Cena",
+      "estimate": "odhad",
       "lowestHour": "Nejlevnější hodina",
       "range": "Rozsah"
     },
@@ -1475,6 +1510,7 @@
     "cancel": "Zrušit",
     "download": "Stáhnout",
     "error": "Chyba",
+    "loading": "Načítání",
     "none": "žádné",
     "note": "Poznámka:",
     "warning": "Varování"

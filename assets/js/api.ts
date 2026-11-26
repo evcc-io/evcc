@@ -1,5 +1,5 @@
 import axios, { type AxiosResponse } from "axios";
-import { openLoginModal } from "./components/Auth/auth";
+import { interruptWithLogin } from "./components/Auth/auth";
 import restart from "./restart";
 
 const { protocol, hostname, port, pathname } = window.location;
@@ -42,7 +42,7 @@ const errorInterceptor = (error: any) => {
 
   // handle unauthorized errors
   if (error.response?.status === 401) {
-    openLoginModal();
+    interruptWithLogin();
     return Promise.reject(error);
   }
 

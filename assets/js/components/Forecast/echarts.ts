@@ -224,7 +224,7 @@ export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[
   };
   const headerRow = headers?.length
     ? `<tr>${hasName ? "<td></td>" : ""}${headers
-        .map((h, i) => `<td class="fw-normal tabular ${valClsFn(i)}">${h}</td>`)
+        .map((h, i) => `<td class="fw-normal tabular ${valClsFn(i)}">${escapeHtml(h)}</td>`)
         .join("")}</tr>`
     : "";
   const rowHtml = (r: TooltipRow) => {
@@ -248,7 +248,7 @@ export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[
         .join("")}</tfoot>`
     : "";
   const thead = head
-    ? `<thead><tr><th colspan="${colCount}" class="fw-bold text-center pb-1">${head}</th></tr></thead>`
+    ? `<thead><tr><th colspan="${colCount}" class="fw-bold text-center pb-1">${escapeHtml(head)}</th></tr></thead>`
     : "";
   return `<table class="lh-sm">${thead}<tbody>${headerRow}${body}</tbody>${foot}</table>`;
 }

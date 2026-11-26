@@ -257,7 +257,7 @@
       "amount": "Mængde",
       "asleep": "sover",
       "broker": "Broker",
-      "bucket": "Bucket",
+      "bucket": "Bucket / Database",
       "capacity": "Kapacitet",
       "chargeStatus": "Status",
       "chargeStatusA": "ikke tilsluttet",
@@ -421,6 +421,7 @@
       "change": "Ændre",
       "clear": "Slet",
       "close": "Luk",
+      "configured": "Konfigureret",
       "confirmDisable": "Deaktiver denne enhed? Den ignoreres efter næste genstart.",
       "confirmEnable": "Aktiver denne enhed igen?",
       "confirmSave": "Ændringer er ikke gemt. Skal de gemmes nu?",
@@ -433,6 +434,8 @@
       "disable": "Deaktivér",
       "disabled": "deaktiveret",
       "dismiss": "Afvis",
+      "dismissAll": "Luk alle",
+      "dismissed": "Lukket",
       "docsLink": "Se dokumentation.",
       "dragHandle": "Træk-håndtag",
       "dragItem": "Kan trækkes: {title}",
@@ -508,7 +511,7 @@
     "influx": {
       "description": "Skriver opladningsdata og andre målinger til InfluxDB. Brug Grafana eller andre værktøjer til at visualisere data.",
       "descriptionToken": "Tjek InfluxDB-dokumentation for at lære, hvordan du opretter en. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Database",
       "labelCheckInsecure": "Tillad selvsignerede certifikater",
       "labelDatabase": "Database",
       "labelInsecure": "Certifikatvalidering",
@@ -519,7 +522,7 @@
       "labelUser": "Brugernavn",
       "title": "InfluxDB",
       "v1Support": "Har du brug for support til InfluxDB 1.x?",
-      "v2Support": "Tilbage til InfluxDB 2.x"
+      "v2Support": "Tilbage til InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -982,7 +985,8 @@
       "manualLogin": "Eller login manuelt ved {url} i din browser med disse oplysninger:",
       "noClients": "Ingen klient endnu. Ingen kan forbindes endnu.",
       "password": "Kode",
-      "passwordOnce": "Denne kode vises kun én gang. Skan QR koden eller kopier den nu. Den kan ikke vises igen.",
+      "passwordOnce": "Denne kode vises kun én gang. Skan QR koden eller kopier/udskriv den nu. Den kan ikke vises igen.",
+      "print": "Udskriv / PDF",
       "privacy": "Ved at aktivere denne funktion accepterer du vores {0}.",
       "privacyLink": "privatlivs politik",
       "qrInstall": "Installer evcc appen for {ios} eller {android}.",
@@ -1235,7 +1239,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Oplad",
       "charged": "Opladet",
+      "discharge": "Aflad",
       "discharged": "Afladet"
     },
     "consumers": {
@@ -1253,19 +1259,35 @@
     },
     "direction": {
       "battery": {
-        "energy": "opladet",
-        "returnEnergy": "afladet"
+        "energy": "Opladet",
+        "returnEnergy": "Afladet"
+      },
+      "consumer": {
+        "energy": "Forbrugt"
       },
       "grid": {
-        "energy": "importeret",
-        "returnEnergy": "eksporteret"
+        "energy": "Importeret",
+        "returnEnergy": "Eksporteret"
+      },
+      "heating": {
+        "energy": "Forbrugt"
+      },
+      "loadpoint": {
+        "energy": "Opladet"
       },
       "meter": {
         "energy": "Energi",
         "returnEnergy": "Energi (eksport)"
+      },
+      "pv": {
+        "energy": "Produceret"
       }
     },
-    "empty": "Der er ingen energidate tilgængelig for denne tidsperiode.",
+    "empty": {
+      "description": "Ingen energidata for denne periode.",
+      "descriptionCurrent": "Ingen energidata endnu. Værdier vises når de første målinger er registreret.",
+      "showCurrent": "Vis aktuel periode"
+    },
     "flow": {
       "battery": "Batteri",
       "batteryCharge": "Batteriopladning",
@@ -1304,7 +1326,7 @@
     },
     "production": {
       "above": "{value} over",
-      "accuracy": "Prognose akkuratesse",
+      "accuracy": "akkuratesse",
       "below": "{value} under",
       "deviation": "Afvigelse",
       "expectedTomorrow": "Forventet i morgen",
@@ -1316,8 +1338,9 @@
     },
     "socTemp": {
       "charged": "opladet",
-      "soc": "lader",
-      "temperature": "temperatur",
+      "power": "Effekt",
+      "soc": "Ladeniveau",
+      "temperature": "Temperatur",
       "used": "brugt"
     },
     "sources": {
@@ -1338,12 +1361,15 @@
       "co2Saved": "CO₂ sparet",
       "co2SavedTooltip": "Sammenlignet med at trække den forbrugte {energy} fra elnettet.",
       "configure": "Konfigurer nu",
+      "energy": "Energi",
+      "fromGrid": "{value} fra elnettet",
       "noCo2": "Ingen CO₂ data.",
       "noPrice": "Ingen pris data.",
       "savings": "Besparelser",
       "savingsTooltip": "Sammenlignet med at købe det brugte {energy} fra elnettet.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Oversigt",
     "title": "Energi"
   },
   "footer": {
@@ -1455,6 +1481,7 @@
     "price": {
       "average": "Gennemsnit",
       "constant": "Pris",
+      "estimate": "estimeret",
       "lowestHour": "Billigste time",
       "range": "Spændvidde"
     },
@@ -1486,6 +1513,7 @@
     "cancel": "Afbryd",
     "download": "Download",
     "error": "Fejl",
+    "loading": "Indlæser",
     "none": "ingen",
     "note": "Note:",
     "warning": "Advarsel"
@@ -1654,7 +1682,8 @@
       "repeatingPlans": "Gentager plan",
       "selectAll": "Vælg alt",
       "strategy": {
-        "label": "Strategi"
+        "label": "Strategi",
+        "optimizerHint": "{optimizer} tager endnu ikke højde for optimeringsindstillingen og vælger altid de billigste tidsintervaller. Begræns den automatiske styring til »Hjemmebatteri«, hvis du har brug for det."
       },
       "time": "Tid",
       "title": "Plan",
@@ -1680,8 +1709,9 @@
       "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
       "gridImport": "Import fra elnet",
+      "heaters": "Varmer | Varmere",
       "homePower": "Forbrug",
-      "loadpoints": "Oplader| Oplader | {count} opladere",
+      "loadpoints": "Oplader| Opladere",
       "loadpointsLimit": "{limit} begrænsning",
       "noEnergy": "Ingen målerdata",
       "pv": "Solcelleanlæg",
@@ -1708,18 +1738,22 @@
       "avgPrice": "⌀ pris",
       "charged": "Opladet",
       "co2": "⌀ CO₂",
+      "consumed": "Forbrugt",
       "duration": "Varighed",
       "emission": "Udledning",
       "fallbackName": "Ladepunkt",
       "finished": "Sluttidspunkt",
       "last24hEnergy": "Sidste 24 timer",
+      "last24hShort": "24 timer",
       "last7dEnergy": "Sidste 7 dage",
+      "last7dShort": "7 dage",
       "phasesMismatch": "Der er flere aktive faser end konfigureret. Check venligst konfigurationen.",
       "power": "Effekt",
       "price": "Pris",
       "remaining": "Resterende tid",
       "remoteDisabledHard": "{source}: slukket",
       "remoteDisabledSoft": "{source}: Adaptiv sol-opladning er slukket",
+      "session": "Session",
       "solar": "solenergi",
       "todayEnergy": "I dag"
     },
@@ -1941,7 +1975,8 @@
       "dismiss": "Afvis",
       "legacyTariffs": "Gammel tarifkonfiguration er i brug.",
       "progress": "{done} af {total} udført",
-      "title": "Fuldfør din opsætning"
+      "suggestions": "1 forslag | {count} forslag",
+      "title": "Din opsætning"
     },
     "control": {
       "description": "Begynd med din første. Flere kan tilføjes senere på konfigurationssiden.",

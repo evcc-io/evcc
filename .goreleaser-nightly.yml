@@ -86,6 +86,9 @@ nfpms:
     formats:
       - deb
 
+    deb:
+      compression: xz # a sixth smaller than gzip, readable by every dpkg
+
     dependencies:
       - adduser
       - ucf
