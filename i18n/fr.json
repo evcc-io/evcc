@@ -38,16 +38,16 @@
       "energy": "Energie",
       "gridCharge": "charge depuis le réseau",
       "gridDischarge": "décharge du réseau",
-      "hold": "décharge verrouillée",
       "holdCharge": "charge verrouillée",
+      "holdDischarge": "décharge verrouillée",
       "ofTotal": "de {total}",
       "power": "Puissance",
       "soc": "Niveau de batterie"
     },
     "combined": "Combinée",
     "config": {
-      "buffer": "Si le niveau de la batterie domestique est supérieur à {soc}, la batterie sera utilisée pour charger les points de charge et repousser le passage en mode intelligent. La charge solaire démarre automatiquement à {start}.",
-      "bufferNone": "La batterie domestique n’est pas utilisée pour charger les points de charge. Définissez une valeur en dessous de {soc} pour activer le support.",
+      "buffer": "Si le niveau de la batterie domestique est supérieur à {soc}, la batterie sera utilisée pour charger les points de charge et repousser le passage en mode intelligent. La charge solaire démarre automatiquement à {start}. Note : l’option « Toujours » ignore cette valeur.",
+      "bufferNone": "La batterie domestique n’est pas utilisée pour charger les points de charge. Définissez une valeur en dessous de {soc} pour activer le support. Note : l’option « Toujours » ignore cette valeur.",
       "bufferStart": {
         "above": "dès que la batterie est chargée à plus de {soc}",
         "full": "dès que la batterie est pleine",
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Charge depuis le réseau",
         "discharge": "Décharge vers le réseau",
-        "hold": "Eviter la décharge",
         "holdcharge": "Eviter la charge",
+        "holddischarge": "Eviter la décharge",
         "normal": "Opération normale"
       },
       "empty": "vide",
@@ -121,7 +121,7 @@
     },
     "battery": {
       "title": "Batterie",
-      "titleAdd": "Ajouter une batterie domestique",
+      "titleAdd": "Ajouter une batterie",
       "titleEdit": "Modifier batterie"
     },
     "charge": {
@@ -146,11 +146,13 @@
       "template": "Fabricant",
       "titleAdd": {
         "charging": "Ajouter un chargeur",
-        "heating": "Ajouter un appareil de chauffage"
+        "heating": "Ajouter un appareil de chauffage",
+        "switch": "Ajouter une prise commutable"
       },
       "titleEdit": {
         "charging": "Modifier chargeur",
-        "heating": "Modifier l’appareil de chauffage"
+        "heating": "Modifier l’appareil de chauffage",
+        "switch": "Modifier la prise commutable"
       },
       "type": {
         "custom": {
@@ -188,11 +190,20 @@
     "circuits": {
       "addMainCircuit": "Ajouter le circuit principal",
       "addSubCircuit": "Ajouter un sous-circuit",
-      "chargingPointsNote": "Attribuer les bornes de recharge et les radiateurs à un circuit dans leurs propres paramètres.",
+      "assignHere": "Assignez ici",
+      "assignmentFailed": "Impossible d’enregistrer l’assignation. Veuillez essayer plus tard.",
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
+      "destination": "Circuit {title}",
+      "dragHint": "Faites glisser sur un circuit, ou appuyez dessus pour sélectionner.",
+      "dropAssign": "Lâcher pour assigner",
+      "dropRemove": "Lâcher ici pour l’enlever du circuit.",
       "legacyWarning": "Une nouvelle configuration des circuits est disponible !. Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée. Un redémarrage sera nécessaire.",
       "meterDedicated": "Compteur",
       "meterGrid": "Réseau",
+      "moveHere": "Déplacer ici",
+      "notAssigned": "Non assigné",
+      "selectAssign": "Tapez un circuit pour attribuer {title}.",
+      "selectMove": "Tapez sur un circuit pour déplacer {title}, ou sur la réserve pour l'enlever.",
       "title": "Gestion de la charge",
       "usableMeters": "Références des compteurs utilisables"
     },
@@ -232,12 +243,21 @@
       "titleAdd": "Ajouter un appareil limitant",
       "titleEdit": "Modifier un appareil limitant"
     },
+    "deviceRef": {
+      "add": {
+        "charger": "Ajouter un chargeur",
+        "meter": "Ajouter un compteur",
+        "switch": "Ajouter une prise commutable",
+        "tariff": "Ajouter un tarif"
+      },
+      "noNesting": "Un seul niveau de regroupement est possible. Veuillez choisir une autre option."
+    },
     "deviceValue": {
       "activeClients": "Clients actifs",
       "amount": "Montant",
       "asleep": "en veille",
       "broker": "Courtier",
-      "bucket": "Seau",
+      "bucket": "Seau / Base de données",
       "capacity": "Capacité",
       "chargeStatus": "Statut",
       "chargeStatusA": "pas connecté",
@@ -310,8 +330,16 @@
           "returnEnergy": "Déchargé"
         },
         "consumer": {
+          "chargeStatusB": "en attente",
+          "chargeStatusC": "chauffage",
           "energy": "Consommé",
           "returnEnergy": "Produit"
+        },
+        "continuous": {
+          "chargeStatusB": "normal",
+          "chargeStatusC": "boost",
+          "dimmed": "Atténué",
+          "enabled": "Boosté"
         },
         "grid": {
           "energy": "Importé",
@@ -333,6 +361,7 @@
       "auxMeter": "Consommateur auto-régulé",
       "batteryStorage": "Batterie domestique",
       "consumer": "Consommateur",
+      "extMeter": "Compteur supplémentaire",
       "solarSystem": "Système photovoltaïque"
     },
     "editor": {
@@ -383,6 +412,7 @@
       "optional": "optionnel"
     },
     "general": {
+      "add": "Ajouter",
       "applyAndClose": "Appliquer & fermer",
       "authPerform": "Se connecter avec {provider}",
       "authPerformHint": "Va s’ouvrir dans un nouvel onglet. Revenez ici pour continuer.",
@@ -394,6 +424,7 @@
       "confirmDisable": "Désactiver cet équipement ? Il sera ignoré dès le prochain redémarrage.",
       "confirmEnable": "Réactiver cet appareil ?",
       "confirmSave": "Il y a des modifications. Enregistrer maintenant ?",
+      "continue": "Continuer",
       "copied": "Copié !",
       "copy": "Copier",
       "customHelp": "Créer un appareil personnalisé en utilisant le système de greffons d’evcc.",
@@ -477,7 +508,7 @@
     "influx": {
       "description": "Écrit les données de charge et autres métriques dans InfluxDB. Utilise Grafana ou d’autres outils pour visualiser les données.",
       "descriptionToken": "Se référer à la documentation InfluxDB pour apprendre comment en créer un. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Seau",
+      "labelBucket": "Seau / Base de données",
       "labelCheckInsecure": "Autoriser les certificats auto-signés",
       "labelDatabase": "Base de données",
       "labelInsecure": "Validation du certificat",
@@ -488,14 +519,14 @@
       "labelUser": "Nom d’utilisateur",
       "title": "InfluxDB",
       "v1Support": "Besoin d’aide pour InfluxDB 1x ?",
-      "v2Support": "Revenir à InfluxDB 2.x"
+      "v2Support": "Revenir à InfluxDB 2.+"
     },
     "loadpoint": {
       "addCharger": {
         "charging": "Ajouter un chargeur",
         "heating": "Ajouter un dispositif de chauffage"
       },
-      "addMeter": "Ajouter un compteur dédié pour l'énergie",
+      "addMeter": "Ajouter un compteur",
       "advancedConfig": "Configuration avancée",
       "cancel": "Annuler",
       "chargerError": {
@@ -531,10 +562,31 @@
       "defaultModeKeep": "laisser tel quel",
       "defaultModeLabel": "Mode par défaut",
       "delete": "Supprimer",
+      "demandPredictor": {
+        "daily": {
+          "description": "Moyenne des derniers jours. Pour les appareils avec le même comportement tous les jours.",
+          "label": "Moyenne quotidienne"
+        },
+        "defaultGroup": "Par défaut selon l’appareil",
+        "description": "Comment l’optimiseur prédit la demande selon la consommation passée.",
+        "label": "Profil",
+        "noTempTariff": "Nécessite une prévision de température.",
+        "noTempTariffLink": "Ajouter une prévision",
+        "profilesGroup": "Profils",
+        "temperature": {
+          "description": "Consommation passée à des températures extérieures similaires. Pour le chauffage, comme les pompes à chaleur.",
+          "label": "Température"
+        },
+        "title": "Prévisions de la demande",
+        "weekday": {
+          "description": "Moyenne du même jour de la semaine. Pour les appareils avec un horaire hebdomadaire, comme les chauffe-eau ou piscine.",
+          "label": "Jour de la semaine"
+        }
+      },
       "electricalSubtitle": "En cas de doute, demandez à votre électricien.",
       "electricalTitle": "Électrique",
       "energyMeterHelp": "Compteur supplémentaire si le chargeur n’en comporte pas.",
-      "energyMeterLabel": "Compteur d’énergie",
+      "energyMeterLabel": "Compteur d’énergie dédié",
       "estimateLabel": "Interpoler le niveau de charge entre deux mises à jour via l’API",
       "maxCurrentHelp": "Doit être supérieur au courant minimum.",
       "maxCurrentLabel": "Courant maximum",
@@ -715,10 +767,18 @@
         "grid": "Ajouter un compteur pour le réseau",
         "pv": "Ajouter un compteur solaire"
       },
+      "reuseApply": "Utilise ces réglages.",
+      "reuseHint": "{device} peut aussi être utilisé en tant que \"{target}\".",
       "save": "Enregistrer",
       "specific": "Intégrations spécifiques",
       "template": "Fabricant",
       "titleChoice": "Que voulez-vous ajouter ?",
+      "titleExample": {
+        "aux": "Chauffe-eau intelligent, etc.",
+        "battery": "Cave, garage, etc.",
+        "consumer": "Lave-vaisselle, machine à laver, pompe de piscine, etc.",
+        "pv": "Toit sud, carport, etc."
+      },
       "titleLabel": "Titre",
       "usage": {
         "aux": "Consommateur auto-régulé",
@@ -922,7 +982,8 @@
       "manualLogin": "Ou authentifiez-vous manuellement sur {url} dans votre navigateur en utilisant ces données de connexion :",
       "noClients": "Aucun client pour l’instant. Personne ne peut encore se connecter.",
       "password": "Mot de passe",
-      "passwordOnce": "Ce mot de passe n’est affiché qu’une seule fois. Scannez le code QR ou copiez-le maintenant dans votre gestionnaire de mots de passe. Vous ne pourrez plus le ré-afficher.",
+      "passwordOnce": "Ce mot de passe n’est affiché qu’une seule fois. Scannez le code QR, copiez-le maintenant dans votre gestionnaire de mots de passe ou imprimez-le maintenant. Vous ne pourrez plus le ré-afficher.",
+      "print": "Imprimer / PDF",
       "privacy": "En activant cette fonctionnalité, vous acceptez notre {0}.",
       "privacyLink": "politique de confidentialité",
       "qrInstall": "Installer l’app evcc pour {ios} ou {android}.",
@@ -976,6 +1037,15 @@
         "example": "Le prix facturé s'élevait à {price}. Vous avez économisé {amount}.",
         "label": "Devise"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V sans neutre (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V avec neutre (3P4W)",
+        "description": {
+          "3p3w": "Réseau sans conducteur neutre. Habituel en Norvège et dans certaines régions de Belgique.",
+          "3p4w": "Réseau le plus courant avec conducteur neutre."
+        },
+        "label": "Connexion au réseau"
+      },
       "siteTitle": {
         "description": "Affiché sur l'écran principal et dans l'onglet du navigateur.",
         "label": "Titre"
@@ -989,6 +1059,18 @@
       "descriptionToken": "En tant que sponsor GitHub, vous pouvez obtenir un jeton sur {url}. Pour démarrer, nous offrons également un jeton d’essai pour les tests {trialToken}.",
       "enterYourToken": "Votre jeton de sponsor",
       "error": "Le jeton de parrain n’est pas valide.",
+      "inline": {
+        "applied": "Jeton appliqué. Merci de soutenir le projet !",
+        "apply": "Appliquer",
+        "becomeSponsor": "devenir un sponsor",
+        "device": "Cet appareil est uniquement disponible pour les sponsors.",
+        "feature": "Cette fonctionnalité est uniquement disponible pour les sponsors.",
+        "learn": "En savoir plus et {becomeSponsor}.",
+        "placeholder": "Coller le jeton",
+        "title": "Jeton de parrain requis",
+        "trial": "Démarrez rapidement.",
+        "trialLink": "Obtenez un jeton d’essai"
+      },
       "invalid": "invalide",
       "labelToken": "Jeton de parrain",
       "title": "Parrainage",
@@ -1083,7 +1165,8 @@
       "solar": {
         "description": "Prévisions de production solaire pour votre installation photovoltaïque. Affichées dans l'interface, elles seront utilisées à l'avenir pour les algorithmes d'optimisation.",
         "titleAdd": "Ajouter prévisions solaires",
-        "titleEdit": "Modifier les prévisions solaires"
+        "titleEdit": "Modifier les prévisions solaires",
+        "titleExample": "Toit sud, carport, etc."
       },
       "temperature": {
         "description": "Prévisions de température extérieure pour votre localité. Affichées dans l'interface et utilisées pour estimer les besoins en chauffage.",
@@ -1093,6 +1176,7 @@
       "template": "Fournisseur",
       "title": "Tarifs & prévisions",
       "titleChoice": "Que voulez-vous rajouter ?",
+      "titleSub": "Sous-tarif",
       "type": {
         "co2": "Intensité de CO₂",
         "feedIn": "Prix de rachat par le réseau",
@@ -1187,7 +1271,11 @@
         "returnEnergy": "Énergie (inversée)"
       }
     },
-    "empty": "Aucune donnée énergétique disponible pour cette période.",
+    "empty": {
+      "description": "Aucune donnée d'énergie pour cette période.",
+      "descriptionCurrent": "Pas encore de données d'énergie. Les valeurs apparaissent une fois les premières mesures enregistrées.",
+      "showCurrent": "Montre période actuelle"
+    },
     "flow": {
       "battery": "Batterie",
       "batteryCharge": "Charge de la batterie",
@@ -1226,7 +1314,7 @@
     },
     "production": {
       "above": "{value} au dessus",
-      "accuracy": "Précision des prévisions",
+      "accuracy": "Précision",
       "below": "{value} en dessous",
       "deviation": "Déviation",
       "expectedTomorrow": "prévu demain",
@@ -1260,12 +1348,14 @@
       "co2Saved": "CO₂ économisé",
       "co2SavedTooltip": "Comparé au prélèvement de l'{energy} consommée sur le réseau.",
       "configure": "Configurer maintenant",
+      "fromGrid": "{value} du réseau",
       "noCo2": "Aucune donnée sur le CO₂.",
       "noPrice": "Aucune donnée de prix.",
       "savings": "Économies",
       "savingsTooltip": "Par rapport à l'achat de l'{energy} consommée auprès du réseau.",
       "versus": "{value} par rapport {reference}"
     },
+    "summary": "Résumé",
     "title": "Énergie"
   },
   "footer": {
@@ -1408,6 +1498,7 @@
     "cancel": "Annuler",
     "download": "Télécharger",
     "error": "Erreur",
+    "loading": "Chargement",
     "none": "aucun",
     "note": "Remarque :",
     "warning": "Avertissement"
@@ -1558,7 +1649,8 @@
         "continuousCo2Description": "Sélectionne la série de créneaux la plus propre et sans interruption.",
         "continuousPriceDescription": "Sélectionne la série de créneaux horaires sans interruption et la moins chère.",
         "disabledDescription": "Nécessite un tarif dynamique ou une prévision de CO2.",
-        "label": "Optimisation"
+        "label": "Optimisation",
+        "optimizerDescription": "{optimizer} sélectionne les créneaux horaires les moins chers. Cela peut entraîner plusieurs démarrages et arrêts."
       },
       "planNumber": "Plan {number}",
       "precondition": {
@@ -1601,8 +1693,9 @@
       "forecast": "Prévisions",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
       "gridImport": "Import du réseau",
+      "heaters": "Radiateur | Radiateurs",
       "homePower": "Consommation",
-      "loadpoints": "Chargeur| Chargeur | {count} chargeurs",
+      "loadpoints": "Chargeur | Chargeurs",
       "loadpointsLimit": "limite à {limit}",
       "noEnergy": "Aucune donnée de compteur",
       "pv": "Système photovoltaïque",
@@ -1629,18 +1722,22 @@
       "avgPrice": "Prix ⌀",
       "charged": "Chargé",
       "co2": "CO₂ ⌀",
+      "consumed": "Consommée",
       "duration": "Durée",
       "emission": "Émissions",
       "fallbackName": "Point de chargement",
       "finished": "Heure de fin",
       "last24hEnergy": "24 dernières heures",
+      "last24hShort": "24h",
       "last7dEnergy": "7 derniers jours",
+      "last7dShort": "7d",
       "phasesMismatch": "Plus de phases actives que configurées. Vérifiez la configuration de phase.",
       "power": "Puissance",
       "price": "Coût",
       "remaining": "Temps restant",
       "remoteDisabledHard": "{source} : désactivée",
       "remoteDisabledSoft": "{source} : charge solaire adaptative désactivée",
+      "session": "Session",
       "solar": "Solaire",
       "todayEnergy": "Aujourd'hui"
     },
@@ -1708,13 +1805,18 @@
       "normal": "Normal",
       "now": "Rapide",
       "off": "Arrêté",
-      "on": "Enclenché",
+      "on": "Allumé",
       "pv": "Solaire",
       "smart": "Intelligent"
     },
     "provider": {
       "login": "connexion",
       "logout": "déconnexion"
+    },
+    "setup": {
+      "description": "Ajoutez vos appareils pour voir le flux d'énergie et commencez à recharger avec l'énergie solaire.",
+      "start": "Commencer la configuration",
+      "title": "Bienvenue !"
     },
     "startConfiguration": "Commençons la configuration",
     "targetCharge": {
@@ -1842,6 +1944,76 @@
     "restartNeeded": "Nécessaire afin de prendre en compte les modifications.",
     "restarting": "Le serveur sera à nouveau disponible dans quelques instants.",
     "starting": "Démarrage du serveur..."
+  },
+  "onboarding": {
+    "another": "Ajouter un autre",
+    "back": "Retour",
+    "battery": {
+      "add": "Ajouter une batterie domestique",
+      "description": "Ajoutez votre batterie pour la prendre en compte et observer son effet.",
+      "none": "Pas de batterie domestique",
+      "title": "Avez-vous une batterie domestique ?"
+    },
+    "checklist": {
+      "dismiss": "Ignorer",
+      "legacyTariffs": "L’ancienne configuration tarifaire est utilisée.",
+      "progress": "{done} sur {total} effectué",
+      "title": "Terminer votre configuration"
+    },
+    "control": {
+      "description": "Commencez par le premier. Vous pourrez en rajouter d’autres plus tard sur l’écran de configuration.",
+      "none": "Rien pour l’instant",
+      "title": "Que voulez-vous contrôler ?"
+    },
+    "done": {
+      "close": "Allez à la configuration",
+      "description": "Un redémarrage applique la configuration. Ensuite, explorez les fonctionnalités. Les véhicules, tarifs et plus peuvent être ajoutés à tout moment.",
+      "restart": "Redémarrer",
+      "title": "Vous êtes prêts"
+    },
+    "grid": {
+      "add": "Ajouter un compteur général",
+      "confirm": "Le compteur général est la base du suivi du surplus et des statistiques de consommation. En ajouter un est recommandé.",
+      "confirmNone": "Continuer sans",
+      "description": "Mesure l'import et l'export du réseau au point de raccordement. Rend le suivi du surplus précis.",
+      "none": "Aucun compte général",
+      "title": "Avez-vous un compteur général ?"
+    },
+    "item": {
+      "battery": "Batterie domestique",
+      "co2": "Prévisions de CO₂",
+      "consumer": "Consommateur",
+      "grid": "Compteur général",
+      "gridExport": "Tarif d'export vers le réseau",
+      "gridImport": "Tarif d'import du réseau",
+      "heater": "Point de chauffage",
+      "loadpoint": "Point de charge",
+      "pv": "Installation photovoltaïque",
+      "solar": "Prévision solaire"
+    },
+    "password": {
+      "description": "Protège les paramètres de configuration des modifications non autorisées. Rappelez-vous, il n'y a pas de moyen facile de le réinitialiser.",
+      "disabled": "L'authentification est désactivée ({flag}). Toute personne ayant accès au réseau peut modifier la configuration, lire les identifiants stockés et exécuter des scripts. Sécurisez l’accès par d'autres moyens.",
+      "title": "Définir un mot de passe administrateur"
+    },
+    "pv": {
+      "add": "Ajouter une installation photovoltaïque",
+      "description": "Mesure la production solaire. Nécessaire pour mesurer la part solaire et utiliser le surplus pour charger.",
+      "none": "Aucune installation photovoltaïque",
+      "title": "Avez-vous une installation photovoltaïque ?"
+    },
+    "site": {
+      "currencyHint": "ex. {price}, {amount}",
+      "defaultTitle": "Accueil",
+      "description": "Quelques informations de base sur votre maison. Vous pouvez les changer à tout moment.",
+      "title": "Votre emplacement"
+    },
+    "skip": "Passer la configuration",
+    "step": "Étape {step} sur {total}",
+    "welcome": {
+      "description": "Définir les parties les plus importantes de votre installation pour commencer la charge intelligente.",
+      "start": "Commencez"
+    }
   },
   "passwordModal": {
     "description": "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal est toujours possible sans authentification.",

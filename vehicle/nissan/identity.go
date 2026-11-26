@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -182,9 +183,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"Origin":       action.Scheme + "://" + action.Host,
 		"Referer":      resp.Request.URL.String(),
 	}
-	for k, v := range htmlHeaders {
-		headers[k] = v
-	}
+	maps.Copy(headers, htmlHeaders)
 
 	if req, err = request.New(http.MethodPost, action.String(), strings.NewReader(data.Encode()), headers); err != nil {
 		return nil, err

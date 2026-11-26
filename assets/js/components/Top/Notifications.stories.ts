@@ -12,17 +12,19 @@ const timeAgo = (hours = 0, minutes = 0, seconds = 0) => {
 
 const notificationsData: Notification[] = [
   {
-    message: "Server unavailable",
+    message: "not available",
     level: "error",
+    area: "gsi",
     time: timeAgo(),
     count: 1,
-    lp: 1,
+    lp: 0,
   },
   {
     message: "charger out of sync: expected disabled, got enabled",
     level: "warn",
     count: 4,
     time: timeAgo(0, 0, 42),
+    area: "lp-1",
     lp: 1,
   },
   {
@@ -30,6 +32,7 @@ const notificationsData: Notification[] = [
     level: "error",
     count: 1,
     time: timeAgo(1, 12, 44),
+    area: "lp-1",
     lp: 1,
   },
   {
@@ -38,6 +41,7 @@ const notificationsData: Notification[] = [
     level: "error",
     count: 1,
     time: timeAgo(1, 12, 44),
+    area: "lp-1",
     lp: 1,
   },
   {
@@ -45,6 +49,7 @@ const notificationsData: Notification[] = [
     level: "warn",
     count: 4,
     time: timeAgo(1, 22, 0),
+    area: "lp-1",
     lp: 1,
   },
   {
@@ -52,6 +57,7 @@ const notificationsData: Notification[] = [
     level: "warn",
     count: 3,
     time: timeAgo(4, 2, 0),
+    area: "lp-1",
     lp: 1,
   },
   {
@@ -60,6 +66,7 @@ const notificationsData: Notification[] = [
     level: "warn",
     count: 1,
     time: timeAgo(5, 2, 44),
+    area: "lp-1",
     lp: 1,
   },
 ];

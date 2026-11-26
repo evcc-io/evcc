@@ -17,8 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const remotePort = 9001
-
 func TestMain(m *testing.M) {
 	// Configure logging before service goroutines can access the shared loggers.
 	util.LogLevel("error", map[string]string{"eebus": "trace"})
@@ -33,6 +31,7 @@ func TestEEBus(t *testing.T) {
 	require.NoError(t, err, "decode certificate")
 
 	_, err = server.NewServer(server.Config{
+		Port: freePort(t),
 		Certificate: server.Certificate{
 			Public:  public,
 			Private: private,
@@ -43,10 +42,11 @@ func TestEEBus(t *testing.T) {
 
 	inst, err := server.Instance()
 	require.NoError(t, err, "instance")
+	defer inst.Shutdown()
 
 	require.NotEmpty(t, inst.Ski(), "server ski")
 
-	box, err := createControlbox(t.Context(), inst.Ski(), remotePort)
+	box, err := createControlbox(t.Context(), inst.Ski(), freePort(t))
 	require.NoError(t, err, "controlbox")
 
 	eventC := make(chan api.EventType, 16)

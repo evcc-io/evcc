@@ -32,7 +32,29 @@ export type Template = {
   };
 };
 
-export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
+export type TemplateParamUsage =
+  | "vehicle"
+  | "battery"
+  | "grid"
+  | "pv"
+  | "charger"
+  | "aux"
+  | "ext"
+  | "curtailer";
+
+// mirrors util/templates/paramtype.go
+export type TemplateParamType =
+  | "String"
+  | "Bool"
+  | "Choice"
+  | "ChargeModes"
+  | "Duration"
+  | "Float"
+  | "Int"
+  | "List"
+  | "Zones"
+  | "PricePerKWh"
+  | "Device";
 
 export type TemplateParam = {
   Name: string;
@@ -40,10 +62,12 @@ export type TemplateParam = {
   Advanced: boolean;
   Deprecated: boolean;
   Default?: string | number | boolean;
-  Type?: string;
+  Type?: TemplateParamType;
   Choice?: string[];
   Service?: string;
   Usages?: TemplateParamUsage[];
+  Class?: DeviceType;
+  Usage?: string; // context the nested device modal opens with, e.g. "heating"
 };
 
 export type ParamService = {
@@ -101,8 +125,8 @@ export function handleError(e: any, msg: string) {
   alert(message);
 }
 
-export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
-  const params = template?.Params || [];
+// only displayed params: hidden ones must not end up in the stored config
+export function applyDefaultsFromTemplate(params: TemplateParam[], values: DeviceValues) {
   params.forEach((p) => {
     if (p.Type === "Bool") {
       // template defaults are strings, and configs stored before bool params

@@ -28,7 +28,7 @@ jobs:
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: depot-ubuntu-24.04-arm
     permissions:
-      contents: write
+      contents: read
       issues: write
       pull-requests: write
 

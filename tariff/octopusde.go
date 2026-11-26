@@ -19,6 +19,7 @@ import (
 var ErrAuthFailed = krakengql.ErrAuthFailed
 
 type OctopusDe struct {
+	*embed
 	log       *util.Logger
 	gqlClient *krakengql.Client
 	data      *util.Monitor[api.Rates]
@@ -49,6 +50,7 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Tariff, error) {
 // Split out to allow for testing.
 func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 	var cc struct {
+		embed         `mapstructure:",squash"`
 		Email         string
 		Password      string
 		AccountNumber string
@@ -70,6 +72,10 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 		return nil, errors.New("missing account number")
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("octopus-de").Redact(cc.Email, cc.Password)
 
 	// Create GraphQL client
@@ -79,6 +85,7 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 	}
 
 	t := &OctopusDe{
+		embed:     &cc.embed,
 		log:       log,
 		gqlClient: gqlClient,
 		data:      util.NewMonitor[api.Rates](2 * time.Hour),
@@ -112,21 +119,31 @@ func (t *OctopusDe) run(done chan error) {
 			continue
 		}
 
-		data := make(api.Rates, 0, len(rates))
-		for _, r := range rates {
-			ar := api.Rate{
-				Start: r.ValidFrom,
-				End:   r.ValidTo,
-				// Convert from cents per kWh to € per kWh (divide by 100)
-				// Use gross price (including tax) as that's what the customer pays
-				Value: r.GrossUnitRateCentsPerKwh / 100,
-			}
-			data = append(data, ar)
-		}
-
-		mergeRates(t.data, data)
+		mergeRates(t.data, t.toRates(rates))
 		once.Do(func() { close(done) })
 	}
+}
+
+// toRates converts rate periods into 15 minute api.Rates, applying configured charges, charges zones, tax and formula.
+// Periods are always split into slots since the resulting price may change within long periods (simple and
+// time-of-use tariffs). Period boundaries are expected to be slot-aligned (see computeHorizon).
+func (t *OctopusDe) toRates(periods []RatePeriod) api.Rates {
+	var data api.Rates
+	for _, r := range periods {
+		// Convert from cents per kWh to € per kWh (divide by 100)
+		// Use gross price (including tax) as that's what the customer pays
+		price := r.GrossUnitRateCentsPerKwh / 100
+
+		for start := r.ValidFrom; start.Before(r.ValidTo); start = start.Add(SlotDuration) {
+			data = append(data, api.Rate{
+				Start: start,
+				End:   start.Add(SlotDuration),
+				Value: t.totalPrice(price, start),
+			})
+		}
+	}
+
+	return data
 }
 
 // Rates implements the api.Tariff interface
@@ -248,8 +265,9 @@ func simpleRates(info krakengql.SimpleProductUnitRateInformation, horizon planni
 
 // computeHorizon returns the planning window, capped by the validity of the agreement.
 func computeHorizon(now time.Time, agreement krakengql.Agreement, planDays int) (planningHorizon, error) {
-	start := now
-	end := now.AddDate(0, 0, planDays)
+	// align the horizon with slot boundaries so that all rate periods start on a slot
+	start := now.Truncate(SlotDuration)
+	end := start.AddDate(0, 0, planDays)
 
 	// Validate agreement overlaps with planning horizon
 	if agreement.ValidFrom.After(end) || (!agreement.ValidTo.IsZero() && agreement.ValidTo.Before(start)) {

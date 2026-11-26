@@ -32,6 +32,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
     default: "tcpip"
   - name: grid_power_register
     type: int
@@ -192,7 +193,7 @@ render: |
               address: {{ .battery_set_register }} # SetActivePowerLessOrEquals (W)
               type: writemultiple
               encoding: float32
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: const
           value: 0

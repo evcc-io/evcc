@@ -135,9 +135,21 @@ func (lp *Loadpoint) selectVehicleByID(ids ...string) (api.Vehicle, string) {
 	return nil, ""
 }
 
-// setActiveVehicle assigns currently active vehicle, configures soc estimator
-// and adds an odometer task
+// getVehicleAndSocEstimator returns the active vehicle and its SoC estimator as a consistent pair
+func (lp *Loadpoint) getVehicleAndSocEstimator() (api.Vehicle, *soc.Estimator) {
+	lp.vmu.RLock()
+	defer lp.vmu.RUnlock()
+	return lp.vehicle, lp.socEstimator
+}
+
+// setActiveVehicle assigns the active vehicle, configures its SoC estimator and adds an odometer task
 func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
+	// always start a fresh estimator, also when re-assigning the same vehicle
+	var estimator *soc.Estimator
+	if v != nil && v.Capacity() > 0 && (lp.Soc.Estimate == nil || *lp.Soc.Estimate) {
+		estimator = soc.NewEstimator(lp.log, v)
+	}
+
 	lp.vmu.Lock()
 
 	prev := lp.vehicle
@@ -154,6 +166,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	}
 
 	lp.vehicle = v
+	lp.socEstimator = estimator
 	lp.vmu.Unlock()
 
 	if from != to {
@@ -169,14 +182,6 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 
 	if v != nil {
 		lp.socUpdated = time.Time{}
-
-		// resolve optional config
-		if v.Capacity() > 0 && (lp.Soc.Estimate == nil || *lp.Soc.Estimate) {
-			lp.socEstimator = soc.NewEstimator(lp.log, v)
-		} else {
-			// drop the previous vehicle's estimator
-			lp.socEstimator = nil
-		}
 
 		vs := vehicle.Settings(lp.log, v)
 		lp.publish(keys.VehicleName, vs.Name())
@@ -207,7 +212,6 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 
 		lp.progress.Reset()
 	} else {
-		lp.socEstimator = nil
 		lp.unpublishVehicleIdentity()
 	}
 

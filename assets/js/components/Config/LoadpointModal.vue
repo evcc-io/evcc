@@ -77,33 +77,32 @@
 					{{ addChargerLabel }}
 				</button>
 			</div>
-			<div v-if="charger || !isNew">
-				<FormRow
+			<FormRow
+				v-if="charger || !isNew"
+				id="loadpointParamMeter"
+				class="mb-6"
+				:label="$t('config.loadpoint.energyMeterLabel')"
+				:help="values.meter ? $t('config.loadpoint.energyMeterHelp') : undefined"
+				optional
+			>
+				<DeviceRefBox
 					v-if="values.meter"
-					id="loadpointParamMeter"
-					class="mb-6"
-					:label="$t('config.loadpoint.energyMeterLabel')"
-					:help="$t('config.loadpoint.energyMeterHelp')"
+					compact
+					:title="meterTitle"
+					:error="hasDeviceError('meter', values.meter)"
+					@edit="editMeter"
+				/>
+				<button
+					v-else
+					type="button"
+					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
+					tabindex="0"
+					@click="editMeter"
 				>
-					<DeviceRefBox
-						compact
-						:title="meterTitle"
-						:error="hasDeviceError('meter', values.meter)"
-						@edit="editMeter"
-					/>
-				</FormRow>
-				<p v-else>
-					<button
-						class="btn btn-link btn-sm text-gray px-0"
-						style="margin-top: -1rem"
-						type="button"
-						tabindex="0"
-						@click="editMeter"
-					>
-						{{ $t(`config.loadpoint.addMeter`) }}
-					</button>
-				</p>
-			</div>
+					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
+					{{ $t("config.loadpoint.addMeter") }}
+				</button>
+			</FormRow>
 
 			<div v-if="values.charger || !isNew">
 				<div class="collapsible-wrapper" :class="{ open: !isNew }">

@@ -583,15 +583,16 @@ func onChargerMessage(ch ws.Channel, data []byte) bool {
 
 		if sc != nil {
 			// throttle MeterValues to upstream; evcc still processes every frame
-			if action == "MeterValues" && sc.meterInterval > 0 {
+			if action == "MeterValues" {
 				sc.lastMeterFwdMu.Lock()
-				elapsed := time.Since(sc.lastMeterFwd)
-				if elapsed < sc.meterInterval {
-					sc.lastMeterFwdMu.Unlock()
+				skip := sc.meterInterval > 0 && time.Since(sc.lastMeterFwd) < sc.meterInterval
+				if !skip {
+					sc.lastMeterFwd = time.Now()
+				}
+				sc.lastMeterFwdMu.Unlock()
+				if skip {
 					return false // evcc handles normally; skip upstream
 				}
-				sc.lastMeterFwd = time.Now()
-				sc.lastMeterFwdMu.Unlock()
 			}
 			if relay {
 				sc.pendingChargerCallsMu.Lock()
@@ -773,7 +774,7 @@ func trackTransaction(cs *CS, chargerID string, call, result []byte) {
 			return
 		}
 		if conn := cp.connectorByID(request.ConnectorId); conn != nil {
-			conn.startTransaction(conf.TransactionId, request.IdTag)
+			conn.startTransaction(conf.TransactionId, &request)
 		}
 
 	case "StopTransaction":

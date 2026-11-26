@@ -36,8 +36,8 @@
       "action": {
         "charge": "Laadi võrgust",
         "discharge": "Laadi võrku",
-        "hold": "Takista võrku laadimist",
         "holdcharge": "Takista võrgust laadimist",
+        "holddischarge": "Takista võrku laadimist",
         "normal": "Tavaline töörežiim"
       },
       "empty": "tühi",

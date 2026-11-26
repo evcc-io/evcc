@@ -60,6 +60,24 @@ func Oauth2Config(brand, country string) *oauth2.Config {
 			Scopes:      []string{"openid", "profile"},
 		}
 
+	case "vauxhall":
+		// Vauxhall is UK only, the redirect uri must match the one registered for gb
+		if country == "" {
+			country = "gb"
+		}
+
+		return &oauth2.Config{
+			ClientID:     "122f3511-4f74-4a0c-bcda-af2f3b2e3a65",
+			ClientSecret: "N1iY3jO4jI1sF2yS6yJ3rG7xQ4kL4kK1dO3xT5uX6dF3kW8gI6",
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   "https://idpcvs.vauxhall.co.uk/am/oauth2/authorize",
+				TokenURL:  "https://idpcvs.vauxhall.co.uk/am/oauth2/access_token",
+				AuthStyle: oauth2.AuthStyleInHeader,
+			},
+			RedirectURL: fmt.Sprintf("mymvxsdk://oauth2redirect/%s", country),
+			Scopes:      []string{"openid", "profile"},
+		}
+
 	default:
 		panic("invalid brand: " + brand)
 	}

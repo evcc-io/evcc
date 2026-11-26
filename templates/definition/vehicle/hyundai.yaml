@@ -27,9 +27,14 @@ params:
     description:
       en: Region your Bluelink account is registered in
       de: Region, in der dein Bluelink-Konto registriert ist
+  - name: pin
+    help:
+      en: Bluelink PIN. Required to start and stop charging.
+      de: Bluelink-PIN. Wird zum Starten und Stoppen des Ladens benötigt.
 render: |
   type: hyundai
   region: {{ .region }}
   {{ include "base" . }}
   {{ include "language" . }}
   {{ include "features" . }}
+  pin: {{ quote .pin }}

@@ -38,16 +38,16 @@
       "energy": "Energia",
       "gridCharge": "Carica da rete",
       "gridDischarge": "scarica in rete",
-      "hold": "Scarica inibita",
       "holdCharge": "Ricarica inibita",
+      "holdDischarge": "Scarica inibita",
       "ofTotal": "di {total}",
       "power": "Potenza batteria",
-      "soc": "% batteria"
+      "soc": "Carica"
     },
     "combined": "Combinata",
     "config": {
-      "buffer": "L'energia accumulata nella batteria domestica al di sopra del valore {soc} può essere utilizzata per alimentare i punti di ricarica e ritardare lo spegnimento in modalità intelligente. Avvia automaticamente la ricarica solare {start}.",
-      "bufferNone": "L'energia della batteria domestica non viene utilizzata per i punti di ricarica. Impostare un valore inferiore a {soc} per abilitare il supporto.",
+      "buffer": "L'energia accumulata nella batteria domestica al di sopra del valore {soc} può essere utilizzata per alimentare i punti di ricarica e ritardare lo spegnimento in modalità intelligente. Avvia automaticamente la ricarica solare {start}. NB: \"Carica sempre\" ignora questa impostazione.",
+      "bufferNone": "L'energia della batteria domestica non viene utilizzata per i punti di ricarica. Impostare un valore inferiore a {soc} per abilitare la funzione in modalità ricarica intelligente. NB: \"Carica sempre\" ignora questa impostazione.",
       "bufferStart": {
         "above": "Quando la % della batteria è maggiore del {soc}",
         "full": "quando la batteria è carica",
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Carica dalla rete",
         "discharge": "Scarico in rete",
-        "hold": "Previeni scarica batteria",
         "holdcharge": "Impedisci la ricarica",
+        "holddischarge": "Previeni scarica batteria",
         "normal": "Funzionamento normale"
       },
       "empty": "vuoto",
@@ -146,11 +146,13 @@
       "template": "Produttore",
       "titleAdd": {
         "charging": "Aggiungi Caricabatterie",
-        "heating": "Aggiungi dispositivo di riscaldamento"
+        "heating": "Aggiungi dispositivo di riscaldamento",
+        "switch": "Presa commutabile"
       },
       "titleEdit": {
         "charging": "Modifica caricabatterie",
-        "heating": "Modifica dispositivo di riscaldamento"
+        "heating": "Modifica dispositivo di riscaldamento",
+        "switch": "Modifica presa commutabile"
       },
       "type": {
         "custom": {
@@ -186,13 +188,22 @@
       "titleLabel": "Titolo"
     },
     "circuits": {
-      "addMainCircuit": "Aggiungi il circuito principale",
+      "addMainCircuit": "Aggiungi il circuito di rete principale",
       "addSubCircuit": "Aggiungi sotto-circuito",
-      "chargingPointsNote": "Assegna i punti di ricarica e i dispositivi di riscaldamento a un circuito nelle rispettive impostazioni.",
+      "assignHere": "Assegna qui",
+      "assignmentFailed": "Non è stato possibile salvare l'assegnazione. Riprova.",
       "description": "Garantisce che la somma dei carichi connessi ad un circuito non superi i limiti di corrente configurati. I circuiti possono essere annidati in una struttura gerarchica.",
-      "legacyWarning": "Nuove configurazioni di circuiti disponibili! Rimuovere e salvare la configurazione qui per utilizzare il nuovo processo guidato.",
+      "destination": "Circuito {title}",
+      "dragHint": "Trascina su un circuito o tocca per selezionare.",
+      "dropAssign": "Trascina per assegnare",
+      "dropRemove": "Trascina qui per rimuovere dal circuito.",
+      "legacyWarning": "Nuova configurazione dei circuiti disponibile! Rimuovere e salvare la configurazione qui per utilizzare il nuovo processo guidato. E' necessario un riavvio al termine.",
       "meterDedicated": "Contatore",
       "meterGrid": "Rete",
+      "moveHere": "Sposta qui",
+      "notAssigned": "Non assegnato",
+      "selectAssign": "Tocca un circuito per assegnare {title}.",
+      "selectMove": "Tocca un circuito per spostare {title} oppure l'area sottostante per rimuovere l'assegnazione.",
       "title": "Gestione del carico",
       "usableMeters": "Riferimenti dei contatori utilizzabili"
     },
@@ -205,13 +216,13 @@
       "used": "già usato"
     },
     "consumer": {
-      "description": "Monitora elettrodomestici non controllabili (frigorifero, lavatrice, ecc.). Ti offre una migliore panoramica dei consumi domestici.",
+      "description": "Monitora elettrodomestici non controllabili (frigorifero, lavatrice, ecc.). Ti offre una migliore panoramica dei consumi.",
       "titleAdd": "Aggiungi contatore di consumo",
       "titleEdit": "Modifica contatore di consumo"
     },
     "control": {
       "description": "Normalmente le impostazioni di default sono adeguate. Modificale solo se sai cosa stai facendo.",
-      "descriptionInterval": "Ciclo di aggiornamento in secondi. Definisce la frequenza con cui evcc legge i dati del contatore e regola la ricarica. L'impostazione predefinita di 30 secondi è una scelta sicura. Dispositivi come veicoli, wallbox e inverter richiedono in genere diversi secondi per regolare il loro comportamento. Se i componenti reagiscono rapidamente, è possibile utilizzare valori inferiori. Si consiglia vivamente di non scendere al di sotto dei 10 secondi. Se si osserva un comportamento di controllo irregolare o valori di potenza instabili, scegliere un intervallo maggiore.",
+      "descriptionInterval": "Ciclo di aggiornamento in secondi. Definisce la frequenza con cui evcc legge i dati del contatore e regola la ricarica. L'impostazione predefinita di 30 secondi è una scelta sicura. Dispositivi come veicoli, caricatori e inverter richiedono in genere diversi secondi per regolare il loro comportamento. Se i componenti reagiscono rapidamente, è possibile utilizzare valori inferiori. Si consiglia vivamente di non scendere al di sotto dei 10 secondi. Se si osserva un comportamento di controllo irregolare o valori di potenza instabili, scegliere un intervallo maggiore.",
       "descriptionResidualPower": "Modifica la soglia di corrente per il ciclo di controllo. Se hai una batteria è consigliabile impostare un valore minimo di 100W: in questo modo la batteria riceverà una priorità rispetto all'uso della rete elettrica.",
       "labelInterval": "Intervallo di aggiornamento",
       "labelResidualPower": "Potenza residua",
@@ -231,6 +242,15 @@
       "title": "Limitazione",
       "titleAdd": "Aggiungi dispositivo limitatore",
       "titleEdit": "Modifica dispositivo limitatore"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Aggiungi caricatore",
+        "meter": "Aggiungi contatore",
+        "switch": "Aggiungi presa commutabile",
+        "tariff": "Aggiungi tariffa"
+      },
+      "noNesting": "L'annidamento è limitato a un solo livello. Si prega di scegliere un'altra opzione."
     },
     "deviceValue": {
       "activeClients": "Client attivi",
@@ -310,8 +330,16 @@
           "returnEnergy": "Scaricati"
         },
         "consumer": {
+          "chargeStatusB": "Pausa",
+          "chargeStatusC": "Riscaldamento",
           "energy": "Consumati",
           "returnEnergy": "Prodotti"
+        },
+        "continuous": {
+          "chargeStatusB": "Normale",
+          "chargeStatusC": "Potenza",
+          "dimmed": "Attenuato",
+          "enabled": "Potenziato"
         },
         "grid": {
           "energy": "Importati",
@@ -333,6 +361,7 @@
       "auxMeter": "Dispositivo smart",
       "batteryStorage": "Batteria di accumulo",
       "consumer": "Consumatore",
+      "extMeter": "Contatore aggiuntivo",
       "solarSystem": "Sistema fotovoltaico"
     },
     "editor": {
@@ -383,6 +412,7 @@
       "optional": "facoltativo"
     },
     "general": {
+      "add": "Aggiungi",
       "applyAndClose": "Applica e chiudi",
       "authPerform": "Connetti con {provider}",
       "authPerformHint": "Si aprirà in una nuova scheda. Torna qui per continuare.",
@@ -394,6 +424,7 @@
       "confirmDisable": "Vuoi disabilitare questo dispositivo? Verrà ignorato al prossimo riavvio.",
       "confirmEnable": "Vuoi abilitare di nuovo questo dispositivo?",
       "confirmSave": "Sono presenti modifiche non salvate. Salvare ora?",
+      "continue": "Continua",
       "copied": "Copiato!",
       "copy": "Copia",
       "customHelp": "Crea un dispositivo definito dall'utente utilizzando il sistema di plugin di evcc.",
@@ -531,6 +562,27 @@
       "defaultModeKeep": "mantieni com'è",
       "defaultModeLabel": "Modalità predefinita",
       "delete": "Elimina",
+      "demandPredictor": {
+        "daily": {
+          "description": "Media degli ultimi giorni. Per dispositivi con lo stesso schema ogni giorno.",
+          "label": "Media giornaliera"
+        },
+        "defaultGroup": "Dispositivo principale",
+        "description": "Come l'ottimizzatore prevede la domanda dai consumi passati.",
+        "label": "Profilo",
+        "noTempTariff": "Richiede le previsioni della temperatura.",
+        "noTempTariffLink": "Aggiungi previsione",
+        "profilesGroup": "Profili",
+        "temperature": {
+          "description": "Consumo passato a temperature esterne simili. Per il riscaldamento degli ambienti, ad esempio con pompe di calore.",
+          "label": "Temperatura"
+        },
+        "title": "Previsione della domanda",
+        "weekday": {
+          "description": "Media dello stesso giorno della settimana. Per dispositivi con programmazione settimanale, come riscaldatori per acqua o piscine.",
+          "label": "Giorno della settimana"
+        }
+      },
       "electricalSubtitle": "Se non sei sicuro, chiedi al tuo elettricista.",
       "electricalTitle": "Elettricità",
       "energyMeterHelp": "Contatore supplementare se il caricabatterie non ne possiede uno integrato.",
@@ -568,16 +620,24 @@
       "priorityLabel": "Priorità",
       "save": "Salva",
       "solarShareReset": "Rimuovi soglie",
+      "solarTitle": "Comportamento con surplus solare",
       "temperatureRangeHelp": "Intervallo di visualizzazione per la barra delle temperature. Non influisce sul controllo.",
       "temperatureRangeTitle": "Intervallo temperature",
+      "thresholdDisableDelayHelp": "Si ferma quando il surplus non è sufficiente per {delay}.",
       "thresholdDisableDelayLabel": "Ritardo di disattivazione",
       "thresholdDisableHelpInvalid": "Inserisci un valore positivo.",
       "thresholdDisableHelpPositive": "Interrompi in caso di prelievo dalla rete superiore a {power} per più di {delay}.",
       "thresholdDisableLabel": "Soglia di disattivazione (W)",
+      "thresholdEnableDelayHelp": "Si avvia quando il surplus è sufficiente per {delay}.",
       "thresholdEnableDelayLabel": "Ritardo di attivazione",
       "thresholdEnableHelpInvalid": "Inserisci un valore negativo.",
       "thresholdEnableHelpNegative": "Inizia quando {surplus} surplus è disponibile per {delay}.",
       "thresholdEnableLabel": "Soglia di attivazione (W)",
+      "thresholdsNote": {
+        "charging": "Per controllare il prelievo dalla rete durante la ricarica solare, usa il cursore {slider} nelle impostazioni del caricatore nella pagina {page}. Imposta qui i valori solo in casi particolari.",
+        "heating": "Per controllare il prelievo dalla rete durante il riscaldamento solare, usa il cursore {slider} nelle impostazioni del riscaldatore nella pagina {page}. Imposta qui i valori solo in casi particolari."
+      },
+      "thresholdsSliderDisabled": "Il cursore {slider} è attualmente disabilitato perché qui sono impostati dei valori.",
       "titleAdd": {
         "charging": "Aggiungi punto di ricarica",
         "heating": "Aggiungi dispositivo di riscaldamento",
@@ -707,10 +767,18 @@
         "grid": "Aggiungi contatore di rete",
         "pv": "Aggiungi contatore fotovoltaico"
       },
+      "reuseApply": "Usa le sue impostazioni.",
+      "reuseHint": "{device} può essere usato anche come \"{target}\".",
       "save": "Salva",
       "specific": "Integrazioni specifiche",
       "template": "Produttore",
       "titleChoice": "Cosa vuoi aggiungere?",
+      "titleExample": {
+        "aux": "Boiler smart, ecc.",
+        "battery": "Seminterrato, garage, centrale, ecc.",
+        "consumer": "Lavastoviglie, lavatrice, pompa della piscina, ecc.",
+        "pv": "Tetto a sud, tettoia, ecc."
+      },
       "titleLabel": "Titolo",
       "usage": {
         "aux": "Consumatore autoregolante",
@@ -915,6 +983,7 @@
       "noClients": "Nessun client finora. Nessuno può ancora connettersi.",
       "password": "Password",
       "passwordOnce": "Questa password viene mostrata solo una volta. Scansiona il QR code o copiala adesso. Non la vedrai di nuovo.",
+      "print": "Stampa / PDF",
       "privacy": "Abilitando questa funzione, accetti la nostra {0}.",
       "privacyLink": "informativa sulla privacy",
       "qrInstall": "Installa l'app di evcc per {ios} o {android}.",
@@ -968,6 +1037,15 @@
         "example": "Il tuo prezzo di ricarica era {price}. Hai risparmiato {amount}.",
         "label": "Valuta"
       },
+      "gridConnection": {
+        "3p3w": "3 × {voltage} V senza neutro (3P3W)",
+        "3p4w": "{voltage}/{lineVoltage} V con neutro (3P4W)",
+        "description": {
+          "3p3w": "Rete senza conduttore di neutro. Diffusa in Norvegia e in parte del Belgio.",
+          "3p4w": "Rete più comune, con conduttore di neutro."
+        },
+        "label": "Connessione alla rete"
+      },
       "siteTitle": {
         "description": "Visualizzato nella schermata principale e nella scheda del browser.",
         "label": "Titolo"
@@ -981,6 +1059,18 @@
       "descriptionToken": "In qualità di sponsor su GitGub, trovi il tuo token in {url}. Offriamo anche un token di prova per i test {trialToken}.",
       "enterYourToken": "Il tuo token Sponsor",
       "error": "Il token sponsor non è valido.",
+      "inline": {
+        "applied": "Token applicato. Grazie per il supporto al progetto!",
+        "apply": "Applica",
+        "becomeSponsor": "diventa sponsor",
+        "device": "Questo dispositivo è disponibile solo per gli sponsor.",
+        "feature": "Questa funzione è disponibile solo per gli sponsor.",
+        "learn": "Scopri di più e {becomeSponsor}.",
+        "placeholder": "Incolla il token",
+        "title": "Token sponsor richiesto",
+        "trial": "Inizia subito.",
+        "trialLink": "Ottieni un token di prova"
+      },
       "invalid": "non valido",
       "labelToken": "Token sponsor",
       "title": "Sponsorizzazione",
@@ -1075,7 +1165,8 @@
       "solar": {
         "description": "Previsione della produzione solare per il tuo impianto fotovoltaico. Visualizzata nell'interfaccia, verrà utilizzata in futuro per gli algoritmi di ottimizzazione.",
         "titleAdd": "Aggiungere la previsione solare",
-        "titleEdit": "Modificare la previsione solare"
+        "titleEdit": "Modificare la previsione solare",
+        "titleExample": "Tetto a sud, tettoia, ecc."
       },
       "temperature": {
         "description": "Previsione della temperatura esterna per la tua località. Visualizzata nell'interfaccia e usata per stimare il fabbisogno di riscaldamento.",
@@ -1085,6 +1176,7 @@
       "template": "Fornitore",
       "title": "Tariffe e previsioni",
       "titleChoice": "Cosa vuoi aggiungere?",
+      "titleSub": "Sottotariffa",
       "type": {
         "co2": "Intensità di CO2",
         "feedIn": "Prezzo immissione in rete",
@@ -1165,16 +1257,29 @@
         "energy": "caricati",
         "returnEnergy": "scaricati"
       },
+      "consumer": {
+        "energy": "Consumati"
+      },
       "grid": {
         "energy": "Prelievo",
         "returnEnergy": "Immissione"
+      },
+      "heating": {
+        "energy": "Consumati"
+      },
+      "loadpoint": {
+        "energy": "Caricati"
       },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (inversa)"
       }
     },
-    "empty": "Nessun dato sull'energia disponibile per questo periodo.",
+    "empty": {
+      "description": "Nessun dato per questo periodo.",
+      "descriptionCurrent": "Ancora nessun dato. I valori compaiono una volta acquisita la prima misurazione.",
+      "showCurrent": "Mostra il periodo attuale"
+    },
     "flow": {
       "battery": "Batteria",
       "batteryCharge": "Carica della batteria",
@@ -1224,6 +1329,7 @@
     },
     "socTemp": {
       "charged": "caricati",
+      "power": "Potenza",
       "soc": "carica",
       "temperature": "temperatura",
       "used": "consumati"
@@ -1246,12 +1352,15 @@
       "co2Saved": "CO₂ risparmiata",
       "co2SavedTooltip": "Rispetto al prelievo dalla rete dei {energy} consumati.",
       "configure": "Configura ora",
+      "energy": "Energia",
+      "fromGrid": "{value} dalla rete",
       "noCo2": "Nessun dato CO₂.",
       "noPrice": "Nessun dato sui prezzi.",
       "savings": "Risparmio",
       "savingsTooltip": "Rispetto all'acquisto dalla rete dei {energy} consumati.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Riepilogo",
     "title": "Energia"
   },
   "footer": {
@@ -1363,6 +1472,7 @@
     "price": {
       "average": "Media",
       "constant": "Prezzo",
+      "estimate": "stima",
       "lowestHour": "Ora più economica",
       "range": "Intervallo"
     },
@@ -1394,6 +1504,7 @@
     "cancel": "Annulla",
     "download": "Download",
     "error": "Errore",
+    "loading": "Caricamento",
     "none": "nessuno",
     "note": "Nota:",
     "warning": "Avviso"
@@ -1544,7 +1655,8 @@
         "continuousCo2Description": "Sceglie la serie continua di fasce più pulita.",
         "continuousPriceDescription": "Sceglie la serie continua di fasce più economica.",
         "disabledDescription": "Richiede una tariffa dinamica o una previsione di CO₂.",
-        "label": "Ottimizzazione"
+        "label": "Ottimizzazione",
+        "optimizerDescription": "L'{optimizer} seleziona gli slot più economici. Potrebbe comportare avvii e arresti multipli."
       },
       "planNumber": "Piano {number}",
       "precondition": {
@@ -1561,7 +1673,8 @@
       "repeatingPlans": "Piani ricorrenti",
       "selectAll": "Seleziona tutti",
       "strategy": {
-        "label": "Strategia"
+        "label": "Strategia",
+        "optimizerHint": "L'{optimizer} non considera ancora l'impostazione di ottimizzazione e sceglie sempre gli slot più economici. Limita il controllo automatico a “Batteria domestica” se ne hai bisogno."
       },
       "time": "Ora",
       "title": "Piano",
@@ -1587,6 +1700,7 @@
       "forecast": "Previsioni",
       "forecastTooltip": "previsioni: produzione solare rimanente per oggi",
       "gridImport": "Uso della rete",
+      "heaters": "Riscaldatore | Riscaldatori",
       "homePower": "Consumo",
       "loadpoints": "Caricabatterie| Caricabatterie | {count} caricabatterie",
       "loadpointsLimit": "{limit} limite",
@@ -1615,18 +1729,22 @@
       "avgPrice": "⌀ Prezzo",
       "charged": "Caricato",
       "co2": "⌀ CO₂",
+      "consumed": "Consumati",
       "duration": "Durata",
       "emission": "Emissione",
       "fallbackName": "Punto di ricarica",
       "finished": "Ora di fine",
       "last24hEnergy": "Ultime 24h",
+      "last24hShort": "24 ore",
       "last7dEnergy": "Ultimi 7 giorni",
+      "last7dShort": "7 gg",
       "phasesMismatch": "Più fasi attive di quelle configurate. Controlla la configurazione delle fasi.",
       "power": "Potenza",
       "price": "Costo",
       "remaining": "Rimanenti",
       "remoteDisabledHard": "{source}: Disabilitato",
       "remoteDisabledSoft": "{source}: Ricarica FV adattiva disabilitata",
+      "session": "Sessione",
       "solar": "Solare",
       "todayEnergy": "Oggi"
     },
@@ -1701,6 +1819,11 @@
     "provider": {
       "login": "accesso",
       "logout": "log out"
+    },
+    "setup": {
+      "description": "Aggiungi i tuoi dispositivi per vedere il flusso di energia e iniziare a caricare con l'energia solare.",
+      "start": "Inizia",
+      "title": "Benvenuto!"
     },
     "startConfiguration": "Iniziamo la configurazione",
     "targetCharge": {
@@ -1827,6 +1950,76 @@
     "restartNeeded": "Necessario per applicare le modifiche.",
     "restarting": "I server ritorneranno presto.",
     "starting": "Avvio del server..."
+  },
+  "onboarding": {
+    "another": "Aggiungine un altro",
+    "back": "Indietro",
+    "battery": {
+      "add": "Aggiungi batteria domestica",
+      "description": "Aggiungi la tua batteria in modo che la ricarica ne tenga conto e tu possa vedere cosa fa.",
+      "none": "Nessuna batteria domestica",
+      "title": "Hai una batteria domestica?"
+    },
+    "checklist": {
+      "dismiss": "Chiudi",
+      "legacyTariffs": "La configurazione delle tariffe in uso è obsoleta.",
+      "progress": "{done} di {total} completato",
+      "title": "Completa la configurazione"
+    },
+    "control": {
+      "description": "Inizia con il primo. Puoi aggiungerne altri più avanti nella pagina di configurazione.",
+      "none": "Ancora nulla",
+      "title": "Cosa vuoi controllare?"
+    },
+    "done": {
+      "close": "Vai alla configurazione",
+      "description": "Il riavvio applica la configurazione. Dopo, esplora le opzioni. Veicoli, tariffe ed altro possono essere aggiunti in qualunque momento.",
+      "restart": "Riavvia",
+      "title": "Sei pronto"
+    },
+    "grid": {
+      "add": "Aggiungi contatore di rete",
+      "confirm": "Il contatore di rete è la base per la ricarica con il surplus di produzione e le statistiche sull'energia. Si raccomanda di aggiungerne uno.",
+      "confirmNone": "Continua senza",
+      "description": "Misura l'importazione e l'immissione in rete al punto di allaccio. Rende precisa la ricarica con il surplus di produzione.",
+      "none": "Nessun contatore di rete",
+      "title": "Hai un contatore di rete?"
+    },
+    "item": {
+      "battery": "Batteria domestica",
+      "co2": "Previsioni CO₂",
+      "consumer": "Consumatore",
+      "grid": "Contatore di rete",
+      "gridExport": "Tariffa di immissione in rete",
+      "gridImport": "Tariffa di importazione dalla rete",
+      "heater": "Dispositivo di riscaldamento",
+      "loadpoint": "Punto di ricarica",
+      "pv": "Impianto fotovoltaico",
+      "solar": "Previsioni solari"
+    },
+    "password": {
+      "description": "Protegge i parametri di configurazione da modifiche non autorizzate. Ricordala, non c'è un modo facile per resettarla.",
+      "disabled": "L'autenticazione è disabilitata ({flag}). Chiunque acceda alla rete può cambiare la configurazione, leggere le credenziali memorizzate ed eseguire script. Proteggi l'accesso con altri mezzi.",
+      "title": "Imposta password amministratore"
+    },
+    "pv": {
+      "add": "Aggiungi impianto fotovoltaico",
+      "description": "Misura la produzione del fotovoltaico. E' necessario per il calcolo della percentuale solare e per la ricarica con il surplus di produzione.",
+      "none": "Nessun impianto fotovoltaico",
+      "title": "Hai un impianto fotovoltaico?"
+    },
+    "site": {
+      "currencyHint": "es. {price}, {amount}",
+      "defaultTitle": "Casa",
+      "description": "Informazioni di base sulla tua casa. Puoi modificarle in qualunque momento.",
+      "title": "Il tuo sito"
+    },
+    "skip": "Salta la configurazione",
+    "step": "Passaggio {step} di {total}",
+    "welcome": {
+      "description": "Imposta le parti più importanti della tua casa per iniziare la ricarica intelligente.",
+      "start": "Iniziamo"
+    }
   },
   "passwordModal": {
     "description": "Imposta una password per proteggere le impostazioni di configurazione. È comunque possibile utilizzare la schermata principale senza effettuare il login.",

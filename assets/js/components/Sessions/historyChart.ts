@@ -32,14 +32,18 @@ export default defineComponent({
     year(): number {
       return this.firstDay?.getFullYear() || 0;
     },
-    // bucket index range [from, to] for the selected period
+    hasSessions(): boolean {
+      return this.sessions.length > 0;
+    },
+    // bucket index range [from, to] for the selected period. A year has its months
+    // without any session, the other periods take their range from the sessions
     bucketRange(): [number, number] | null {
+      if (this.period === PERIODS.YEAR) {
+        return [1, 12];
+      }
       if (!this.firstDay || !this.lastDay) return null;
       if (this.period === PERIODS.TOTAL) {
         return [this.firstDay.getFullYear(), this.lastDay.getFullYear()];
-      }
-      if (this.period === PERIODS.YEAR) {
-        return [1, 12];
       }
       return [1, new Date(this.lastDay.getFullYear(), this.lastDay.getMonth() + 1, 0).getDate()];
     },

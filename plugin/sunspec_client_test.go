@@ -2,10 +2,12 @@ package plugin
 
 import (
 	"errors"
+	"net"
 	"testing"
 
 	"github.com/andig/gosunspec/memory"
 	"github.com/andig/gosunspec/models/model704"
+	"github.com/cenkalti/backoff/v4"
 	gridx "github.com/grid-x/modbus"
 	"github.com/stretchr/testify/require"
 	sunsdev "github.com/volkszaehler/mbmd/meters/sunspec"
@@ -159,4 +161,49 @@ func TestSunspecCachedClientSharedBlock(t *testing.T) {
 	_, _, err = dev.QueryPointAny(c, model704.ModelID, 0, model704.WMaxLimPctEna)
 	require.NoError(t, err)
 	require.Greater(t, sim.reads, reads, "read after write must not serve stale data")
+}
+
+// flakyClient fails the first failReads reads with a non-network error, like a
+// device answering with stale responses
+type flakyClient struct {
+	*slabClient
+	reads, failReads int
+}
+
+func (f *flakyClient) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
+	f.reads++
+	if f.reads <= f.failReads {
+		return nil, errors.New("modbus: response transaction id '3' does not match request '1'")
+	}
+	return f.slabClient.ReadHoldingRegisters(address, quantity)
+}
+
+func TestSunspecDeviceTreeRetry(t *testing.T) {
+	slab, err := memory.NewSlabBuilder().AddModel(model704.ModelID).Build()
+	require.NoError(t, err)
+
+	// first detection fails, retry succeeds
+	sim := &flakyClient{slabClient: &slabClient{slab: slab}, failReads: 1}
+	devices, err := sunspecDeviceTree(sim, backoff.WithMaxRetries(&backoff.ZeroBackOff{}, 3))
+	require.NoError(t, err)
+	require.NotEmpty(t, devices)
+
+	// connection errors are not retried
+	refused := &net.OpError{Op: "dial", Err: errors.New("connect: connection refused")}
+	cnt := &errClient{err: refused}
+	_, err = sunspecDeviceTree(cnt, backoff.WithMaxRetries(&backoff.ZeroBackOff{}, 3))
+	require.ErrorIs(t, err, refused)
+	require.Equal(t, 1, cnt.reads)
+}
+
+// errClient fails every read with err
+type errClient struct {
+	gridx.Client
+	err   error
+	reads int
+}
+
+func (c *errClient) ReadHoldingRegisters(_, _ uint16) ([]byte, error) {
+	c.reads++
+	return nil, c.err
 }

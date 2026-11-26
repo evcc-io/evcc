@@ -200,7 +200,7 @@ func (wb *SgReady) Dim(dim bool) error {
 		return err
 	}
 
-	wb.mode = Dim
+	wb.mode = mode
 
 	return nil
 }

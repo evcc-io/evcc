@@ -14,10 +14,12 @@ caveats:
       de: Phasenumschaltung synchronisiert sich nicht immer zuverlässig.
       en: Phase switching does not always synchronise reliably.
 discovery:
+  mdns: ["_alfen._tcp"]
   mac: ["549A119"]
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
 render: |
   type: alfen
   {{- include "modbus" . }}

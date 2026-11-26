@@ -67,7 +67,7 @@ render: |
               address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
               type: writemultiple
               decode: uint32
-      - case: 2 # hold
+      - case: 2 # holddischarge
         set:
           source: sequence
           set:

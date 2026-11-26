@@ -30,7 +30,8 @@ var LogAreaPadding = 6
 type Logger struct {
 	*jww.Notepad
 	*Redactor
-	lp int
+	area string
+	lp   int
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
@@ -66,6 +67,7 @@ func newLogger(area string, lp int) *Logger {
 	logger := &Logger{
 		Notepad:  notepad,
 		Redactor: redactor,
+		area:     area,
 		lp:       lp,
 	}
 
@@ -122,6 +124,7 @@ var uiChan chan<- Param
 type uiWriter struct {
 	re    *regexp.Regexp
 	level string
+	area  string
 	lp    int
 }
 
@@ -132,10 +135,12 @@ func (w *uiWriter) Write(p []byte) (n int, err error) {
 	val := struct {
 		Message   string `json:"message"`
 		Level     string `json:"level"`
+		Area      string `json:"area"`
 		Loadpoint int    `json:"lp,omitempty"`
 	}{
 		Message:   strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
 		Level:     w.level,
+		Area:      w.area,
 		Loadpoint: w.lp,
 	}
 
@@ -166,15 +171,16 @@ func CaptureLogs(c chan<- Param) {
 }
 
 func captureLogger(l *Logger) {
-	captureLogLevel("warn", l.lp, l.Notepad.WARN)
-	captureLogLevel("error", l.lp, l.Notepad.ERROR)
-	captureLogLevel("error", l.lp, l.Notepad.FATAL)
+	captureLogLevel("warn", l.area, l.lp, l.Notepad.WARN)
+	captureLogLevel("error", l.area, l.lp, l.Notepad.ERROR)
+	captureLogLevel("error", l.area, l.lp, l.Notepad.FATAL)
 }
 
-func captureLogLevel(level string, lp int, l *log.Logger) {
-	re := regexp.MustCompile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
+func captureLogLevel(level, area string, lp int, l *log.Logger) {
+	re := regexp.MustCompile(`^\[[^\]]+\] \w+ .{19} `)
 
 	ui := uiWriter{
+		area:  area,
 		lp:    lp,
 		re:    re,
 		level: level,

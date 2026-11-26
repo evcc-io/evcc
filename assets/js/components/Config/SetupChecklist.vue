@@ -8,12 +8,7 @@
 				<div class="d-flex justify-content-between align-items-baseline gap-3 mb-2">
 					<h5 class="mb-0">{{ $t("onboarding.checklist.title") }}</h5>
 					<span class="small evcc-gray text-nowrap">
-						{{
-							$t("onboarding.checklist.progress", {
-								done: doneCount,
-								total: rows.length,
-							})
-						}}
+						{{ $t("onboarding.checklist.suggestions", openRows.length) }}
 					</span>
 				</div>
 				<div class="progress mb-3" role="progressbar" :aria-valuenow="progress">
@@ -34,41 +29,64 @@
 						/>
 						<span
 							class="flex-grow-1 text-truncate"
-							:class="{ 'evcc-gray text-decoration-line-through': row.done }"
+							:class="{
+								'evcc-gray text-decoration-line-through': row.state === 'dismissed',
+							}"
 						>
 							{{ $t(`onboarding.item.${row.item}`) }}
 						</span>
-						<CheckIcon v-if="row.done" class="text-primary flex-shrink-0" />
-						<template v-else>
-							<!-- disabled buttons get no hover events, the wrapper carries the hint -->
-							<span
-								v-tooltip="
-									row.blocked
-										? $t('onboarding.checklist.legacyTariffs')
-										: undefined
-								"
-							>
-								<button
-									type="button"
-									class="btn btn-sm btn-outline-primary btn-pill px-3"
-									:disabled="row.blocked"
-									@click="add(row.item)"
-								>
-									{{ $t("config.general.add") }}
-								</button>
-							</span>
+						<span
+							v-if="row.state === 'configured'"
+							class="d-flex align-items-center gap-1 small evcc-gray flex-shrink-0"
+						>
+							<CheckIcon class="text-primary" />
+							{{ $t("config.general.configured") }}
+						</span>
+						<!-- disabled buttons get no hover events, the wrapper carries the hint -->
+						<span
+							v-if="row.state === 'open'"
+							v-tooltip="
+								row.blocked ? $t('onboarding.checklist.legacyTariffs') : undefined
+							"
+						>
 							<button
 								type="button"
-								class="btn btn-sm btn-link evcc-gray p-0"
-								:aria-label="$t('onboarding.checklist.dismiss')"
-								:title="$t('onboarding.checklist.dismiss')"
-								@click="dismiss(row.item)"
+								class="btn btn-sm btn-outline-primary btn-pill px-3"
+								:disabled="row.blocked"
+								@click="add(row.item)"
 							>
-								<shopicon-regular-close size="s"></shopicon-regular-close>
+								{{ $t("config.general.add") }}
 							</button>
-						</template>
+						</span>
+						<button
+							v-if="row.state !== 'configured'"
+							type="button"
+							class="btn btn-sm btn-link evcc-gray text-decoration-none p-0 flex-shrink-0"
+							:aria-pressed="row.state === 'dismissed'"
+							:aria-label="dismissLabel(row)"
+							@click="toggle(row)"
+						>
+							<!-- narrow screens: icon, the add button needs the room -->
+							<span :class="{ 'd-none d-sm-inline': row.state === 'open' }">
+								{{ dismissLabel(row) }}
+							</span>
+							<shopicon-regular-close
+								v-if="row.state === 'open'"
+								size="s"
+								class="d-sm-none"
+							></shopicon-regular-close>
+						</button>
 					</li>
 				</ul>
+				<div class="d-flex justify-content-end pt-2">
+					<button
+						type="button"
+						class="btn btn-sm btn-link evcc-gray text-decoration-none p-0"
+						@click="dismissAll"
+					>
+						{{ $t("config.general.dismissAll") }}
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -80,7 +98,7 @@ import CheckIcon from "../MaterialIcon/Check.vue";
 import { defineComponent, type PropType } from "vue";
 import type { OnboardingItem } from "@/types/evcc";
 import { openModal } from "@/configModal";
-import { dismiss, ONBOARDING_ITEMS } from "@/onboarding";
+import { dismiss, undismiss, ONBOARDING_ITEMS } from "@/onboarding";
 import { ONBOARDING_ICONS } from "./Onboarding/icons";
 
 const METER_ITEMS = ["battery", "pv", "grid", "consumer"];
@@ -89,6 +107,12 @@ const TARIFF_TYPES: Partial<Record<OnboardingItem, string>> = {
 	gridExport: "feedIn",
 };
 const TARIFF_ITEMS: OnboardingItem[] = ["gridImport", "gridExport", "co2", "solar"];
+
+interface Row {
+	item: OnboardingItem;
+	state: "configured" | "dismissed" | "open";
+	blocked: boolean;
+}
 
 // rows stay once done (configured or dismissed), the card collapses when nothing is left
 export default defineComponent({
@@ -103,33 +127,41 @@ export default defineComponent({
 		return { ICONS: ONBOARDING_ICONS };
 	},
 	computed: {
-		rows() {
-			// charging point and heater complement each other
-			const control = !!(this.configured["loadpoint"] || this.configured["heater"]);
-			return ONBOARDING_ITEMS.map((item) => ({
-				item,
-				done:
-					!!this.configured[item] ||
-					this.dismissed.includes(item) ||
-					((item === "loadpoint" || item === "heater") && control),
-				blocked: this.legacyTariffs && TARIFF_ITEMS.includes(item),
-			}));
+		rows(): Row[] {
+			return ONBOARDING_ITEMS.map((item) => {
+				let state: Row["state"] = "open";
+				if (this.configured[item]) state = "configured";
+				else if (this.dismissed.includes(item)) state = "dismissed";
+				return {
+					item,
+					state,
+					blocked: this.legacyTariffs && TARIFF_ITEMS.includes(item),
+				};
+			});
+		},
+		openRows(): Row[] {
+			return this.rows.filter((r) => r.state === "open");
 		},
 		visible() {
-			return this.rows.some((r) => !r.done);
+			return this.openRows.length > 0;
 		},
 		columnRows() {
 			return Math.ceil(this.rows.length / 2);
 		},
-		doneCount() {
-			return this.rows.filter((r) => r.done).length;
-		},
 		progress() {
-			return Math.round((this.doneCount / this.rows.length) * 100);
+			return Math.round(((this.rows.length - this.openRows.length) / this.rows.length) * 100);
 		},
 	},
 	methods: {
-		dismiss,
+		dismissLabel(row: Row) {
+			return this.$t(`config.general.${row.state === "dismissed" ? "dismissed" : "dismiss"}`);
+		},
+		toggle(row: Row) {
+			return row.state === "dismissed" ? undismiss(row.item) : dismiss(row.item);
+		},
+		dismissAll() {
+			return dismiss(...this.openRows.map((r) => r.item));
+		},
 		add(item: OnboardingItem) {
 			if (METER_ITEMS.includes(item)) {
 				openModal("meter", { type: item });

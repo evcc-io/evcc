@@ -51,7 +51,7 @@ power: # current power
 #limitsoc: # set battery charge target in % (for battery)
 #  source: js
 #  script: console.log(limitsoc)
-#batterymode: # set charging mode directly (1: normal, 2: hold, 3: charge) (for battery)
+#batterymode: # set charging mode directly (1: normal, 2: holddischarge, 3: charge) (for battery)
 #  source: js
 #  script: console.log(batterymode)
 #curtail: # set feed-in limit in % (0..100, 100 = uncurtailed)

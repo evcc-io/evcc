@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -47,4 +48,45 @@ func TestNewFromConfigRejectsShortSlots(t *testing.T) {
 
 	_, err = NewFromConfig(context.TODO(), "test-15m", nil)
 	require.NoError(t, err)
+}
+
+func TestNewFromConfigWrapsMixedSlots(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration)
+
+	// day-ahead 15m slots followed by hourly forecast
+	rr := append(makeRates(now, SlotDuration, 4, 0), makeRates(now.Add(time.Hour), time.Hour, 2, 0)...)
+	registry.Add("test-mixed", func(map[string]any) (api.Tariff, error) {
+		return &testTariff{rates: rr, typ: api.TariffTypePriceForecast}, nil
+	})
+
+	tf, err := NewFromConfig(context.TODO(), "test-mixed", nil)
+	require.NoError(t, err)
+
+	res, err := tf.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 12)
+	assert.Equal(t, now.Add(3*time.Hour), res[len(res)-1].End)
+}
+
+func TestCustomForecastKeepsEstimate(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration).UTC()
+	slot := func(i int, estimate string) string {
+		return fmt.Sprintf(`{"start":%q,"end":%q,"value":0.2%s}`,
+			now.Add(time.Duration(i)*SlotDuration).Format(time.RFC3339),
+			now.Add(time.Duration(i+1)*SlotDuration).Format(time.RFC3339), estimate)
+	}
+
+	tf, err := NewFromConfig(context.TODO(), api.Custom, map[string]any{
+		"forecast": map[string]any{
+			"source": "const",
+			"value":  "[" + slot(0, "") + "," + slot(1, `,"estimate":true`) + "]",
+		},
+	})
+	require.NoError(t, err)
+
+	res, err := tf.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	assert.False(t, res[0].Estimate)
+	assert.True(t, res[1].Estimate)
 }

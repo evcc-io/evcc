@@ -745,6 +745,13 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 		// without load management scaling up cannot overload anything- no delay
 		{desc: "no circuit, charging at 1p", activePhases: 1, phasesConfigured: 0, status: api.StatusC, chargePower: 3680, expectedPhases: 3, noCircuit: true, phaseTimerRunning: true},
 
+		// unknown phases after restart must not prevent switching
+		{desc: "unknown phases, high limit", phasesConfigured: 0, activePhases: 0, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 3},
+		{desc: "unknown phases, low limit", phasesConfigured: 0, activePhases: 0, status: api.StatusB, chargePower: 0, availableCircuitPower: 3680, expectedPhases: 1},
+		// measured phases substitute the unknown enabled phase count, scale up remains delayed
+		{desc: "unknown phases, charging 1p measured, high limit", phasesConfigured: 0, activePhases: 0, measuredPhases: 1, status: api.StatusC, chargePower: 3680, availableCircuitPower: 22080, expectedPhases: 3},
+		{desc: "unknown phases, charging 2p measured, low limit", phasesConfigured: 0, activePhases: 0, measuredPhases: 2, status: api.StatusC, chargePower: 3680, availableCircuitPower: 3680, expectedPhases: 1},
+
 		{desc: "fixed 1p, 1p active", activePhases: 1, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
 		{desc: "fixed 1p, 3p active", activePhases: 3, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
 
@@ -834,13 +841,14 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 			require.NoError(t, err)
 
 			// handle scale phases up delay
-			if !tc.noCircuit && tc.activePhases == 1 && tc.expectedPhases == 3 && tc.status == api.StatusC {
-				require.Equal(t, 1, lp.phases, "should not scale up immediately while charging")
+			at1p := tc.activePhases == 1 || tc.activePhases == 0 && tc.measuredPhases == 1
+			if !tc.noCircuit && at1p && tc.expectedPhases == 3 && tc.status == api.StatusC {
+				require.Equal(t, tc.activePhases, lp.phases, "should not scale up immediately while charging")
 
 				clck.Add(lp.Enable.Delay - time.Second)
 				err = lp.fastCharging()
 				require.NoError(t, err)
-				require.Equal(t, 1, lp.phases, "should not scale up before delay elapsed")
+				require.Equal(t, tc.activePhases, lp.phases, "should not scale up before delay elapsed")
 
 				clck.Add(time.Second)
 				err = lp.fastCharging()

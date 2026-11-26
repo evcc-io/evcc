@@ -10,6 +10,7 @@ params:
     choice: ["battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
+    id: 1
   - name: maxchargerate
   - preset: battery-params
 render: |
@@ -55,7 +56,7 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 124:0:OutWRte
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

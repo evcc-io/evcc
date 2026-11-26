@@ -39,7 +39,6 @@ jobs:
     uses: ./.github/workflows/default.yml
     permissions:
       contents: read
-      actions: write
 
   docker:
     needs:
@@ -49,7 +48,10 @@ jobs:
       contents: read
       actions: read
       id-token: write # depot OIDC
-    secrets: inherit
+    secrets:
+      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
+      DEPOT_PROJECT_ID: ${{ secrets.DEPOT_PROJECT_ID }}
 
   hassio:
     name: Hassio Addon :nightly
@@ -91,7 +93,8 @@ jobs:
     with:
       addon_path: evcc-nightly
       include_unreleased: true
-    secrets: inherit
+    secrets:
+      HASSIO_DEPLOY_TOKEN: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
 
   apt:
     name: Publish APT nightly
@@ -125,14 +128,14 @@ jobs:
           key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
+        uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7
         with:
-          version: '~> v2'
+          version: v2.20.3
           args: --snapshot -f .goreleaser-nightly.yml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: 3.12
 

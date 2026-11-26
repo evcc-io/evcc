@@ -127,7 +127,11 @@ type batteryPowerLimits struct {
 
 // Decorator returns an api.BatteryPowerLimiter decorator
 func (m *batteryPowerLimits) Decorator() func() (float64, float64, error) {
+	if m.MaxChargePower == 0 && m.MaxDischargePower == 0 {
+		return nil
+	}
 	if m.MaxChargePower == 0 || m.MaxDischargePower == 0 {
+		warnPartialPowerLimits(context.Background())
 		return nil
 	}
 	return func() (float64, float64, error) {
@@ -153,10 +157,19 @@ func (m *batteryPowerLimitsCtx) Decorator(ctx context.Context) (func() (float64,
 	if err != nil {
 		return nil, err
 	}
+	if charge == nil && discharge == nil {
+		return nil, nil
+	}
 	if charge == nil || discharge == nil {
+		warnPartialPowerLimits(ctx)
 		return nil, nil
 	}
 	return floatPair(charge, discharge), nil
+}
+
+// warnPartialPowerLimits warns that a single power limit is ignored without the other
+func warnPartialPowerLimits(ctx context.Context) {
+	util.ContextLoggerWithDefault(ctx, util.NewLogger("battery")).WARN.Println("maxchargepower and maxdischargepower must both be configured, ignoring power limit")
 }
 
 type batterySocLimits struct {
@@ -177,7 +190,7 @@ func (m *batterySocLimits) Decorator() func() (float64, float64, error) {
 }
 
 // batteryModesSocLimit are the modes implementable via soc limit
-var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge)
+var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge)
 
 // batteryModes converts the keys the battery mode setter switches on into modes.
 // Keys that are not a battery mode are ignored.
@@ -222,7 +235,7 @@ func (m *batterySocLimits) LimitController(socG func() (float64, error), limitSo
 		case api.BatteryNormal:
 			return limitSocS(m.MinSoc)
 
-		case api.BatteryHold:
+		case api.BatteryHoldDischarge:
 			soc, err := socG()
 			if err != nil {
 				return err
@@ -285,7 +298,7 @@ func (m *batterySocLimitsCtx) LimitController(ctx context.Context, socG func() (
 			}
 			return limitSocS(minSoc)
 
-		case api.BatteryHold:
+		case api.BatteryHoldDischarge:
 			soc, err := socG()
 			if err != nil {
 				return err

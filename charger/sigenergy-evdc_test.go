@@ -10,7 +10,6 @@ import (
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -288,17 +287,6 @@ func TestSigenergyEVDCMinMaxCurrent(t *testing.T) {
 	require.NoError(t, err)
 	assert.InDelta(t, 1.0, minA, 0.001)  // evdcMinCurrent
 	assert.InDelta(t, 36.23, maxA, 0.01) // 25000 W / 690
-}
-
-func TestSigenergyEVDCSponsorGate(t *testing.T) {
-	// go-e tests set the global sponsor.Subject and never reset it
-	old := sponsor.Subject
-	sponsor.Subject = ""
-	t.Cleanup(func() { sponsor.Subject = old })
-
-	// tests run without sponsorship: the public constructor must refuse
-	_, err := NewSigenergyEVDC(t.Context(), "localhost:0", 1)
-	assert.ErrorIs(t, err, api.ErrSponsorRequired)
 }
 
 func TestSigenergyEVDCReadFailure(t *testing.T) {

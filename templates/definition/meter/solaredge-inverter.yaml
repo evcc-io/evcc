@@ -147,22 +147,15 @@ render: |
             type: writesingle
             encoding: uint16
   curtailed:
-    source: go
-    in:
-      - name: limit
-        type: int
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 61441 # Active Power Limit (%)
-            type: holding
-            decode: uint16
-    script: |
-      percent := int(limit)
-      if percent > 100 {
-        percent = 100
-      }
-      percent
+    source: calc
+    min:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 61441 # Active Power Limit (%)
+          type: holding
+          decode: uint16
+      - source: const
+        value: 100
   {{- include "sunspec-maxacpower" . }}
   {{- end }}

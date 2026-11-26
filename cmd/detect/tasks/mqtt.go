@@ -1,12 +1,16 @@
 package tasks
 
 import (
+	"context"
 	"errors"
 	"net"
+	"net/url"
 	"strconv"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
+	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -39,37 +43,42 @@ type MqttHandler struct {
 func (h *MqttHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	addr := net.JoinHostPort(in.IP, strconv.Itoa(h.Port))
 
-	opt := mqtt.NewClientOptions()
-	opt.AddBroker(addr)
-	opt.SetConnectTimeout(timeout)
+	recv := make(chan bool, 1)
+	ctx := context.Background()
 
-	client := mqtt.NewClient(opt)
+	client, err := mqtt.Connect(ctx, autopaho.ClientConfig{
+		ServerUrls:                    []*url.URL{{Scheme: "mqtt", Host: addr}},
+		CleanStartOnInitialConnection: true,
+		ConnectTimeout:                timeout,
+		ClientConfig: paho.ClientConfig{
+			PacketTimeout: timeout,
+			OnPublishReceived: mqtt.OnPublish(func(*paho.Publish) {
+				select {
+				case recv <- true:
+				default:
+				}
+			}),
+		},
+	}, timeout)
+	if err != nil {
+		return nil
+	}
+	defer func() { _ = client.Disconnect(ctx) }()
 
-	var ok bool
-	token := client.Connect()
-	if token.Wait() {
-		ok = token.Error() == nil
+	if h.Topic == "" {
+		return nil
 	}
 
-	if ok && h.Topic != "" {
-		recv := make(chan bool, 1)
-		_ = client.Subscribe(h.Topic, 1, func(mqtt.Client, mqtt.Message) {
-			recv <- true
-		})
+	_, _ = client.Subscribe(ctx, &paho.Subscribe{
+		Subscriptions: []paho.SubscribeOptions{{Topic: h.Topic, QoS: 1}},
+	})
 
-		timer := time.NewTimer(timeout)
-
-		for {
-			select {
-			case <-recv:
-				out := in
-				out.Topic = h.Topic
-				return []ResultDetails{out}
-			case <-timer.C:
-				return nil
-			}
-		}
+	select {
+	case <-recv:
+		out := in
+		out.Topic = h.Topic
+		return []ResultDetails{out}
+	case <-time.After(timeout):
+		return nil
 	}
-
-	return nil
 }

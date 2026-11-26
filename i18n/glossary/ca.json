@@ -76,5 +76,6 @@
     "vehicle": "vehicle",
     "vehicleLimit": "límit del vehicle",
     "vehicleRange": "autonomia",
-    "withdrawal": "extracció"
+    "withdrawal": "extracció",
+    "consumed": "Energia d'un dispositiu integrat, com ara un escalfador, utilitzat durant una sessió o un període."
 }

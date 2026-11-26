@@ -2,9 +2,11 @@ package server
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
+	"html/template"
 	"io"
 	"io/fs"
 	"net/http"
@@ -12,7 +14,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -89,7 +90,9 @@ func globalsJsHandler(custom Customization) http.HandlerFunc {
 	}
 }
 
-func indexHandler() http.HandlerFunc {
+func indexHandler(custom Customization) http.HandlerFunc {
+	name := cmp.Or(custom.Brand, "evcc")
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
@@ -113,9 +116,42 @@ func indexHandler() http.HandlerFunc {
 		if err := t.Execute(w, map[string]any{
 			"Version":     util.Version,
 			"DefaultLang": defaultLang,
+			"Name":        name,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
+	}
+}
+
+func manifestHandler(custom Customization) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b, err := fs.ReadFile(assets.Web, "meta/site.webmanifest")
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		var manifest map[string]any
+		if err := json.Unmarshal(b, &manifest); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if custom.Brand != "" {
+			manifest["name"] = custom.Brand
+			manifest["short_name"] = custom.Brand
+		}
+
+		if custom.Icon != "" {
+			manifest["icons"] = []map[string]string{
+				{"src": "android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+				{"src": "android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/manifest+json")
+		b, _ = json.Marshal(manifest)
+		_, _ = w.Write(b)
 	}
 }
 
@@ -225,6 +261,31 @@ func batteryGridDischargeHandler(site site.API) http.HandlerFunc {
 			}
 		}
 		set(w, r)
+	}
+}
+
+// optimizerRiskProfileHandler updates the optimizer risk profile, DELETE removes it
+func optimizerRiskProfileHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var profile *api.RiskProfile
+
+		if r.Method != http.MethodDelete {
+			if err := jsonDecoder(r.Body).Decode(&profile); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+			if profile == nil {
+				jsonError(w, http.StatusBadRequest, errors.New("missing risk profile"))
+				return
+			}
+		}
+
+		if err := site.SetOptimizerRiskProfile(profile); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, site.GetOptimizerRiskProfile())
 	}
 }
 
@@ -606,7 +667,7 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 		}
 
 		if req.Settings {
-			tables := []string{"settings", "configs", "caches", "meters"}
+			tables := []string{"settings", "configs", "caches", "meters", "meters_daily", "meters_flows_daily"}
 
 			for _, table := range tables {
 				if err := db.Instance.Exec("DELETE FROM " + table).Error; err != nil {

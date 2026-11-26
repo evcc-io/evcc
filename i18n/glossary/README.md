@@ -37,6 +37,12 @@ They keep their official spelling in every language.
 - SEMP
 - RFID
 
+## Untranslated labels
+
+Some labels are fixed English in every language and have no translation key.
+
+- In, Out: bar labels and headings of the energy flow. The bar labels sit in a very narrow column and the headings have to match them. Most languages need longer words that would not fit, and Weblate cannot limit the length of a translation.
+
 ## English
 
 - Form of address: "you".

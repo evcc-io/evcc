@@ -1,6 +1,7 @@
 package eudataact
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,13 +9,16 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
@@ -23,8 +27,9 @@ import (
 // https://github.com/TA2k/ioBroker.vw-connect (lib/euDataAct.js)
 
 const (
-	// BaseURL is the EU Data Act portal that delivers the mandated vehicle datasets
-	BaseURL = "https://eu-data-act.drivesomethinggreater.com"
+	// BaseURL is the EU Data Act portal. The former drivesomethinggreater.com host
+	// redirects API calls to a path that answers 404.
+	BaseURL = "https://eu-data-act.vwgroup-datahub.com"
 	// RedirectURI is the OIDC redirect target registered for the portal
 	RedirectURI = BaseURL + "/login"
 	// Scope is the OIDC scope requested for the EU Data Act flow
@@ -104,6 +109,11 @@ func NewAPI(log *util.Logger, brandName, user, password string) (*API, error) {
 		password: password,
 	}
 	v.Client.Jar = &v.jar
+	// the portal limits downloads per minute and answers bursts with a short Retry-After,
+	// waiting counts towards the client timeout
+	const maxRetryAfter = 30 * time.Second
+	v.Client.Transport = transport.RetryAfter(maxRetryAfter, v.Client.Transport)
+	v.Client.Timeout += maxRetryAfter
 
 	if err := v.login(0); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
@@ -200,11 +210,21 @@ func (v *API) login(gen uint64) error {
 		if final, err = loginLocation(resp); err != nil {
 			return err
 		}
+	} else if resp.StatusCode == http.StatusOK && vwidentity.IsAuth0MarketingConsent(final) {
+		resp, err = vwidentity.SkipAuth0MarketingConsent(&client, resp)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if final, err = loginLocation(resp); err != nil {
+			return err
+		}
 	}
 
 	// a successful login lands on the portal; a remaining signin/consent url means
 	// the user has not completed the one-time browser consent and vehicle linking
-	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") {
+	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") ||
+		strings.HasPrefix(final.Path, "/v2/login/ui/") {
 		return api.UrlError(
 			fmt.Sprintf("login did not complete- open the portal and confirm consent: %s", final),
 			final,
@@ -237,9 +257,15 @@ func validMarketingCallback(u *url.URL, identityHost string) bool {
 	return u.Scheme == "https" && strings.EqualFold(u.Host, identityHost) && validPath
 }
 
+// userPagePath matches the portal's short user page path, e.g. /de/en/user.html
+var userPagePath = regexp.MustCompile(`^/[a-z]{2}/[a-z]{2}/user\.html$`)
+
 func isUserPage(u *url.URL) bool {
-	return u.Scheme == "https" && strings.EqualFold(u.Host, portalHost) &&
-		strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html")
+	if u.Scheme != "https" || !strings.EqualFold(u.Host, portalHost) {
+		return false
+	}
+	return strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html") ||
+		userPagePath.MatchString(u.Path)
 }
 
 func loginLocation(resp *http.Response) (*url.URL, error) {
@@ -263,11 +289,12 @@ func loginLocation(resp *http.Response) (*url.URL, error) {
 }
 
 // get executes a GET request, re-authenticating once on 401/403, and returns the body
-func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
+func (v *API) get(ctx context.Context, uri string, headers map[string]string) ([]byte, error) {
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(ctx)
 
 	gen := v.loginGen.Load()
 	resp, err := v.Do(req)
@@ -285,7 +312,7 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 		if req, err = request.New(http.MethodGet, uri, nil, headers); err != nil {
 			return nil, err
 		}
-		if resp, err = v.Do(req); err != nil {
+		if resp, err = v.Do(req.WithContext(ctx)); err != nil {
 			return nil, err
 		}
 	}
@@ -294,8 +321,8 @@ func (v *API) get(uri string, headers map[string]string) ([]byte, error) {
 }
 
 // getJSON executes a GET request and decodes the JSON response
-func (v *API) getJSON(uri string, res any) error {
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent})
+func (v *API) getJSON(ctx context.Context, uri string, res any) error {
+	b, err := v.get(ctx, uri, map[string]string{"Accept": request.JSONContent})
 	if err != nil {
 		return err
 	}
@@ -306,7 +333,7 @@ func (v *API) getJSON(uri string, res any) error {
 func (v *API) Vehicles() ([]Vehicle, error) {
 	uri := BaseURL + "/proxy_api/consent/me/vehicles?viewPosition=FRONT_LEFT"
 
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent})
+	b, err := v.get(context.Background(), uri, map[string]string{"Accept": request.JSONContent})
 	if err != nil {
 		return nil, err
 	}
@@ -328,13 +355,13 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 }
 
 // identifier returns the data-request identifier required for the data delivery calls
-func (v *API) identifier(vin string) (string, error) {
+func (v *API) identifier(ctx context.Context, vin string) (string, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datarequest/vehicles/%s/metadata/partial", BaseURL, vin)
 
 	var res struct {
 		Identifier string `json:"Identifier"`
 	}
-	if err := v.getJSON(uri, &res); err != nil {
+	if err := v.getJSON(ctx, uri, &res); err != nil {
 		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(404) {
 			err = ErrNotConfigured
 		}
@@ -349,10 +376,10 @@ func (v *API) identifier(vin string) (string, error) {
 }
 
 // datasets lists the available datasets for the given data request
-func (v *API) datasets(vin, identifier string) ([]dataset, error) {
+func (v *API) datasets(ctx context.Context, vin, identifier string) ([]dataset, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/list", BaseURL, vin, identifier)
 
-	b, err := v.get(uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
+	b, err := v.get(ctx, uri, map[string]string{"Accept": request.JSONContent, "type": "partial"})
 	if err != nil {
 		// the portal answers 404 "No files available for this request" until the
 		// vehicle has delivered its first dataset
@@ -378,7 +405,7 @@ func (v *API) datasets(vin, identifier string) ([]dataset, error) {
 }
 
 // download fetches the dataset zip archive
-func (v *API) download(vin, identifier, name string) ([]byte, error) {
+func (v *API) download(ctx context.Context, vin, identifier, name string) ([]byte, error) {
 	uri := fmt.Sprintf("%s/proxy_api/euda-apim/datadelivery/vehicles/%s/%s/download", BaseURL, vin, identifier)
-	return v.get(uri, map[string]string{"filename": name, "type": "partial"})
+	return v.get(ctx, uri, map[string]string{"filename": name, "type": "partial"})
 }

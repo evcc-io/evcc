@@ -53,6 +53,14 @@ func TestForecastRates(t *testing.T) {
 			},
 			want: "[[1735689600,1735693200,0.25],[1735693200,1735696800,-0.1]]",
 		},
+		{
+			desc: "estimate",
+			rates: api.Rates{
+				{Start: start, End: start.Add(time.Hour), Value: 0.25},
+				{Start: start.Add(time.Hour), End: start.Add(2 * time.Hour), Value: 0.3, Estimate: true},
+			},
+			want: "[[1735689600,1735693200,0.25],[1735693200,1735696800,0.3,1]]",
+		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			b, err := json.Marshal(forecastRates(tc.rates))

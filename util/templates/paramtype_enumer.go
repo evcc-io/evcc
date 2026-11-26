@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ParamTypeName = "StringBoolChoiceChargeModesDurationFloatIntListZonesPricePerKWh"
+const _ParamTypeName = "StringBoolChoiceChargeModesDurationFloatIntListZonesPricePerKWhDevice"
 
-var _ParamTypeIndex = [...]uint8{0, 6, 10, 16, 27, 35, 40, 43, 47, 52, 63}
+var _ParamTypeIndex = [...]uint8{0, 6, 10, 16, 27, 35, 40, 43, 47, 52, 63, 69}
 
-const _ParamTypeLowerName = "stringboolchoicechargemodesdurationfloatintlistzonespriceperkwh"
+const _ParamTypeLowerName = "stringboolchoicechargemodesdurationfloatintlistzonespriceperkwhdevice"
 
 func (i ParamType) String() string {
 	if i < 0 || i >= ParamType(len(_ParamTypeIndex)-1) {
@@ -34,9 +34,10 @@ func _ParamTypeNoOp() {
 	_ = x[TypeList-(7)]
 	_ = x[TypeZones-(8)]
 	_ = x[TypePricePerKWh-(9)]
+	_ = x[TypeDevice-(10)]
 }
 
-var _ParamTypeValues = []ParamType{TypeString, TypeBool, TypeChoice, TypeChargeModes, TypeDuration, TypeFloat, TypeInt, TypeList, TypeZones, TypePricePerKWh}
+var _ParamTypeValues = []ParamType{TypeString, TypeBool, TypeChoice, TypeChargeModes, TypeDuration, TypeFloat, TypeInt, TypeList, TypeZones, TypePricePerKWh, TypeDevice}
 
 var _ParamTypeNameToValueMap = map[string]ParamType{
 	_ParamTypeName[0:6]:   TypeString,
@@ -49,6 +50,7 @@ var _ParamTypeNameToValueMap = map[string]ParamType{
 	_ParamTypeName[43:47]: TypeList,
 	_ParamTypeName[47:52]: TypeZones,
 	_ParamTypeName[52:63]: TypePricePerKWh,
+	_ParamTypeName[63:69]: TypeDevice,
 }
 
 var _ParamTypeLowerNameToValueMap = map[string]ParamType{
@@ -62,6 +64,7 @@ var _ParamTypeLowerNameToValueMap = map[string]ParamType{
 	_ParamTypeLowerName[43:47]: TypeList,
 	_ParamTypeLowerName[47:52]: TypeZones,
 	_ParamTypeLowerName[52:63]: TypePricePerKWh,
+	_ParamTypeLowerName[63:69]: TypeDevice,
 }
 
 var _ParamTypeNames = []string{
@@ -75,6 +78,7 @@ var _ParamTypeNames = []string{
 	_ParamTypeName[43:47],
 	_ParamTypeName[47:52],
 	_ParamTypeName[52:63],
+	_ParamTypeName[63:69],
 }
 
 // ParamTypeString retrieves an enum value from the enum constants string name.

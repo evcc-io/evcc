@@ -12,6 +12,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
+	"github.com/evcc-io/evcc/util/sponsor"
 	ocppapi "github.com/lorenzodonini/ocpp-go/ocpp"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -40,6 +41,9 @@ var testLogger ocppLogger
 var suiteRuns atomic.Int64
 
 func TestMain(m *testing.M) {
+	// sponsored constructors refuse otherwise
+	sponsor.Subject = "test"
+
 	ocpp.Timeout = 5 * time.Second
 
 	// the simulated charge points never send a spontaneous BootNotification,
@@ -355,6 +359,61 @@ func (suite *ocppTestSuite) TestTimeout() {
 	_, err := NewOCPP(suite.T().Context(), id1, 1, "", "", 0, false, false, false, false, false, ocppTestConnectTimeout)
 
 	suite.Require().NoError(err)
+}
+
+func (suite *ocppTestSuite) TestReconnect() {
+	id := suite.stationID("test-reconnect")
+
+	cp1, _, stopCp1 := suite.startChargePoint(id, 1)
+	suite.Require().NoError(cp1.Start(ocppTestUrl))
+
+	c, err := NewOCPP(suite.T().Context(), id, 1, "", "", 0, false, false, false, true, false, ocppTestConnectTimeout)
+	suite.Require().NoError(err)
+
+	stopCp1()
+	suite.Require().Eventually(func() bool { return !c.cp.Connected() }, time.Second, 10*time.Millisecond)
+
+	// reconnect without reboot, BootNotification is only sent when triggered
+	cp2, ocppjClient, _ := suite.startChargePoint(id, 1)
+
+	var triggered atomic.Bool
+	handler := ocppjClient.GetRequestHandler()
+	ocppjClient.SetRequestHandler(func(request ocppapi.Request, requestId string, action string) {
+		if req, ok := request.(*remotetrigger.TriggerMessageRequest); ok && req.RequestedMessage == core.BootNotificationFeatureName {
+			triggered.Store(true)
+		}
+		handler(request, requestId, action)
+	})
+
+	suite.Require().NoError(cp2.Start(ocppTestUrl))
+
+	// well before the boot timeout
+	suite.Require().Eventually(c.cp.Connected, ocpp.Timeout/2, 10*time.Millisecond)
+	suite.True(triggered.Load(), "BootNotification should be triggered on reconnect")
+}
+
+func (suite *ocppTestSuite) TestBootTriggerRejected() {
+	id := suite.stationID("test-boot-rejected")
+
+	cp1, ocppjClient, _ := suite.startChargePoint(id, 1)
+
+	handler := ocppjClient.GetRequestHandler()
+	ocppjClient.SetRequestHandler(func(request ocppapi.Request, requestId string, action string) {
+		if req, ok := request.(*remotetrigger.TriggerMessageRequest); ok && req.RequestedMessage == core.BootNotificationFeatureName {
+			suite.Require().NoError(ocppjClient.SendResponse(requestId, remotetrigger.NewTriggerMessageConfirmation(remotetrigger.TriggerMessageStatusRejected)))
+			return
+		}
+		handler(request, requestId, action)
+	})
+
+	start := time.Now()
+	suite.Require().NoError(cp1.Start(ocppTestUrl))
+
+	_, err := NewOCPP(suite.T().Context(), id, 1, "", "", 0, false, false, false, true, false, ocppTestConnectTimeout)
+	suite.Require().NoError(err)
+
+	// neither the boot wait after connect nor the one during setup ran into the timeout
+	suite.Less(time.Since(start), ocpp.Timeout)
 }
 
 func (suite *ocppTestSuite) TestEnabledAvailable() {
