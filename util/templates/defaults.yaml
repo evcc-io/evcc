@@ -779,8 +779,8 @@ presets:
         en: Authentication token
         de: Authentifizierungs-Token
       help:
-        de: "Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert. (Verwendet OCPP RemoteStartTransaction)"
-        en: "This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions. (Uses OCPP RemoteStartTransaction)"
+        de: "Nur wirksam, wenn der Remote-Start aktiviert ist. Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert. Ohne Angabe wird ein Standard-Token verwendet. (Verwendet OCPP RemoteStartTransaction)"
+        en: "Only effective if remote start is enabled. This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions. If empty, a default token is used. (Uses OCPP RemoteStartTransaction)"
       example: evcc
     - name: connecttimeout
       advanced: true
