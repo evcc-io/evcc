@@ -237,12 +237,6 @@ func (wb *SmaModbus) applySetpoint() error {
 	return nil
 }
 
-func (wb *SmaModbus) write(reg uint16, val uint32) error {
-	b := binary.BigEndian.AppendUint32(nil, val)
-	_, err := wb.conn.WriteMultipleRegisters(reg, 2, b)
-	return err
-}
-
 // read32 reads count consecutive 32 bit input registers
 func (wb *SmaModbus) read32(reg uint16, count int) ([]uint32, error) {
 	b, err := wb.conn.ReadInputRegisters(reg, uint16(2*count))
