@@ -9,7 +9,11 @@ image = "evcc/evcc:latest"
 
 [experimental]
 auto_rollback = true
-cmd = ["evcc", "--demo", "--metrics", "--profile"]
+# goal: fresh demo data. exit every 12h, restart policy brings it back
+cmd = ["timeout", "-s", "INT", "43200", "evcc", "--demo"]
+
+[[restart]]
+policy = "always"
 
 [[services]]
 http_checks = []
