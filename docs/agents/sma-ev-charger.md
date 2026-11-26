@@ -73,7 +73,7 @@ evcc controls charging via the charging mode and leaves `ChrgApv` untouched. Acc
 
 REST fails on startup when neither the setpoint channels nor `ActChaMod` and `WMaxIn` are `editable` for the configured account. Writing limits requires an administrator or installer account, a plain user account can read values (`alengwenus/ha-sma-ev-charger#38`, `SpongeTroN86/ioBroker.sma-echarger`).
 
-All drivers only read on startup and warn on settings that conflict with evcc control: charging mode charge stop with setpoint control (REST, Modbus), EV Charger rotary switch in smart position (REST without setpoint), "Trennung nach Vollladung" (`StpWhenFl`) enabled (all, SEMP only when the parameters endpoint provides it). SEMP additionally warns when "Betrieb mit Netzanschlusspunktzähler" (`UseEnergyMeter`) is disabled, again only when the parameters endpoint provides it.
+All drivers only read on startup and warn on settings that conflict with evcc control: EV Charger rotary switch in smart position (REST without setpoint), "Trennung nach Vollladung" (`StpWhenFl`) enabled (all, SEMP only when the parameters endpoint provides it). SEMP additionally warns when "Betrieb mit Netzanschlusspunktzähler" (`UseEnergyMeter`) is disabled, again only when the parameters endpoint provides it.
 
 - **documented**: SEMP control requires `UseEnergyMeter` enabled and a meter configured on the charger (`semp-sma` setup). REST and Modbus control do not depend on it.
 - **verified**: the EV Charger answers SEMP with `EMSignalsAccepted` true even with `UseEnergyMeter` 1130, so the SEMP status does not reveal a missing meter (evcc-io/evcc#33350).

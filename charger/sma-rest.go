@@ -164,11 +164,6 @@ func NewSmaRest(ctx context.Context, uri, user, password string, cache time.Dura
 	}
 
 	if wb.useSetpoint {
-		// the setpoint applies in all charging modes except charge stop
-		if mode, err := wb.mode(); err == nil && mode == sma.ChargeStop {
-			log.WARN.Println("charging mode is charge stop, charging is not possible")
-		}
-
 		if enabled, err := wb.Enabled(); err == nil {
 			wb.enabled = enabled
 		}
