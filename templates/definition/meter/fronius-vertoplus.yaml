@@ -271,7 +271,7 @@ render: |
             {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:OutWRte
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

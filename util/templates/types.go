@@ -247,6 +247,9 @@ type Param struct {
 func (p *Param) DefaultValue(renderMode int) any {
 	// return empty list to allow iterating over in template
 	if p.Type == TypeList {
+		if renderMode == RenderModeUnitTest && p.Example != "" {
+			return []string{p.Example}
+		}
 		return []string{}
 	}
 	if p.Type == TypeZones {

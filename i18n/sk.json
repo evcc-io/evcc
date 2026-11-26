@@ -38,8 +38,8 @@
       "energy": "Energia",
       "gridCharge": "nabíjanie zo siete",
       "gridDischarge": "vybíjanie do siete",
-      "hold": "vybíjanie zablokované",
       "holdCharge": "nabíjanie zablokované",
+      "holdDischarge": "vybíjanie zablokované",
       "ofTotal": "z {total}",
       "power": "Výkon",
       "soc": "Stav nabitia batérie"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Nabíjanie zo siete",
         "discharge": "Vybiť do siete",
-        "hold": "Zabrániť vybíjaniu",
         "holdcharge": "Zabrániť nabíjaniu",
+        "holddischarge": "Zabrániť vybíjaniu",
         "normal": "Normálna prevádzka"
       },
       "empty": "prázdne",

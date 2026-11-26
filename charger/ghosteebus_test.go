@@ -431,4 +431,20 @@ func TestGhostEEBus_IdentifyFallback(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, []string{"MAC-001"}, id)
 	})
+
+	t.Run("rfid_error", func(t *testing.T) {
+		wb, _, _ := newTestGhostEEBusWithEEBus(t)
+		wb.hasRFID = true
+
+		httpmock.ActivateNonDefault(wb.Client)
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder(http.MethodGet,
+			"https://wallbox.local/api/v2/rfid-cards/last-read",
+			httpmock.NewStringResponder(500, ""),
+		)
+
+		_, err := wb.Identify()
+		require.Error(t, err)
+	})
 }

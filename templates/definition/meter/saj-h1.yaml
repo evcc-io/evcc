@@ -8,6 +8,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 1
   - preset: battery-params
   - name: timeout
     deprecated: true
@@ -87,7 +88,7 @@ render: |
               address: 0x3247 # AppMode
               type: writesingle
               decode: uint16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

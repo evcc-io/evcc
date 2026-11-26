@@ -105,7 +105,7 @@ func (t *FrankEnergie) run(done chan error) {
 		if err := backoff.Retry(func() error {
 			var err error
 			prices, err = t.prices(client, today)
-			return err
+			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
 				return

@@ -93,6 +93,7 @@ func TestDeleteLoadpointCascadesChargerRefs(t *testing.T) {
 	lp := loadpoint.NewMockAPI(gomock.NewController(t))
 	lp.EXPECT().GetChargerRef().Return(config.NameForID(charger.ID)).AnyTimes()
 	lp.EXPECT().GetMeterRef().Return("").AnyTimes()
+	lp.EXPECT().GetTempSensorRef().Return("").AnyTimes()
 	lp.EXPECT().SetChargerRef("").AnyTimes()
 	require.NoError(t, config.Loadpoints().Add(config.NewConfigurableDevice[loadpoint.API](&lpConf, lp)))
 

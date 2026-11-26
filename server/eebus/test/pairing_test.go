@@ -23,7 +23,7 @@ import (
 func freePort(t *testing.T) int {
 	t.Helper()
 
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	l, err := net.Listen("tcp", ":0") // same wildcard address the hub binds
 	require.NoError(t, err)
 	defer l.Close()
 

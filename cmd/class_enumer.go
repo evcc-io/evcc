@@ -71,6 +71,7 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassName[108:119]: ClassSponsorship,
 	_ClassName[119:128]: ClassLoadpoint,
 	_ClassName[128:137]: ClassCurtailer,
+	_ClassName[137:147]: ClassTempSensor,
 }
 
 var _ClassLowerNameToValueMap = map[string]Class{
@@ -94,7 +95,6 @@ var _ClassLowerNameToValueMap = map[string]Class{
 	_ClassLowerName[108:119]: ClassSponsorship,
 	_ClassLowerName[119:128]: ClassLoadpoint,
 	_ClassLowerName[128:137]: ClassCurtailer,
-	_ClassName[137:147]:      ClassTempSensor,
 	_ClassLowerName[137:147]: ClassTempSensor,
 }
 

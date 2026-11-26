@@ -25,7 +25,7 @@ Site (orchestrator — core/site.go)
 ### Battery
 - `Battery` — `Soc() (float64, error)` — 0-100%
 - `BatteryCapacity` — kWh
-- `BatteryController` — set charge/discharge/hold mode
+- `BatteryController` — set charge/discharge/holddischarge mode
 
 ### Charger
 - `Charger` — `Status()`, `Enabled()`, `Enable(bool)`, `MaxCurrent(int64)`
@@ -124,7 +124,7 @@ effectivePrice = gridPrice * (1 - greenShare) + feedInPrice * greenShare
 | Channel | Scope | Buffer | Purpose |
 |---------|-------|--------|---------|
 | `valueChan` | Site | Unbounded (`chanx.NewUnboundedChan`) | State changes -> DB + UI (ordering) |
-| `lpUpdateChan` | Site | 1 | Early loadpoint update requests |
+| `lpUpdateChan` | Site | one per loadpoint | Early loadpoint update requests, each loadpoint queued at most once |
 | `pushChan` | Loadpoint | 16 | User notifications, queued via `valueChan` so the message renders the state at event time |
 
 ## Tariff Integration
@@ -160,13 +160,13 @@ Runs after each solve, and again every cycle via `reapplySuggestions` when the a
 
 **Home battery** (`Action` is an `api.BatteryMode` string):
 
-| Condition (slot values, W)                         | Action       | Meaning                             |
-| -------------------------------------------------- | ------------ | ----------------------------------- |
-| charge > pvShare + thr and grid importing          | `charge`     | grid charging                       |
-| idle and grid importing and soc > `SMin`           | `hold`       | discharge deliberately withheld     |
-| idle and grid exporting and soc < `SMax`           | `holdcharge` | surplus exported instead of charged |
-| discharge > thr and grid exporting                 | `discharge`  | battery-to-grid                     |
-| otherwise (incl. idle at a soc bound, PV charging) | `normal`     | inverter self-consumption logic     |
+| Condition (slot values, W)                         | Action          | Meaning                             |
+| -------------------------------------------------- | --------------- | ----------------------------------- |
+| charge > pvShare + thr and grid importing          | `charge`        | grid charging                       |
+| idle and grid importing and soc > `SMin`           | `holddischarge` | discharge deliberately withheld     |
+| idle and grid exporting and soc < `SMax`           | `holdcharge`    | surplus exported instead of charged |
+| discharge > thr and grid exporting                 | `discharge`     | battery-to-grid                     |
+| otherwise (incl. idle at a soc bound, PV charging) | `normal`        | inverter self-consumption logic     |
 
 `idle` = charge and discharge both <= thr. At a soc bound nothing is withheld (the bound does it), hence `normal`.
 
@@ -183,7 +183,7 @@ Gated by `OptimizerAutomatic()`: `off` (advisory only), battery-only, or `full` 
 **Home battery** (`requiredBatteryMode`, `core/site_battery.go`), in priority order:
 
 - external mode (API) wins.
-- `Automatic()` and `unmodelledCharging(rate)`: a loadpoint the optimizer does not control is fast charging or on the smart cost limit. The suggestion did not account for that load, so force `hold`.
+- `Automatic()` and `unmodelledCharging(rate)`: a loadpoint the optimizer does not control is fast charging or on the smart cost limit, and the request does not contain that load: heaters, vehicles without capacity or session energy limit, plan or min soc charging. A vehicle the request models as storage on mode now or the smart cost limit is fixed demand (`fixedDemandModelled`) and does not count. The suggestion did not account for that load, so force `holddischarge`, unless the suggestion is `charge`: grid charging cannot drain the battery into that load.
 - `Automatic()`: `batterySuggestionMode()` takes the first controllable battery's suggestion (`api.BatteryModeString(s.Action)`); an unknown action releases to `normal`; no suggestion releases to `normal` only if evcc had modified the mode (`batteryModeModified`), otherwise the mode is left untouched. This replaces the grid charge limit and discharge control. TODO: per-battery modes.
 - not automatic: legacy grid charge / discharge control / feed-in discharge rules.
 
@@ -192,8 +192,9 @@ Gated by `OptimizerAutomatic()`: `off` (advisory only), battery-only, or `full` 
 - `ModeSmart` strategy switch calls `optimizerCharging(s)` and skips the smart cost / feed-in price limits.
   - `surplusRegime` (charge below max power, no grid flow, no battery discharge): not handled, the PV loop tracks measured surplus instead of the forecast.
   - `stop` without always-charge: not handled, PV loop may still enable on measured surplus.
-  - `charge` at full power or above what the active phases deliver: `fastCharging()`.
-  - `charge` at a limited setpoint: `setLimit(PowerToCurrent(s.Charge))`, or `minCharging()` below min current.
+  - `charge` at full power, or above what the active phases deliver and at least 3p min power: `fastCharging()`.
+  - `charge` at a limited setpoint: `setLimit(PowerToCurrent(s.Charge))` capped at max current, or `minCharging()` below min current.
+    Inside the 1p/3p gap (above 1p max, below 3p min power) this charges on 1p below the suggestion, never above it.
   - `stop` with always-charge: `minCharging()`.
 - Planner is reduced to a backstop: `plannerActive = planDeadlineCritical()`.
 - Session `LimitEnergy` / `LimitSoc` do not stop charging while the optimizer is driving a plan goal above them.

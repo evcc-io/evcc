@@ -1,0 +1,66 @@
+template: kaco-nh3
+products:
+  - brand: KACO
+    description:
+      generic: blueplanet hybrid NH3
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Für KACO blueplanet Hybrid NH3 mit AI-Dongle/WLAN-Stick. Modbus TCP muss über die IP-Adresse des Sticks erreichbar sein (Port 502, Geräte-ID 3).
+      Die Abregelung verwendet die SunSpec-Steuerung des Wechselrichters und begrenzt die Wirkleistung auf den gewünschten Prozentsatz.
+    en: |
+      For KACO blueplanet Hybrid NH3 with AI dongle/Wi-Fi stick. Modbus TCP must be reachable at the stick's IP address (port 502, device ID 3).
+      Curtailment uses the inverter's SunSpec controls to limit active power to the requested percentage.
+capabilities: ["curtail"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 3
+render: |
+  type: custom
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 704:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Disable active power limit
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 14 }}
+                value: 704:WMaxLimPctEna
+        default:
+          source: const
+          value: 1 # Enable active power limit
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 704:WMaxLimPctEna
+  curtailed:
+    source: go
+    in:
+      - name: enabled
+        type: bool
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 704:WMaxLimPctEna
+      - name: percent
+        type: float
+        config:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 704:WMaxLimPct
+    script: |
+      result := 100
+      if enabled {
+        result = int(percent)
+      }
+      result

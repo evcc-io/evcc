@@ -34,11 +34,11 @@ func init() {
 
 // batteryModeExpectation documents the expected battery power sign per mode (negative: charging, positive: discharging)
 var batteryModeExpectation = map[api.BatteryMode]string{
-	api.BatteryNormal:     "any sign (< 0 with pv surplus, > 0 with house demand)",
-	api.BatteryHold:       "<= 0 (no discharging, charging from pv surplus allowed)",
-	api.BatteryCharge:     "< 0 (charging from grid)",
-	api.BatteryHoldCharge: ">= 0 (no charging, discharging allowed)",
-	api.BatteryDischarge:  "> 0 (discharging to grid)",
+	api.BatteryNormal:        "any sign (< 0 with pv surplus, > 0 with house demand)",
+	api.BatteryHoldDischarge: "<= 0 (no discharging, charging from pv surplus allowed)",
+	api.BatteryCharge:        "< 0 (charging from grid)",
+	api.BatteryHoldCharge:    ">= 0 (no charging, discharging allowed)",
+	api.BatteryDischarge:     "> 0 (discharging to grid)",
 }
 
 // batteryModeTransitions returns the sequence of target modes, starting and ending at modes[0].

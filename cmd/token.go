@@ -61,7 +61,7 @@ func runToken(cmd *cobra.Command, args []string) {
 			token, err = fordConnectToken(vehicleConf)
 		case "tronity":
 			token, err = tronityToken(conf, vehicleConf)
-		case "citroen", "ds", "opel", "peugeot":
+		case "citroen", "ds", "opel", "peugeot", "vauxhall":
 			token, err = psaToken(typ)
 
 		default:

@@ -175,6 +175,9 @@ func (m *Modbus) StringGetter() (func() (string, error), error) {
 	if err != nil {
 		return nil, err
 	}
+	if op.Length == 0 {
+		return nil, errors.New("register count is required")
+	}
 
 	return func() (string, error) {
 		b, err := m.readBytes(op)

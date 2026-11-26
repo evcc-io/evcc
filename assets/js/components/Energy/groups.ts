@@ -11,6 +11,18 @@ export function isBidirectional(
   return group === "meter" && series.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
 }
 
+// groups without their own label read like a meter
+export function energyLabel(
+  t: (key: string) => string,
+  group: string,
+  isTemp = false,
+  direction: "energy" | "returnEnergy" = "energy"
+): string {
+  const key = `energy.direction.${group === "loadpoint" && isTemp ? "heating" : group}.${direction}`;
+  const label = t(key);
+  return label === key ? t(`energy.direction.meter.${direction}`) : label;
+}
+
 const COLOR_PICKER_GROUPS = ["loadpoint", "consumer", "meter"];
 
 export function hasColorPicker(group: string): boolean {

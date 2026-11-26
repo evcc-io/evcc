@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 	"sync"
@@ -12,8 +13,9 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/eclipse/paho.mqtt.golang/packets"
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/packets"
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/evcc-io/evcc/api"
 	pluginmqtt "github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
@@ -183,7 +185,7 @@ func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
 			v.log.ERROR.Println(err)
 
 			// don't reset backoff
-			if errors.Is(err, packets.ErrorRefusedBadUsernameOrPassword) || errors.Is(err, packets.ErrorRefusedNotAuthorised) {
+			if ce, ok := errors.AsType[*autopaho.ConnackError](err); ok && (ce.ReasonCode == packets.ConnackBadUsernameOrPassword || ce.ReasonCode == packets.ConnackNotAuthorized) {
 				continue
 			}
 		}
@@ -198,47 +200,69 @@ func (v *MqttConnector) runMqtt(ctx context.Context, token *oauth2.Token) error 
 
 	v.log.DEBUG.Printf("connect streaming (using gcid %s, id_token %s, valid: %v)", gcid, idToken, token.Expiry.Round(time.Second))
 
-	paho := mqtt.NewClient(
-		mqtt.NewClientOptions().
-			AddBroker(StreamingURL).
-			SetAutoReconnect(true).
-			SetUsername(gcid).
-			SetPassword(idToken))
+	u, err := url.Parse(StreamingURL)
+	if err != nil {
+		return err
+	}
 
 	timeout := 30 * time.Second
-	if t := paho.Connect(); !t.WaitTimeout(timeout) {
-		return errors.New("connect timeout")
-	} else if err := t.Error(); err != nil {
+	topic := fmt.Sprintf("%s/+", gcid)
+	errC := make(chan error, 1)
+
+	client, err := pluginmqtt.Connect(ctx, autopaho.ClientConfig{
+		ServerUrls:                    []*url.URL{u},
+		KeepAlive:                     30,
+		CleanStartOnInitialConnection: true,
+		ConnectTimeout:                timeout,
+		ConnectUsername:               gcid,
+		ConnectPassword:               []byte(idToken),
+		// the broker drops the subscription when the connection is lost
+		OnConnectionUp: func(cm *autopaho.ConnectionManager, _ *paho.Connack) {
+			go func() {
+				if _, err := cm.Subscribe(ctx, &paho.Subscribe{
+					Subscriptions: []paho.SubscribeOptions{{Topic: topic}},
+				}); err != nil {
+					select {
+					case errC <- fmt.Errorf("subscribe: %w", err):
+					default:
+					}
+					return
+				}
+
+				v.log.DEBUG.Println("connected streaming")
+			}()
+		},
+		ClientConfig: paho.ClientConfig{
+			PacketTimeout: timeout,
+			OnPublishReceived: pluginmqtt.OnPublish(func(m *paho.Publish) {
+				v.handler(m.Topic, m.Payload)
+			}),
+		},
+	}, timeout)
+	if err != nil {
 		return fmt.Errorf("connect: %w", err)
 	}
-	defer paho.Disconnect(1000)
+	defer func() { _ = client.Disconnect(context.Background()) }()
 
-	topic := fmt.Sprintf("%s/+", gcid)
-
-	if t := paho.Subscribe(topic, 0, v.handler); !t.WaitTimeout(timeout) {
-		return errors.New("subcribe timeout")
-	} else if err := t.Error(); err != nil {
-		return fmt.Errorf("subscribe: %w", err)
-	}
-
-	v.log.DEBUG.Println("connected streaming")
-
-	ctx, cancel := context.WithDeadline(ctx, token.Expiry)
+	expired, cancel := context.WithDeadline(ctx, token.Expiry)
 	defer cancel()
 
-	<-ctx.Done()
-
-	return nil
+	select {
+	case err := <-errC:
+		return err
+	case <-expired.Done():
+		return nil
+	}
 }
 
-func (v *MqttConnector) handler(_ mqtt.Client, m mqtt.Message) {
+func (v *MqttConnector) handler(topic string, payload []byte) {
 	var res StreamingMessage
-	if err := json.Unmarshal(m.Payload(), &res); err != nil {
-		v.log.ERROR.Println(m.Topic(), string(m.Payload()), err)
+	if err := json.Unmarshal(payload, &res); err != nil {
+		v.log.ERROR.Println(topic, string(payload), err)
 		return
 	}
 
-	v.log.TRACE.Printf("recv %s: %s", m.Topic(), string(m.Payload()))
+	v.log.TRACE.Printf("recv %s: %s", topic, string(payload))
 
 	v.dispatch(res)
 }

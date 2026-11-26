@@ -98,7 +98,7 @@ func TestResolveBrand(t *testing.T) {
 	_, ok := resolveBrand("nope")
 	assert.False(t, ok)
 
-	// IsBrand drives the cloud server's brand -> drivesomethinggreater routing
+	// IsBrand drives the cloud server's brand -> vwgroup-datahub routing
 	for _, name := range []string{"audi", "Volkswagen", "seat", "CUPRA", "skoda"} {
 		assert.True(t, IsBrand(name), "%q is a VW group brand", name)
 	}
@@ -323,4 +323,25 @@ func TestSocKeysPrepended(t *testing.T) {
 	soc, err = p.Soc()
 	require.NoError(t, err)
 	assert.Equal(t, 73.0, soc, "prepended key wins")
+}
+
+// TestLimitKeys: a car reporting settings.target_soc under several keys
+// is read by the configured key regardless of dataset order.
+func TestLimitKeys(t *testing.T) {
+	const keyApp = "b3b04f31-b10e-38aa-b8ad-c0da7c06caea"
+
+	data := []point{
+		{Key: "e21d4d25-98bc-3016-a234-1ad061cc313b", Name: FieldTargetSoc, Value: "100"},
+		{Key: keyApp, Name: FieldTargetSoc, Value: "80"},
+	}
+
+	p := testProvider(data)
+	limit, err := p.GetLimitSoc()
+	require.NoError(t, err)
+	assert.Equal(t, int64(100), limit, "name lookup takes the first key")
+
+	p.limitKeys = []string{keyApp}
+	limit, err = p.GetLimitSoc()
+	require.NoError(t, err)
+	assert.Equal(t, int64(80), limit)
 }

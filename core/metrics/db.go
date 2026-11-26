@@ -12,13 +12,13 @@ import (
 )
 
 type meter struct {
-	Meter        int      `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
-	Timestamp    int64    `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
+	Meter        int      `json:"meter" gorm:"column:meter;primaryKey;autoIncrement:false"`
+	Timestamp    int64    `json:"ts" gorm:"column:ts;primaryKey;autoIncrement:false"` // start of 15min slot
 	Entity       entity   `json:"-" gorm:"foreignkey:Meter;references:Id"`
-	Energy       float64  `json:"energy" gorm:"column:energy"`
-	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy"`
-	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp"`    // at start of slot
-	Recovered    bool     `json:"recovered,omitempty" gorm:"column:recovered"` // downtime catchup slot, excluded from profile
+	Energy       float64  `json:"energy" gorm:"column:energy;type:numeric"` // numeric stores whole numbers compactly, real does not WITHOUT ROWID
+	ReturnEnergy float64  `json:"returnEnergy" gorm:"column:return_energy;type:numeric"`
+	SocTemp      *float64 `json:"socTemp,omitempty" gorm:"column:soc_temp;type:numeric"`    // at start of slot
+	Recovered    int      `json:"recovered,omitempty" gorm:"column:recovered;type:numeric"` // slot origin, slotMeasured etc
 }
 
 type entity struct {
@@ -130,7 +130,122 @@ func SetupSchema() error {
 		}
 	}
 
-	return db.Instance.AutoMigrate(new(meter))
+	if err := migrateMeterWithoutRowid(); err != nil {
+		return err
+	}
+
+	if err := db.Instance.AutoMigrate(new(energySum), new(flowDay)); err != nil {
+		return err
+	}
+
+	if err := backfill(); err != nil {
+		return err
+	}
+
+	return loadDaily()
+}
+
+const withoutRowid = "WITHOUT ROWID"
+
+// migrateMeterWithoutRowid keeps meters clustered on its primary key (meter, ts). A table from
+// before stores every row twice, in the table and in its unique index, and is rebuilt once.
+func migrateMeterWithoutRowid() error {
+	m := db.Instance.Set("gorm:table_options", withoutRowid).Migrator()
+	if !m.HasTable(new(meter)) {
+		return m.CreateTable(new(meter))
+	}
+
+	current, err := meterTableCurrent()
+	if err != nil {
+		return err
+	}
+	if current {
+		// an older version run in between recreates the unique index
+		return db.Instance.Exec(`DROP INDEX IF EXISTS meters_meter_ts`).Error
+	}
+
+	// add the columns an older table lacks, so the copy finds them all. AutoMigrate would
+	// also alter the changed column types, rebuilding the table once per column.
+	stmt := &gorm.Statement{DB: db.Instance}
+	if err := stmt.Parse(new(meter)); err != nil {
+		return err
+	}
+	for _, name := range stmt.Schema.DBNames {
+		if !m.HasColumn(new(meter), name) {
+			if err := m.AddColumn(new(meter), name); err != nil {
+				return err
+			}
+		}
+	}
+
+	if err := db.Instance.Transaction(func(tx *gorm.DB) error {
+		// the unique index moves along and guarantees (meter, ts) holds no duplicates for the new primary key
+		if err := tx.Exec(`ALTER TABLE meters RENAME TO meters_rowid`).Error; err != nil {
+			return err
+		}
+
+		m := tx.Set("gorm:table_options", withoutRowid).Migrator()
+		if err := m.CreateTable(new(meter)); err != nil {
+			return err
+		}
+
+		types, err := m.ColumnTypes(new(meter))
+		if err != nil {
+			return err
+		}
+		cols := make([]string, 0, len(types))
+		for _, typ := range types {
+			cols = append(cols, `"`+typ.Name()+`"`)
+		}
+		list := strings.Join(cols, ",")
+
+		// copy in key order along the old index, so the new table fills its pages in sequence. A row
+		// without meter or ts no query can reach, and the primary key rejects it
+		for _, stmt := range []string{
+			`INSERT INTO meters (` + list + `) SELECT ` + list + ` FROM meters_rowid WHERE meter IS NOT NULL AND ts IS NOT NULL ORDER BY meter, ts`,
+			`DROP TABLE meters_rowid`,
+		} {
+			if err := tx.Exec(stmt).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// the dropped table leaves its pages on the freelist, about half the file. Return them, which
+	// also applies auto_vacuum to a database created before it was set. The rebuild is committed,
+	// so a failure (e.g. not enough disk space for the copy) only costs space
+	if err := db.Instance.Exec(`VACUUM`).Error; err != nil {
+		log.WARN.Printf("vacuum after meters migration: %v", err)
+	}
+	return nil
+}
+
+// meterTableCurrent reports whether meters is WITHOUT ROWID with numeric measurement columns
+func meterTableCurrent() (bool, error) {
+	var ddl string
+	if err := db.Instance.Raw(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'meters'`).Scan(&ddl).Error; err != nil {
+		return false, err
+	}
+	if !strings.Contains(strings.ToUpper(ddl), withoutRowid) {
+		return false, nil
+	}
+
+	types, err := db.Instance.Migrator().ColumnTypes(new(meter))
+	if err != nil {
+		return false, err
+	}
+	for _, typ := range types {
+		switch typ.Name() {
+		case "energy", "return_energy", "soc_temp":
+			if !strings.EqualFold(typ.DatabaseTypeName(), "numeric") {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
 }
 
 // OnPersist, if set, is called with the slot start after a slot is written.
@@ -139,14 +254,20 @@ var OnPersist func(slot time.Time)
 // persist stores a completed 15min slot
 func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp *float64, recovered bool) error {
 	slot := ts.Truncate(tariff.SlotDuration)
-	if err := db.Instance.Create(&meter{
-		Meter:        entity.Id,
-		Timestamp:    slot.Unix(),
-		Energy:       energy,
-		ReturnEnergy: returnEnergy,
-		SocTemp:      socTemp,
-		Recovered:    recovered,
-	}).Error; err != nil {
+	origin := slotMeasured
+	if recovered {
+		origin = slotRecovered
+	}
+	if err := writeDays(slot, slot.Add(tariff.SlotDuration), func(tx *gorm.DB) error {
+		return tx.Create(&meter{
+			Meter:        entity.Id,
+			Timestamp:    slot.Unix(),
+			Energy:       energy,
+			ReturnEnergy: returnEnergy,
+			SocTemp:      socTemp,
+			Recovered:    origin,
+		}).Error
+	}); err != nil {
 		return err
 	}
 	if OnPersist != nil {

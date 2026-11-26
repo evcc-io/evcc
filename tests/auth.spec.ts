@@ -181,3 +181,30 @@ test("disable auth", async ({ page }) => {
 
   await stop();
 });
+
+test("session edit requires login", async ({ page, request }) => {
+  await start("sessions.evcc.yaml", "sessions.sql", ["--disable-onboarding"]);
+  await request.put("/api/auth/password", { data: { current: "", new: "secret" } });
+
+  await page.goto("/#/sessions?year=2023&month=5");
+  await page.getByTestId("sessions-entry").nth(0).click();
+  const modal = page.getByTestId("session-details");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Charging point").selectOption("Carport");
+
+  // login replaces the details modal and returns to it
+  const login = page.getByTestId("login-modal");
+  await expectModalVisible(login);
+  await expectModalHidden(modal);
+  await login.getByLabel("Administrator Password").fill("secret");
+  await login.getByRole("button", { name: "Login" }).click();
+  await expectModalHidden(login);
+  await expectModalVisible(modal);
+
+  await modal.getByLabel("Charging point").selectOption("Carport");
+  await page.reload();
+  await page.getByTestId("sessions-entry").nth(0).click();
+  await expect(modal.getByLabel("Charging point")).toHaveValue("Carport");
+
+  await stop();
+});

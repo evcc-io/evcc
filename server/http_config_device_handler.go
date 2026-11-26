@@ -379,7 +379,7 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		if !requireCriticalConfigAuth(w, r, authObject, req) {
+		if !requireCriticalConfigAuth(w, r, authObject, class, req) {
 			return
 		}
 
@@ -488,7 +488,7 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		if !configUnchanged(id, req) && !requireCriticalConfigAuth(w, r, authObject, req) {
+		if !configUnchanged(id, req) && !requireCriticalConfigAuth(w, r, authObject, class, req) {
 			return
 		}
 
@@ -917,7 +917,7 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		if !requireCriticalConfigAuth(w, r, authObject, req) {
+		if !requireCriticalConfigAuth(w, r, authObject, class, req) {
 			return
 		}
 

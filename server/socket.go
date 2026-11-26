@@ -48,9 +48,7 @@ func NewSocketHub() *SocketHub {
 
 // ServeWebsocket handles websocket requests from the peer.
 func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
-	acceptOptions := &websocket.AcceptOptions{
-		InsecureSkipVerify: true,
-	}
+	acceptOptions := new(websocket.AcceptOptions)
 
 	// Safari deflate message compression is broken, enable for others
 	// see: https://github.com/gorilla/websocket/issues/731
@@ -61,7 +59,7 @@ func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := websocket.Accept(w, r, acceptOptions)
 	if err != nil {
-		log.ERROR.Println(err)
+		log.WARN.Println(err)
 		return
 	}
 	defer conn.Close(websocket.StatusInternalError, "")

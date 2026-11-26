@@ -226,7 +226,8 @@ render: |
       decode: uint16
   {{- if not .slave }}
   {{- $charge := .maxchargepower | int }}
-  {{- $discharge := mod (sub 4294967296 (.maxdischargepower | int)) 4294967296 }}
+  {{- /* float literals: 2^32 as int (or sprig int64 string) overflows/zeroes on 32-bit, float64 converts to int64 */}}
+  {{- $discharge := mod (sub 4294967296.0 (.maxdischargepower | int)) 4294967296.0 }}
   batterymode:
     source: switch
     switch:
@@ -244,7 +245,7 @@ render: |
               address: 0x1110
               type: writemultiple
               decode: int16
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

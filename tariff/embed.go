@@ -6,6 +6,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"math"
 	"reflect"
 	"slices"
 	"time"
@@ -152,11 +153,12 @@ func (t *embed) effectiveCharges(ts time.Time) float64 {
 
 func (t *embed) totalPrice(price float64, ts time.Time) float64 {
 	charges := t.effectiveCharges(ts)
+	res := (price + charges) * (1 + t.Tax)
 	if t.calc != nil {
-		res, _ := t.calc(price, charges, ts)
-		return res
+		res, _ = t.calc(price, charges, ts)
 	}
-	return (price + charges) * (1 + t.Tax)
+	// strip floating point noise like 0.43404000000000004
+	return math.Round(res*1e6) / 1e6
 }
 
 var _ api.FeatureDescriber = (*embed)(nil)

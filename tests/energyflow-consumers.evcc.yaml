@@ -2,6 +2,8 @@ site:
   title: Hello World
   meters:
     grid: grid
+    pv:
+      - pv
     consumer:
       - fridge
     aux:
@@ -14,7 +16,12 @@ meters:
     type: custom
     power:
       source: js
-      script: "900"
+      script: "-1100"
+  - name: pv
+    type: custom
+    power:
+      source: js
+      script: "2000"
   - name: fridge
     type: custom
     power:

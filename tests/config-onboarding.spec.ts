@@ -119,8 +119,10 @@ test.describe("wizard with password", async () => {
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
     await expectModalHidden(wizard);
     const checklist = page.getByTestId("setup-checklist");
-    await expect(checklist).toContainText("5 of 10 done");
-    await expect(checklist.getByTestId("checklist-battery").getByRole("button")).toHaveCount(0);
+    await expect(checklist).toContainText("6 suggestions");
+    await expect(
+      checklist.getByTestId("checklist-battery").getByRole("button", { name: "Dismissed" })
+    ).toBeVisible();
     await expect(
       checklist.getByTestId("checklist-consumer").getByRole("button", { name: "Add" })
     ).toBeVisible();
@@ -130,13 +132,15 @@ test.describe("wizard with password", async () => {
     await expect(
       checklist.getByTestId("checklist-gridExport").getByRole("button", { name: "Add" })
     ).toBeVisible();
-    await expect(checklist.getByTestId("checklist-heater").getByRole("button")).toHaveCount(0);
+    await expect(
+      checklist.getByTestId("checklist-heater").getByRole("button", { name: "Add" })
+    ).toBeVisible();
 
     // energy flow on the main page
     await page.getByRole("link", { name: "Charge" }).click();
     await page.getByTestId("visualization").click();
     await expect(page.getByTestId("energyflow-entry-production")).toContainText("5.0 kW");
-    await expect(page.getByTestId("energyflow-entry-loadpoints")).toContainText("3.0 kW");
+    await expect(page.getByTestId("energyflow-entry-charging")).toContainText("3.0 kW");
     await expect(page.getByTestId("energyflow-entry-gridexport")).toContainText("2.0 kW");
     await expect(
       page.getByTestId("loadpoint").getByRole("heading", { name: "Solar Carport" })
@@ -216,7 +220,7 @@ test.describe("wizard", async () => {
     await skipOnboarding(page);
 
     const checklist = page.getByTestId("setup-checklist");
-    await expect(checklist).toContainText("0 of 10 done");
+    await expect(checklist).toContainText("10 suggestions");
     await checklist.getByTestId("checklist-loadpoint").getByRole("button", { name: "Add" }).click();
     const lpModal = page.getByTestId("loadpoint-modal");
     await expectModalVisible(lpModal);
@@ -225,16 +229,32 @@ test.describe("wizard", async () => {
 
     await checklist
       .getByTestId("checklist-battery")
-      .getByRole("button", { name: "Dismiss" })
+      .getByRole("button", { name: "Dismiss", exact: true })
       .click();
-    await expect(checklist.getByTestId("checklist-battery").getByRole("button")).toHaveCount(0);
-    await expect(checklist).toContainText("1 of 10 done");
+    await expect(
+      checklist.getByTestId("checklist-battery").getByRole("button", { name: "Add" })
+    ).toHaveCount(0);
+    await expect(checklist).toContainText("9 suggestions");
 
     // no solar system means no export tariff and no solar forecast
-    await checklist.getByTestId("checklist-pv").getByRole("button", { name: "Dismiss" }).click();
-    await expect(checklist.getByTestId("checklist-gridExport").getByRole("button")).toHaveCount(0);
-    await expect(checklist.getByTestId("checklist-solar").getByRole("button")).toHaveCount(0);
-    await expect(checklist).toContainText("4 of 10 done");
+    await checklist
+      .getByTestId("checklist-pv")
+      .getByRole("button", { name: "Dismiss", exact: true })
+      .click();
+    for (const item of ["gridExport", "solar"]) {
+      const row = checklist.getByTestId(`checklist-${item}`);
+      await expect(row.getByRole("button", { name: "Add" })).toHaveCount(0);
+      await expect(row.getByRole("button", { name: "Dismissed" })).toBeVisible();
+    }
+    await expect(checklist).toContainText("6 suggestions");
+
+    // second click brings it back
+    const solar = checklist.getByTestId("checklist-solar");
+    await solar.getByRole("button", { name: "Dismissed" }).click();
+    await expect(solar.getByRole("button", { name: "Add" })).toBeVisible();
+    await expect(checklist).toContainText("7 suggestions");
+    await solar.getByRole("button", { name: "Dismiss", exact: true }).click();
+    await expect(checklist).toContainText("6 suggestions");
 
     // empty main page while nothing is configured
     await page.getByRole("link", { name: "Charge" }).click();
@@ -246,8 +266,12 @@ test.describe("wizard", async () => {
     await restart();
     await page.goto("/#/config");
     await expectModalHidden(page.getByTestId("onboarding-modal"));
-    await expect(checklist.getByTestId("checklist-battery").getByRole("button")).toHaveCount(0);
-    await expect(checklist.getByTestId("checklist-solar").getByRole("button")).toHaveCount(0);
+    await expect(
+      checklist.getByTestId("checklist-battery").getByRole("button", { name: "Add" })
+    ).toHaveCount(0);
+    await expect(
+      checklist.getByTestId("checklist-solar").getByRole("button", { name: "Add" })
+    ).toHaveCount(0);
   });
 });
 
@@ -263,8 +287,14 @@ test.describe("existing configuration", async () => {
     await expectModalHidden(page.getByTestId("onboarding-modal"));
     const checklist = page.getByTestId("setup-checklist");
     await expect(checklist.getByTestId("checklist-grid").getByRole("button")).toHaveCount(0);
-    await expect(checklist.getByTestId("checklist-heater").getByRole("button")).toHaveCount(0);
-    await expect(checklist.getByTestId("checklist-pv")).toBeVisible();
+    await expect(
+      checklist.getByTestId("checklist-heater").getByRole("button", { name: "Add" })
+    ).toBeVisible();
+    await checklist.getByRole("button", { name: "Dismiss all" }).click();
+    await expect(checklist).not.toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+    await expect(checklist).not.toBeVisible();
   });
 
   test("yaml tariffs", async ({ page }) => {

@@ -38,8 +38,8 @@
       "energy": "Energija",
       "gridCharge": "įkraunama iš tinklo",
       "gridDischarge": "iškrova į tinklą",
-      "hold": "iškrovimas blokuojamas",
       "holdCharge": "įkrovimas blokuojamas",
+      "holdDischarge": "iškrovimas blokuojamas",
       "ofTotal": "iš {total}",
       "power": "Galia",
       "soc": "Įkrova"
@@ -71,8 +71,8 @@
       "action": {
         "charge": "Įkrauti iš tinklo",
         "discharge": "Iškrauti į tinklą",
-        "hold": "Iškrovimas blokuojamas",
         "holdcharge": "Įkrovimas blokuojamas",
+        "holddischarge": "Iškrovimas blokuojamas",
         "normal": "Normalus veikimas"
       },
       "empty": "tuščia",
@@ -146,11 +146,13 @@
       "template": "Gamintojas",
       "titleAdd": {
         "charging": "Pridėti Įkroviklį",
-        "heating": "Pridėti Šildytuvą"
+        "heating": "Pridėti Šildytuvą",
+        "switch": "Pridėti Išmanią Rozetę"
       },
       "titleEdit": {
         "charging": "Redaguoti įkroviklį",
-        "heating": "Redaguoti Šildytuvą"
+        "heating": "Redaguoti Šildytuvą",
+        "switch": "Redaguoti Išmanią Rozetę"
       },
       "type": {
         "custom": {
@@ -188,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Pridėti pagrindinę grandinę",
       "addSubCircuit": "Pridėti papildomą grandinę",
+      "assignHere": "Priskirti čia",
+      "assignmentFailed": "Nepavyko išsaugoti priskyrimo. Bandykite dar kartą.",
       "description": "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius ir šildytuvus, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija.",
+      "destination": "Grandinė {title}",
+      "dragHint": "Nutempkite ant grandinės arba bakstelėkite, kad pasirinktumėte.",
+      "dropAssign": "Įdėkite priskyrimui",
+      "dropRemove": "Įdėkite čia, kad pašalintumėte iš grandinės.",
       "legacyWarning": "Galima naudoti naują grandinių konfigūracijos metodą. Pašalinkite ir išsaugokite savo konfigūraciją čia, kad galėtumėte pasinaudoti naujuoju vedliu. Po to reikės restartuoti.",
       "meterDedicated": "Skaitiklis",
       "meterGrid": "Tinklas",
+      "moveHere": "Perkelti čia",
+      "notAssigned": "Nepriskirta",
+      "selectAssign": "Bakstelėkite grandinę, kad priskirti {title}.",
+      "selectMove": "Bakstelėkite grandinę, kad perkeltumėte {title}, arba bakstelėkite žemiau, kad pašalintumėte priskyrimą.",
       "title": "Apkrovos valdymas",
       "usableMeters": "Galimi skaitikliai"
     },
@@ -231,12 +243,21 @@
       "titleAdd": "Pridėti Apribojimo Įrenginį",
       "titleEdit": "Redaguoti apribojimo įrenginį"
     },
+    "deviceRef": {
+      "add": {
+        "charger": "Pridėti įkroviklį",
+        "meter": "Pridėti skaitiklį",
+        "switch": "Pridėti išmanią rozetę",
+        "tariff": "Pridėti tarifą"
+      },
+      "noNesting": "Įdėjimas galimas tik vienu lygiu. Prašome pasirinkti kitą variantą."
+    },
     "deviceValue": {
       "activeClients": "Aktyvūs vartotojai",
       "amount": "Kiekis",
       "asleep": "miega",
       "broker": "Broker sistema",
-      "bucket": "Bucket",
+      "bucket": "Bucket / Duomenų bazė",
       "capacity": "Talpa",
       "chargeStatus": "Statusas",
       "chargeStatusA": "neprijungta",
@@ -309,8 +330,16 @@
           "returnEnergy": "Iškrauta"
         },
         "consumer": {
+          "chargeStatusB": "pasiruošęs",
+          "chargeStatusC": "šildoma",
           "energy": "Suvartota",
           "returnEnergy": "Pagaminta"
+        },
+        "continuous": {
+          "chargeStatusB": "normalus",
+          "chargeStatusC": "pastiprinti",
+          "dimmed": "Pamažintas",
+          "enabled": "Pastiprintas"
         },
         "grid": {
           "energy": "Importuota",
@@ -332,6 +361,7 @@
       "auxMeter": "Savireguliuojantis prietaisas",
       "batteryStorage": "Kaupiklis",
       "consumer": "Vartojantis įrenginys",
+      "extMeter": "Papildomas skaitiklis",
       "solarSystem": "Saulės elektrinė"
     },
     "editor": {
@@ -478,7 +508,7 @@
     "influx": {
       "description": "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius.",
       "descriptionToken": "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Duomenų bazė",
       "labelCheckInsecure": "Leisti naudoti savarankiškai pasirašytus sertifikatus",
       "labelDatabase": "Duomenų bazė",
       "labelInsecure": "Sertifikato patvirtinimas",
@@ -489,14 +519,14 @@
       "labelUser": "Vartotojo vardas",
       "title": "InfluxDB",
       "v1Support": "Reikia InfluxDB 1.x palaikymo?",
-      "v2Support": "Atgal į InfluxDB 2.x"
+      "v2Support": "Atgal į InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
         "charging": "Pridėti įkroviklį",
         "heating": "Pridėti šildytuvą"
       },
-      "addMeter": "Pridėti energijos skaitiklį",
+      "addMeter": "Pridėti skaitiklį",
       "advancedConfig": "Išplėstinė konfigūracija",
       "cancel": "Atšaukti",
       "chargerError": {
@@ -532,10 +562,31 @@
       "defaultModeKeep": "palikti kaip yra",
       "defaultModeLabel": "Numatytasis režimas",
       "delete": "Ištrinti",
+      "demandPredictor": {
+        "daily": {
+          "description": "Pastarųjų dienų vidurkis. Įrenginiams, kurių veikimo pobūdis kasdien vienodas.",
+          "label": "Dienos vidurkis"
+        },
+        "defaultGroup": "Įrenginio numatytasis",
+        "description": "Kaip optimizatorius prognozuoja poreikį, remiantis ankstesniu vartojimu.",
+        "label": "Profilis",
+        "noTempTariff": "Reikalinga temperatūros prognozė.",
+        "noTempTariffLink": "Pridėti prognozę",
+        "profilesGroup": "Profiliai",
+        "temperature": {
+          "description": "Ankstesnės sąnaudos esant panašiai lauko temperatūrai. Patalpų šildymui, pavyzdžiui, naudojant šilumos siurblius.",
+          "label": "Temperatūra"
+        },
+        "title": "Poreikio prognozė",
+        "weekday": {
+          "description": "Tos pačios savaitės dienos vidurkis. Įrenginiams, veikiantiems pagal savaitinį tvarkaraštį, pavyzdžiui, vandens ar baseinų šildytuvams.",
+          "label": "Savaitės diena"
+        }
+      },
       "electricalSubtitle": "Jei abejojate, pasitarkite su elektriku.",
       "electricalTitle": "Elektros parametrai",
       "energyMeterHelp": "Papildomas skaitiklis, jei įkroviklyje nėra integruoto.",
-      "energyMeterLabel": "Energijos skaitiklis",
+      "energyMeterLabel": "Dedikuotas energijos skaitiklis",
       "estimateLabel": "Interpoliuoti įkrovos lygį tarp API naujinimų",
       "maxCurrentHelp": "Turi būti didesnė nei minimali srovė.",
       "maxCurrentLabel": "Max srovė",
@@ -931,7 +982,8 @@
       "manualLogin": "Arba prisijunkite rankiniu būdu adresu {url} naršyklėje naudodami šiuos prisijungimo duomenis:",
       "noClients": "Kol kas nėra vartotojų. Niekas dar negali prisijungti.",
       "password": "Slaptažodis",
-      "passwordOnce": "Šis slaptažodis rodomas tik vieną kartą. Nuskaitykite QR kodą arba nukopijuokite jį dabar. Daugiau jo nebegalėsite pamatyti.",
+      "passwordOnce": "Šis slaptažodis rodomas tik vieną kartą. Nuskaitykite QR kodą, nukopijuokite ar atspausdinkite jį dabar. Daugiau jo nebegalėsite pamatyti.",
+      "print": "Spausdinti / PDF",
       "privacy": "Įjungdami šią funkciją, sutinkate su mūsų {0}.",
       "privacyLink": "privatumo politika",
       "qrInstall": "Įdiekite evcc programėlę, skirtą {ios} arba {android}.",
@@ -1124,6 +1176,7 @@
       "template": "Tiekėjas",
       "title": "Tarifai ir prognozės",
       "titleChoice": "Ką norite pridėti?",
+      "titleSub": "Sub tarifas",
       "type": {
         "co2": "CO₂ Intensyvumas",
         "feedIn": "Tinklo Eksporto Kaina",
@@ -1206,19 +1259,32 @@
     },
     "direction": {
       "battery": {
-        "energy": "įkrauta",
-        "returnEnergy": "iškrauta"
+        "energy": "Įkrauta",
+        "returnEnergy": "Iškrauta"
+      },
+      "consumer": {
+        "energy": "Suvartota"
       },
       "grid": {
         "energy": "iš tinklo",
         "returnEnergy": "į tinklą"
+      },
+      "heating": {
+        "energy": "Suvartota"
+      },
+      "loadpoint": {
+        "energy": "Įkrauta"
       },
       "meter": {
         "energy": "Energija iš tinklo",
         "returnEnergy": "Energija (patiekta į tinklą)"
       }
     },
-    "empty": "Šiam laikotarpiui energijos duomenų nėra.",
+    "empty": {
+      "description": "Šiam laikotarpiui energijos duomenų nėra.",
+      "descriptionCurrent": "Energijos duomenų dar nėra. Reikšmės pasirodo, kai užfiksuojami pirmieji matavimai.",
+      "showCurrent": "Rodyti dabartinį laikotarpį"
+    },
     "flow": {
       "battery": "Kaupiklis",
       "batteryCharge": "Kaupiklis įkrauta",
@@ -1257,7 +1323,7 @@
     },
     "production": {
       "above": "{value} virš",
-      "accuracy": "Prognozės tikslumas",
+      "accuracy": "tikslumas",
       "below": "{value} žemiau",
       "deviation": "Nuokrypis",
       "expectedTomorrow": "tikimasi rytoj",
@@ -1269,8 +1335,9 @@
     },
     "socTemp": {
       "charged": "įkrauta",
-      "soc": "įkrova",
-      "temperature": "temperatūra",
+      "power": "Galia",
+      "soc": "Įkrova",
+      "temperature": "Temperatūra",
       "used": "sunaudota"
     },
     "sources": {
@@ -1291,12 +1358,14 @@
       "co2Saved": "CO₂ sutaupyta",
       "co2SavedTooltip": "Palyginus su suvartojimu {energy} iš tinklo.",
       "configure": "Konfigūruoti dabar",
+      "fromGrid": "{value} iš tinklo",
       "noCo2": "Nėra CO₂ duomenų.",
       "noPrice": "Nėra kainos duomenų.",
       "savings": "Sutaupymai",
       "savingsTooltip": "Palyginus su suvartotos {energy} pirkimu iš tinklo.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Santrauka",
     "title": "Energija"
   },
   "footer": {
@@ -1408,6 +1477,7 @@
     "price": {
       "average": "Vidurkis",
       "constant": "Kaina",
+      "estimate": "numatoma",
       "lowestHour": "Pigiausia valanda",
       "range": "Diapazonas"
     },
@@ -1439,6 +1509,7 @@
     "cancel": "Atšaukti",
     "download": "Atsisiųsti",
     "error": "Klaida",
+    "loading": "Įkeliama",
     "none": "nė vienas",
     "note": "Pastaba:",
     "warning": "Perspėjimas"
@@ -1589,7 +1660,8 @@
         "continuousCo2Description": "Parenka švariausią nepertraukiamą laikotarpių seriją.",
         "continuousPriceDescription": "Pasirenkama pigiausia ištisinė laikotarpių serija.",
         "disabledDescription": "Reikalingas dinaminis tarifas arba CO₂ prognozė.",
-        "label": "Optimizacija"
+        "label": "Optimizacija",
+        "optimizerDescription": "{optimizer} parenka pigiausius laiko intervalus. Dėl to gali būti keli įjungimai ir išjungimai."
       },
       "planNumber": "Planas {number}",
       "precondition": {
@@ -1606,7 +1678,8 @@
       "repeatingPlans": "Pasikartojantys planai",
       "selectAll": "Pasirinkti visus",
       "strategy": {
-        "label": "Strategija"
+        "label": "Strategija",
+        "optimizerHint": "{optimizer} kol kas neatsižvelgia į optimizavimo nustatymą ir visada pasirenka pigiausius laiko intervalus. Jei to reikia, apribokite automatinį valdymą į “Kaupiklis” ."
       },
       "time": "Laikas",
       "title": "Planas",
@@ -1632,8 +1705,9 @@
       "forecast": "Prognozė",
       "forecastTooltip": "prognozė: likusi saulės energijos gamyba šiandien",
       "gridImport": "Iš tinklo",
+      "heaters": "Šildytuvas | Šildytuvai",
       "homePower": "Namo suvartojimas",
-      "loadpoints": "Įkroviklis | Įkroviklis | {count} įkrovikliai",
+      "loadpoints": "Įkroviklis | Įkrovikliai",
       "loadpointsLimit": "{limit} limitas",
       "noEnergy": "Nėra skaitiklių duomenų",
       "pv": "Saulės jėgainė",
@@ -1660,18 +1734,22 @@
       "avgPrice": "⌀ Kaina",
       "charged": "Įkrauta",
       "co2": "⌀ CO₂",
+      "consumed": "Suvartota",
       "duration": "Trukmė",
       "emission": "Emisijos",
       "fallbackName": "Įkroviklis",
       "finished": "Bus baigta",
       "last24hEnergy": "Pastarosios 24 val",
+      "last24hShort": "24 val",
       "last7dEnergy": "Pastarosios 7 dienos",
+      "last7dShort": "7d",
       "phasesMismatch": "Daugiau fazių aktyvios, nei sukonfigūruota. Patikrinkite fazių konfigūraciją.",
       "power": "Galia",
       "price": "Kaina",
       "remaining": "Liko",
       "remoteDisabledHard": "{source}: išjungtas",
       "remoteDisabledSoft": "{source}: adaptyvus Saulės įkrovimas išjungtas",
+      "session": "Sesija",
       "solar": "Saulės",
       "todayEnergy": "Šiandien"
     },
@@ -1891,7 +1969,7 @@
     },
     "checklist": {
       "dismiss": "Atmesti",
-      "legacyTariffs": "Naudojama sena tarifų konfigūracija.",
+      "legacyTariffs": "Yra naudojama pasenusi tarifų konfigūracija.",
       "progress": "{done} iš {total} atlikta",
       "title": "Užbaikite nustatymus"
     },

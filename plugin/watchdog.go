@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -41,6 +42,11 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	// time.Tick(0) returns a nil channel, so the watchdog would never rewrite
+	if cc.Timeout < 2*time.Nanosecond {
+		return nil, errors.New("timeout is required")
 	}
 
 	o := &watchdogPlugin{

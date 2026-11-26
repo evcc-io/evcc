@@ -61,7 +61,10 @@ func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	port, _ := strconv.Atoi(port_)
+	port, err := strconv.Atoi(port_)
+	if err != nil {
+		return nil, fmt.Errorf("invalid port: %w", err)
+	}
 
 	cfg := rscp.ClientConfig{
 		Address:           host,
@@ -208,7 +211,7 @@ func (m *E3dc) batterySoc() (float64, error) {
 }
 
 func (m *E3dc) getBatteryModes() []api.BatteryMode {
-	return []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}
+	return []api.BatteryMode{api.BatteryNormal, api.BatteryHoldDischarge, api.BatteryCharge, api.BatteryHoldCharge}
 }
 
 func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
@@ -216,7 +219,7 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	defer m.mu.Unlock()
 
 	switch mode {
-	case api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge:
+	case api.BatteryHoldDischarge, api.BatteryCharge, api.BatteryHoldCharge:
 		if err := m.sysSpecs(); err != nil {
 			return err
 		}
@@ -229,7 +232,7 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 			e3dcPowerLimits(false, 0, 0),
 			e3dcBatteryCharge(0),
 		}
-	case api.BatteryHold:
+	case api.BatteryHoldDischarge:
 		messages = []rscp.Message{
 			e3dcPowerLimits(true, m.maxCharge, m.dischargeLimit),
 			e3dcBatteryCharge(0),

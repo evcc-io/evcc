@@ -33,6 +33,22 @@ test.describe("loadpoint", async () => {
   });
 });
 
+test.describe("energyflow", async () => {
+  test("heating entry", async ({ page }) => {
+    await page.getByTestId("energyflow").click();
+    await expect(page.getByTestId("energyflow-entry-charging")).toHaveCount(0);
+
+    const heating = page.getByTestId("energyflow-entry-heating");
+    await expect(heating).toContainText("Heaters");
+    await expect(heating).toContainText("1.3 kW");
+
+    // heaters pick their own unit
+    await heating.getByRole("button", { name: "Heaters" }).click();
+    await expect(heating).toContainText("500 W");
+    await expect(heating).toContainText("800 W");
+  });
+});
+
 test.describe("integrated device", async () => {
   test("switch device modes without always charge option", async ({ page }) => {
     const lp = page.getByTestId("loadpoint").first();

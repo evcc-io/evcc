@@ -49,6 +49,7 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassName[41:50]: Messenger,
 	_ClassName[50:54]: Hems,
 	_ClassName[54:63]: Curtailer,
+	_ClassName[63:73]: TempSensor,
 }
 
 var _ClassLowerNameToValueMap = map[string]Class{
@@ -61,7 +62,6 @@ var _ClassLowerNameToValueMap = map[string]Class{
 	_ClassLowerName[41:50]: Messenger,
 	_ClassLowerName[50:54]: Hems,
 	_ClassLowerName[54:63]: Curtailer,
-	_ClassName[63:73]:      TempSensor,
 	_ClassLowerName[63:73]: TempSensor,
 }
 

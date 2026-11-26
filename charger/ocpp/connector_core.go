@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
@@ -25,9 +26,30 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	return !t.Before(conn.status.Timestamp.Time)
 }
 
+// statusClass maps a status to the charge status as seen by the loadpoint, api.StatusNone for errors
+func statusClass(s *core.StatusNotificationRequest) api.ChargeStatus {
+	if s == nil || s.ErrorCode != core.NoError {
+		return api.StatusNone
+	}
+
+	switch s.Status {
+	case core.ChargePointStatusAvailable, core.ChargePointStatusUnavailable:
+		return api.StatusA
+	case core.ChargePointStatusPreparing, core.ChargePointStatusSuspendedEVSE,
+		core.ChargePointStatusSuspendedEV, core.ChargePointStatusFinishing:
+		return api.StatusB
+	case core.ChargePointStatusCharging:
+		return api.StatusC
+	default:
+		return api.StatusNone
+	}
+}
+
 func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
+
+	prev := conn.status
 
 	var applied bool
 	if conn.status == nil {
@@ -39,6 +61,10 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		applied = true
 	} else {
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
+	}
+
+	if applied && statusClass(prev) != statusClass(request) && conn.onStatusChange != nil {
+		conn.onStatusChange()
 	}
 
 	// Available means cable unplugged and any prior transaction is stale
@@ -125,7 +151,19 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 					}
 
 					sample.Value = strings.TrimSpace(sample.Value)
-					conn.measurements[getSampleKey(sample)] = sample
+
+					key := getSampleKey(sample)
+					isTotal := key == types.MeasurandEnergyActiveImportRegister
+
+					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions.
+					// A total older than the meterStart baseline must not replace it.
+					if !isZeroEnergy(sample) && (!isTotal || !meterValue.Timestamp.Time.Before(conn.energyTimestamp)) {
+						conn.measurements[key] = sample
+						if isTotal {
+							conn.energyTimestamp = meterValue.Timestamp.Time
+						}
+					}
+
 					conn.meterTimestamp = meterValue.Timestamp.Time
 					// freshness is measured locally: charger sample timestamps may lag (Mennekes: 6-7s)
 					conn.meterUpdated = conn.clock.Now()
@@ -139,7 +177,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 
 func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
 	txnId := int(conn.cp.cs.txnId.Add(1))
-	conn.startTransaction(txnId, request.IdTag)
+	conn.startTransaction(txnId, request)
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
@@ -152,15 +190,41 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 }
 
 // startTransaction records a transaction issued by evcc or by an upstream central system.
-func (conn *Connector) startTransaction(txnId int, idTag string) {
+func (conn *Connector) startTransaction(txnId int, request *core.StartTransactionRequest) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
 	conn.txnId = txnId
-	conn.idTag = idTag
+	conn.idTag = request.IdTag
 
 	// a transaction started after the boot is fresh and must survive the first status
 	conn.rebooted = false
+
+	conn.setStartEnergy(request.MeterStart, request.Timestamp)
+}
+
+// setStartEnergy takes meterStart as the authoritative energy register, even if it is lower
+// than the last reading (ABB Terra AC resets the register per transaction).
+func (conn *Connector) setStartEnergy(wh int, ts *types.DateTime) {
+	// a total created from meterStart would shadow phase-only registers
+	if _, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]; !ok {
+		return
+	}
+
+	// a StartTransaction queued while offline carries an outdated meterStart
+	if ts != nil && ts.Time.Before(conn.energyTimestamp) {
+		return
+	}
+
+	conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{
+		Value: strconv.Itoa(wh),
+		Unit:  types.UnitOfMeasureWh,
+	}
+
+	if ts != nil {
+		conn.energyTimestamp = ts.Time
+	}
+	conn.meterStartUpdated = conn.clock.Now()
 }
 
 // clearTransaction resets transaction state and zeroes reported power.
@@ -217,6 +281,16 @@ func (conn *Connector) assumeMeterStopped() {
 			}
 		}
 	}
+}
+
+// isZeroEnergy returns true if sample is a total or phase energy register reading of zero.
+func isZeroEnergy(sample types.SampledValue) bool {
+	if sample.Measurand != types.MeasurandEnergyActiveImportRegister {
+		return false
+	}
+
+	f, err := strconv.ParseFloat(sample.Value, 64)
+	return err == nil && f == 0
 }
 
 func (conn *Connector) updateEnergyRegister(wh float64) {

@@ -264,6 +264,31 @@ func batteryGridDischargeHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// optimizerRiskProfileHandler updates the optimizer risk profile, DELETE removes it
+func optimizerRiskProfileHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var profile *api.RiskProfile
+
+		if r.Method != http.MethodDelete {
+			if err := jsonDecoder(r.Body).Decode(&profile); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+			if profile == nil {
+				jsonError(w, http.StatusBadRequest, errors.New("missing risk profile"))
+				return
+			}
+		}
+
+		if err := site.SetOptimizerRiskProfile(profile); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, site.GetOptimizerRiskProfile())
+	}
+}
+
 // boolHandler updates bool-param api
 func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 	return handler(strconv.ParseBool, set, get)
@@ -642,7 +667,7 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 		}
 
 		if req.Settings {
-			tables := []string{"settings", "configs", "caches", "meters"}
+			tables := []string{"settings", "configs", "caches", "meters", "meters_daily", "meters_flows_daily"}
 
 			for _, table := range tables {
 				if err := db.Instance.Exec("DELETE FROM " + table).Error; err != nil {

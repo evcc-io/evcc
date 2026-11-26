@@ -183,7 +183,7 @@ render: |
               type: writemultiple
               encoding: float32s
             scale: 0.001
-    - case: 2 # hold
+    - case: 2 # holddischarge
       set:
         source: sequence
         set:

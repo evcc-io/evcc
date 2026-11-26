@@ -53,9 +53,6 @@ func TestPublishSocAndRange(t *testing.T) {
 	}
 
 	// populate channels
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
-
 	assert.Empty(t, lp.socUpdated)
 
 	tc := []api.ChargeStatus{api.StatusB, api.StatusC}
@@ -169,9 +166,6 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 		}
 
 		// populate channels
-		x, y, z := createChannels(t)
-		attachChannels(lp, x, y, z)
-
 		test := func(t *testing.T) {
 			assert.Equal(t, tc.socPoll, lp.vehicleSocPollAllowed())
 			lp.publishSocAndRange()
@@ -229,9 +223,6 @@ func TestPublishSocAndRangeTempSensor(t *testing.T) {
 		mode:        api.ModeNow,
 	}
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
-
 	lp.publishSocAndRange()
 
 	assert.Equal(t, 48.0, lp.vehicleSoc, "temp sensor must override charger temperature")
@@ -268,9 +259,6 @@ func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 		chargePower:  900, // W
 	}
 	lp.energyMetrics.totalKWh = 1.1
-
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
 
 	lp.publishSocAndRange()
 
@@ -311,9 +299,6 @@ func TestPublishSocAndRangePlanAboveLimit(t *testing.T) {
 			suggestion:        &types.Suggestion{},
 			suggestionUpdated: clck.Now(),
 		}
-
-		x, y, z := createChannels(t)
-		attachChannels(lp, x, y, z)
 
 		lp.publishSocAndRange()
 		assert.InDelta(t, soc.RemainingChargeEnergy(tc.goal, 50, 10), lp.GetRemainingEnergy(), 1e-9, tc)
@@ -426,20 +411,13 @@ func TestDefaultVehicle(t *testing.T) {
 	}).AnyTimes()
 
 	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
-	vehicle.EXPECT().Icon().Return("").AnyTimes()
-	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().Phases().AnyTimes()
-	vehicle.EXPECT().OnIdentified().AnyTimes()
+	expectVehiclePublish(vehicle)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 	lp.DefaultMode = api.ModeOff // ondisconnect
 	lp.defaultVehicle = dflt
 
 	// populate channels
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
-
 	title := func(v api.Vehicle) string {
 		if v == nil {
 			return "<nil>"
@@ -486,9 +464,6 @@ func TestVehicleChangeResetsAlwaysChargeOnce(t *testing.T) {
 
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
-
 	lp.setActiveVehicle(v1)
 	assert.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
 
@@ -531,9 +506,6 @@ func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
 	lp.charger = &idCharger{id: "rfid-1"}
 	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
-
 	// vehicle already active via a different detection path (e.g. SoC poll)
 	lp.setActiveVehicle(vehicle)
 	assert.Equal(t, api.ModeSmart, lp.GetMode(), "mode after first identification")
@@ -553,16 +525,9 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
-	vehicle.EXPECT().Icon().Return("").AnyTimes()
-	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().Phases().AnyTimes()
-	vehicle.EXPECT().OnIdentified().AnyTimes()
+	expectVehiclePublish(vehicle)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
-
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
 
 	// vehicle active, soc read from a prior cycle
 	lp.setActiveVehicle(vehicle)
@@ -577,24 +542,36 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 	assert.Equal(t, 0.0, lp.vehicleSoc, "soc must clear on vehicle change")
 }
 
+// TestDisconnectClearsSoc ensures the previous session's SoC does not survive
+// a disconnect for the same default vehicle
+func TestDisconnectClearsSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(vehicle)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.defaultVehicle = vehicle
+
+	lp.setActiveVehicle(vehicle)
+	lp.vehicleSoc = 75.1
+
+	lp.evVehicleDisconnectHandler()
+	assert.Equal(t, vehicle, lp.vehicle, "expected default vehicle")
+	assert.Zero(t, lp.vehicleSoc, "SoC must clear on disconnect")
+}
+
 // TestActiveVehicleChangeTriggersOptimizer ensures the optimizer is re-run when
 // the detected vehicle changes, as the loadpoint profile depends on it.
 func TestActiveVehicleChangeTriggersOptimizer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
-	vehicle.EXPECT().Icon().Return("").AnyTimes()
-	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().Phases().AnyTimes()
-	vehicle.EXPECT().OnIdentified().AnyTimes()
+	expectVehiclePublish(vehicle)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 	s := new(mockSite)
 	lp.site = s
-
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
 
 	lp.setActiveVehicle(vehicle)
 	assert.Equal(t, 1, s.optimized, "vehicle detected")
@@ -637,9 +614,6 @@ func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	lp.charger = &integratedDeviceCharger{}
 	lp.DefaultMode = api.ModeSmart
 	lp.setMode(api.ModeOff)
-
-	x, y, z := createChannels(t)
-	attachChannels(lp, x, y, z)
 
 	lp.evVehicleDisconnectHandler()
 

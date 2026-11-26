@@ -17,15 +17,14 @@
 				<ForecastGraphIcon class="tab-icon" />
 			</Item>
 
-			<Item v-if="experimental" to="/energy" :label="$t('tabBar.energy')">
+			<Item to="/energy" :label="$t('tabBar.energy')">
 				<SankeyIcon class="tab-icon" />
 			</Item>
 
-			<!-- six tabs do not fit a phone, sessions moves into the more menu there -->
 			<Item
 				to="/sessions"
 				:label="$t('tabBar.sessions')"
-				:class="{ 'd-none d-sm-flex': experimental }"
+				:class="{ 'd-none d-sm-flex': hideSessions }"
 			>
 				<SessionsIcon class="tab-icon" />
 			</Item>
@@ -37,6 +36,7 @@
 				:sponsor="sponsor"
 				:fatal="fatal"
 				:experimental="experimental"
+				:hide-sessions="hideSessions"
 				:auth-disabled="authDisabled"
 				:optimizer="optimizer"
 				:installed="installed"
@@ -101,6 +101,10 @@ export default defineComponent({
 		},
 		batteryConfigured() {
 			return (this.battery?.devices?.length ?? 0) > 0;
+		},
+		// six tabs do not fit a phone, sessions moves into the more menu there
+		hideSessions() {
+			return this.batteryConfigured;
 		},
 		moreActive() {
 			const mainTabs = ["/", "/energy", "/battery", "/forecast", "/sessions"];
