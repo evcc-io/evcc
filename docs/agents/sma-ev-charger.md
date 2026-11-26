@@ -56,9 +56,9 @@ evcc controls charging via the charging mode and leaves `ChrgApv` untouched. Acc
 
 ## Control paths
 
-- **REST**: `WSptMax` and `WSptMin` set to the same negative value for power, 0 to disable, rewritten at half the control timeout. Without writable setpoint channels (EV Charger, unverified) mode 4718/4721 for enable and `Inverter.WMaxIn` for power, clamped to the `min`/`max` reported for the parameter. With a 4500 W minimum, as on the EV Charger, 1p charging and phase switching are not possible there.
+- **REST**: `WSptMax` and `WSptMin` set to the same negative value for power, 0 to disable, rewritten at half the control timeout. Without writable setpoint channels (EV Charger, unverified) mode 4718/4721 for enable and `Inverter.WMaxIn` for power, clamped to the `min`/`max` reported for the parameter. With a 4500 W minimum, as on the EV Charger, 1p charging is not possible there and phase switching is not offered. With setpoints, phase switching is offered only if `WMaxIn` reaches the 3p threshold, and `WMaxIn` is reported as power limit.
 - **SEMP**: `On` plus `RecommendedPowerConsumption`, sent at least once per minute. eCharger firmware 2.7.31.R accepts but ignores SEMP commands and charges at full power (evcc-io/evcc#36465). A power cycle helps temporarily.
-- **Modbus**: `WSptMax` (41431) and `WSptMin` (41433) set to the same negative value for power, 0 to disable, rewritten at half the control timeout (41525). Enabled while `WSptMin` is not 0. The charger switches 1p/3p internally based on the power (120 s changeover pause, manual 8.13.2).
+- **Modbus**: `WSptMax` (41431) and `WSptMin` (41433) set to the same negative value for power, 0 to disable, rewritten at half the control timeout (41525). Enabled while `WSptMin` is not 0. `WMinIn`/`WMaxIn` are reported as power limits, phase switching is offered only if `WMaxIn` reaches the 3p threshold and the rated power (33019) indicates a 3p device. The charger switches 1p/3p internally based on the power (120 s changeover pause, manual 8.13.2).
 
 ## Charging mode
 

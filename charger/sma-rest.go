@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/sma"
 	smarest "github.com/evcc-io/evcc/charger/sma-rest"
 	"github.com/evcc-io/evcc/util"
@@ -42,6 +43,7 @@ import (
 
 // smaevchager charger implementation
 type SmaRest struct {
+	implement.Caps
 	*request.Helper
 	log          *util.Logger
 	uri          string // 192.168.XXX.XXX
@@ -103,6 +105,7 @@ func NewSmaRest(ctx context.Context, uri, user, password string, cache time.Dura
 	log := util.NewLogger("sma-rest").Redact(user, password)
 
 	wb := &SmaRest{
+		Caps:    implement.New(),
 		Helper:  request.NewHelper(log),
 		log:     log,
 		uri:     util.DefaultScheme(strings.TrimRight(uri, "/"), "http") + "/api/v1",
@@ -172,8 +175,14 @@ func NewSmaRest(ctx context.Context, uri, user, password string, cache time.Dura
 		log.WARN.Println("rotary switch must be set to fast charging")
 	}
 
-	// the charger may already run a 1p setpoint after a restart
-	if wb.useSetpoint {
+	// the charger selects 1p below the threshold power, the legacy path never sets less than its 4500 W minimum
+	if maxPower := wb.maxPower(); wb.useSetpoint && maxPower > 0 && maxPower < sma.MinPower3p {
+		wb.phases = 1
+	} else if wb.useSetpoint {
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+
+		// the charger may already run a 1p setpoint after a restart
 		if v, err := wb.getParameter(sma.SetpointWSptMin); err == nil {
 			if f, err := strconv.ParseFloat(v, 64); err == nil && f != 0 {
 				wb.power = math.Abs(f)
@@ -444,10 +453,37 @@ func (wb *SmaRest) calcPower(current float64, phases int) float64 {
 	return power
 }
 
-var _ api.PhaseSwitcher = (*SmaRest)(nil)
+// maxPower returns the configured maximum power, 0 if unknown
+func (wb *SmaRest) maxPower() float64 {
+	p, err := wb.parameter(sma.InverterWMaxIn)
+	if err != nil {
+		return 0
+	}
 
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (wb *SmaRest) Phases1p3p(phases int) error {
+	v, _ := strconv.ParseFloat(p.Value, 64)
+	return math.Abs(v)
+}
+
+var _ api.PowerLimiter = (*SmaRest)(nil)
+
+// GetMinMaxPower implements the api.PowerLimiter interface
+func (wb *SmaRest) GetMinMaxPower() (float64, float64, error) {
+	// the legacy path controls via the maximum power, it is no limit there
+	if !wb.useSetpoint {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	maxPower := wb.maxPower()
+	if maxPower == 0 {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	// the minimum power is not exposed, 0 leaves the minimum current in effect
+	return 0, maxPower, nil
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *SmaRest) phases1p3p(phases int) error {
 	// loadpoint may not rewrite an unchanged current, hence apply the new phases immediately
 	if wb.current > 0 {
 		if err := wb.setPower(wb.current, phases); err != nil {
@@ -460,14 +496,8 @@ func (wb *SmaRest) Phases1p3p(phases int) error {
 	return nil
 }
 
-var _ api.PhaseGetter = (*SmaRest)(nil)
-
-// GetPhases implements the api.PhaseGetter interface
-func (wb *SmaRest) GetPhases() (int, error) {
-	if !wb.useSetpoint {
-		return wb.phases, nil
-	}
-
+// getPhases implements the api.PhaseGetter interface
+func (wb *SmaRest) getPhases() (int, error) {
 	v, err := wb.getParameter(sma.SetpointWSptMin)
 	if err != nil {
 		return 0, err
@@ -476,9 +506,7 @@ func (wb *SmaRest) GetPhases() (int, error) {
 	power, err := strconv.ParseFloat(v, 64)
 	switch {
 	case err != nil: // not limited, the charger uses its configured maximum
-		if p, err := wb.parameter(sma.InverterWMaxIn); err == nil {
-			power, _ = strconv.ParseFloat(p.Value, 64)
-		}
+		power = wb.maxPower()
 	case power == 0: // disabled, phases follow the stored setpoint on enable
 		wb.mu.Lock()
 		power = wb.power
