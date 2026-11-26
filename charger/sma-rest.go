@@ -172,17 +172,12 @@ func NewSmaRest(ctx context.Context, uri, user, password string, cache time.Dura
 		log.WARN.Println("rotary switch must be set to fast charging")
 	}
 
-	// the charger may already charge on 1p after a restart
-	if s, err := wb.Status(); err == nil && s == api.StatusC {
-		if l1, l2, l3, err := wb.Currents(); err == nil {
-			var active int
-			for _, l := range []float64{l1, l2, l3} {
-				if math.Abs(l) > 1 {
-					active++
-				}
-			}
-			if active == 1 {
-				wb.phases = 1
+	// the charger may already run a 1p setpoint after a restart
+	if wb.useSetpoint {
+		if v, err := wb.getParameter(sma.SetpointWSptMin); err == nil {
+			if f, err := strconv.ParseFloat(v, 64); err == nil && f != 0 {
+				wb.power = math.Abs(f)
+				wb.phases = sma.Phases(wb.power)
 			}
 		}
 	}
@@ -424,6 +419,13 @@ func (wb *SmaRest) calcPower(current float64, phases int) float64 {
 	}
 
 	if wb.useSetpoint {
+		// the charger selects the phases based on the setpoint
+		if phases > 1 {
+			power = max(power, sma.MinPower3p)
+		} else {
+			power = min(power, sma.MinPower3p-1)
+		}
+
 		// the setpoint is limited by the configured maximum power
 		if v, err := strconv.ParseFloat(p.Value, 64); err == nil && v != 0 {
 			power = min(power, math.Abs(v))
@@ -462,7 +464,32 @@ var _ api.PhaseGetter = (*SmaRest)(nil)
 
 // GetPhases implements the api.PhaseGetter interface
 func (wb *SmaRest) GetPhases() (int, error) {
-	return wb.phases, nil
+	if !wb.useSetpoint {
+		return wb.phases, nil
+	}
+
+	v, err := wb.getParameter(sma.SetpointWSptMin)
+	if err != nil {
+		return 0, err
+	}
+
+	power, err := strconv.ParseFloat(v, 64)
+	switch {
+	case err != nil: // not limited, the charger uses its configured maximum
+		if p, err := wb.parameter(sma.InverterWMaxIn); err == nil {
+			power, _ = strconv.ParseFloat(p.Value, 64)
+		}
+	case power == 0: // disabled, phases follow the stored setpoint on enable
+		wb.mu.Lock()
+		power = wb.power
+		wb.mu.Unlock()
+	}
+
+	if power == 0 {
+		return 0, nil
+	}
+
+	return sma.Phases(math.Abs(power)), nil
 }
 
 var _ api.MeterEnergy = (*SmaRest)(nil)

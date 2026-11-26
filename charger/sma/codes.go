@@ -24,6 +24,17 @@ const (
 	SetpointWSptMin     = "Setpoint.PlantControl.Inverter.WModCfg.WCtlComCfg.WSptMin"
 )
 
+// MinPower3p is the setpoint power from which the charger selects 3p, below it selects 1p
+const MinPower3p = 4500 // W
+
+// Phases returns the phases the charger selects for the setpoint power
+func Phases(power float64) int {
+	if power >= MinPower3p {
+		return 3
+	}
+	return 1
+}
+
 // Code is an SMA enum value
 type Code uint32
 
