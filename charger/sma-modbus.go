@@ -395,15 +395,25 @@ func (wb *SmaModbus) voltageFactor(phases int) float64 {
 		return 1
 	}
 
-	u := u1
+	us := []float64{u1}
 	if phases > 1 {
-		u = max(u1, u2, u3)
+		us = append(us, u2, u3)
 	}
-	if u <= 0 {
+
+	// equal phase currents draw the sum of the phase voltages, hence the mean of the measured ones
+	var sum float64
+	var n int
+	for _, u := range us {
+		if u > 0 {
+			sum += u
+			n++
+		}
+	}
+	if n == 0 {
 		return 1
 	}
 
-	return u / grid.Voltage
+	return sum / float64(n) / grid.Voltage
 }
 
 var _ api.PhaseSwitcher = (*SmaModbus)(nil)
