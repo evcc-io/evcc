@@ -5,26 +5,30 @@ products:
 requirements:
   evcc: ["skiptest"]
 group: price
-countries: ["DE", "LU", "AT", "FR", "NL", "BE", "PL", "DK"]
+countries: ["DE", "LU", "AT", "FR", "NL", "BE", "PL", "DK", "CH", "CZ", "HU", "SI", "IT", "NO", "SE"]
 params:
   - name: token
     required: true
   - name: domain
     type: choice
-    choice: [DE-LU, AT, FR, NL, BE, PL, DK1, DK2]
+    choice: [DE-LU, AT, FR, NL, BE, PL, DK1, DK2, CH, CZ, HU, SI, IT-North, NO2, SE4]
   - preset: tariff-base
   - preset: tariff-features
 render: |
   type: custom
+  {{- $local := or .chargesZones .formula }}
+  {{- if $local }}
   {{ include "base" . }}
+  {{- end }}
   {{ include "features" . }}
+  # without zones or formula, charges and tax are applied by the API, unset values fall back to the energyforecast.de profile
   forecast:
     source: http
-    uri: https://www.energyforecast.de/api/v1/predictions/next_96_hours?resolution=QUARTER_HOURLY&fixed_cost_cent=0&vat=0&token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}
+    uri: https://www.energyforecast.de/api/v2/forecast?token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}{{ if not $local }}{{ if .charges }}&fixed_cost_cent={{ round (mulf .charges 100) 4 }}{{ end }}{{ if .tax }}&vat={{ round (mulf .tax 100) 4 }}{{ end }}{{ end }}
     jq: |
-      map({
-        "start": .start | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "end":   .end   | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "value": .price,
+      .data | map({
+        "start": .start,
+        "end": .end,
+        "value": ({{ if $local }}.price_ct_kwh{{ else }}.total_ct_kwh{{ end }} / 100),
         "estimate": (.price_origin == "forecast")
       }) | tostring
