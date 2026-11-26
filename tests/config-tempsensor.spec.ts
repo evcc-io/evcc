@@ -1,4 +1,4 @@
-import { test, expect, type Locator } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
   expectModalVisible,
@@ -16,18 +16,6 @@ test.describe.configure({ mode: "parallel" });
 test.afterEach(async () => {
   await stop();
 });
-
-const addTempSensor = async (lpModal: Locator, sensorModal: Locator) => {
-  await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
-  await lpModal.getByRole("button", { name: "Add temperature sensor" }).click();
-  await expectModalVisible(sensorModal);
-  await sensorModal.getByLabel("Manufacturer").selectOption("User-defined device");
-  await sensorModal.getByRole("button", { name: "Validate & save" }).click();
-  await expectModalHidden(sensorModal);
-  await expectModalVisible(lpModal);
-  await lpModal.getByRole("button", { name: "Save" }).click();
-  await expectModalHidden(lpModal);
-};
 
 test.describe("temp sensor", async () => {
   test("create, update and delete", async ({ page }) => {
@@ -126,7 +114,15 @@ test.describe("temp sensor", async () => {
 
     await newLoadpoint(page, "Boiler", LoadpointType.Heating);
     await addDemoCharger(page, LoadpointType.Heating);
-    await addTempSensor(lpModal, sensorModal);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
+    await lpModal.getByRole("button", { name: "Add temperature sensor" }).click();
+    await expectModalVisible(sensorModal);
+    await sensorModal.getByLabel("Manufacturer").selectOption("User-defined device");
+    await sensorModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(sensorModal);
+    await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
 
     await restart();
     await page.reload();

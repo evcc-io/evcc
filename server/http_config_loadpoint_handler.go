@@ -403,8 +403,6 @@ func deleteLoadpointHandler(site site.API) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
-
-			setConfigDirty()
 		}
 
 		setConfigDirty()
