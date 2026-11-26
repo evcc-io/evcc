@@ -83,6 +83,9 @@ type EEBus struct {
 	mux sync.Mutex
 	log *util.Logger
 
+	// lifecycle serializes device registration including its SHIP calls, which run outside mux
+	lifecycle sync.Mutex
+
 	// configured is set once device configuration has finished. Until then, an
 	// unknown ski may still belong to a device that is not configured yet.
 	configured bool
@@ -487,6 +490,9 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 		return errors.New("device ski can not be identical to host ski")
 	}
 
+	c.lifecycle.Lock()
+	defer c.lifecycle.Unlock()
+
 	// trust for the paired device is established by pairing, not by configuration
 	if ski != pairedSki {
 		identity := shipapi.NewServiceIdentity(ski, "", "")
@@ -544,6 +550,9 @@ func (c *EEBus) replayUseCases(ski string, device Device) {
 func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("unregistering ski: %s", ski)
+
+	c.lifecycle.Lock()
+	defer c.lifecycle.Unlock()
 
 	c.mux.Lock()
 	if idx := slices.Index(c.clients[ski], device); idx != -1 {
