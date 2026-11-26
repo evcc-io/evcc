@@ -53,7 +53,11 @@ type SmaRest struct {
 	control      string // channel used for power control
 	mu           sync.Mutex
 	setpoint     string // last written setpoint
+	updated      time.Time
 }
+
+// setpoint refresh after the last write, well within the 600 s control timeout seen on the eCharger
+const smaRestRefresh = 30 * time.Second
 
 func init() {
 	// TODO remove deprecated
@@ -199,38 +203,36 @@ func NewSmaRest(ctx context.Context, uri, user, password string, cache time.Dura
 
 	// setpoints fall back after the control timeout
 	if wb.control == sma.SetpointWSptMin {
-		interval := time.Minute
-		if v, err := wb.getParameter(sma.InverterTmsOutPrc); err == nil {
-			if t, err := strconv.ParseFloat(v, 64); err == nil && t > 0 {
-				interval = max(time.Duration(t*float64(time.Second))/2, time.Second)
-			}
-		}
-
-		go wb.watchdog(ctx, interval)
+		go wb.watchdog(ctx)
 	}
 
 	return wb, nil
 }
 
 // watchdog rewrites the setpoint before the charger falls back after the control timeout
-func (wb *SmaRest) watchdog(ctx context.Context, interval time.Duration) {
-	for tick := time.Tick(interval); ; {
+func (wb *SmaRest) watchdog(ctx context.Context) {
+	for {
+		wb.mu.Lock()
+		wait := smaRestRefresh
+		if wb.setpoint != "" {
+			wait -= time.Since(wb.updated)
+		}
+		wb.mu.Unlock()
+
 		select {
-		case <-tick:
+		case <-time.After(wait):
 		case <-ctx.Done():
 			return
 		}
 
 		wb.mu.Lock()
-		var err error
-		if wb.setpoint != "" {
-			err = wb.Send(value(wb.control, wb.setpoint))
+		if wb.setpoint != "" && time.Since(wb.updated) >= smaRestRefresh {
+			if err := wb.Send(value(wb.control, wb.setpoint)); err != nil {
+				wb.log.ERROR.Println("watchdog:", err)
+			}
+			wb.updated = time.Now()
 		}
 		wb.mu.Unlock()
-
-		if err != nil {
-			wb.log.ERROR.Println("watchdog:", err)
-		}
 	}
 }
 
@@ -360,6 +362,7 @@ func (wb *SmaRest) setPower(current float64, phases int) error {
 	}
 
 	wb.setpoint = val
+	wb.updated = time.Now()
 
 	return nil
 }
