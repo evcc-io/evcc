@@ -501,6 +501,31 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 	assert.Equal(t, 0.0, lp.vehicleSoc, "soc must clear on vehicle change")
 }
 
+func TestVehicleHandoverDoesNotDeadlock(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(vehicle)
+
+	shared := coordinator.New(util.NewLogger("coordinator"), []api.Vehicle{vehicle})
+	a := NewLoadpoint(util.NewLogger("a"), settings.NewDatabaseSettingsAdapter("a"))
+	b := NewLoadpoint(util.NewLogger("b"), settings.NewDatabaseSettingsAdapter("b"))
+	a.coordinator = coordinator.NewAdapter(a, shared)
+	b.coordinator = coordinator.NewAdapter(b, shared)
+
+	a.SetVehicle(vehicle)
+	done := make(chan struct{})
+	go func() {
+		b.SetVehicle(vehicle)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("vehicle handover deadlocked")
+	}
+}
+
 // TestDisconnectClearsSoc ensures the previous session's SoC does not survive
 // a disconnect for the same default vehicle
 func TestDisconnectClearsSoc(t *testing.T) {
