@@ -19,6 +19,8 @@ const (
 	ChrgStpWhenFl       = "Parameter.Chrg.StpWhenFl"
 	ChrgUseEnergyMeter  = "Parameter.Chrg.UseEnergyMeter"
 	InverterWMaxIn      = "Parameter.Inverter.WMaxIn"
+	InverterTmsOutPrc   = "Parameter.Inverter.CtlComCfg.WCtlCom.TmsOutPrc"
+	SetpointWSptMax     = "Setpoint.PlantControl.Inverter.WModCfg.WCtlComCfg.WSptMax"
 	SetpointWSptMin     = "Setpoint.PlantControl.Inverter.WModCfg.WCtlComCfg.WSptMin"
 )
 
