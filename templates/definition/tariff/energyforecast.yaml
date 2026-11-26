@@ -3,6 +3,9 @@ link: https://www.energyforecast.de
 products:
   - brand: Energy Forecast
 requirements:
+  description:
+    de: Aufschlag und Steuer, die hier nicht gesetzt sind, werden aus dem Profil auf energyforecast.de übernommen. Wer nur einen Aufschlag setzt, sollte auch die Steuer setzen, da der Aufschlag sonst unversteuert bleibt.
+    en: Charges and tax not set here are taken from your energyforecast.de profile. When setting a charge, also set the tax, otherwise the charge is not taxed.
   evcc: ["skiptest"]
 group: price
 countries:
@@ -17,19 +20,16 @@ params:
   - preset: tariff-features
 render: |
   type: custom
-  {{- $local := or .chargesZones .formula }}
-  {{- if $local }}
   {{ include "base" . }}
-  {{- end }}
   {{ include "features" . }}
-  # without zones or formula, charges and tax are applied by the API, unset values fall back to the energyforecast.de profile
+  # values set in evcc are applied locally and zeroed in the API, unset values come from the energyforecast.de profile
   forecast:
     source: http
-    uri: https://www.energyforecast.de/api/v2/forecast?token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}{{ if not $local }}{{ if ne (toString .charges) "" }}&fixed_cost_cent={{ round (mulf .charges 100) 4 }}{{ end }}{{ if ne (toString .tax) "" }}&vat={{ round (mulf .tax 100) 4 }}{{ end }}{{ end }}
+    uri: https://www.energyforecast.de/api/v2/forecast?token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}{{ if or (ne (toString .charges) "") .chargesZones .formula }}&fixed_cost_cent=0{{ end }}{{ if or (ne (toString .tax) "") .formula }}&vat=0{{ end }}
     jq: |
       .data | map({
         "start": .start,
         "end": .end,
-        "value": ({{ if $local }}.price_ct_kwh{{ else }}.total_ct_kwh{{ end }} / 100),
+        "value": (.total_ct_kwh / 100),
         "estimate": (.price_origin == "forecast")
       }) | tostring
