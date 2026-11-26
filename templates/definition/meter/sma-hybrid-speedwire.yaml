@@ -4,6 +4,11 @@ products:
     description:
       de: Smart Energy Hybrid-Wechselrichter (Speedwire)
       en: Smart Energy Hybrid Inverter (Speedwire)
+caveats:
+  - description:
+      de: evcc und das Gerät müssen sich im selben Layer-2-Netzwerk befinden.
+      en: evcc and the device must be on the same layer 2 network.
+    link: https://github.com/evcc-io/evcc/discussions/16986
 requirements:
   description:
     de: |

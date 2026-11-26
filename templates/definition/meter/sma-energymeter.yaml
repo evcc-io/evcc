@@ -3,6 +3,11 @@ products:
   - brand: SMA
     description:
       generic: Energy Meter
+caveats:
+  - description:
+      de: evcc und das Gerät müssen sich im selben Layer-2-Netzwerk befinden.
+      en: evcc and the device must be on the same layer 2 network.
+    link: https://github.com/evcc-io/evcc/discussions/16986
 discovery:
   hostname: ["sma*", "energymeter*"]
   mac: ["0015BB", "0040AD"]
