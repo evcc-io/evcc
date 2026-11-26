@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -33,7 +35,10 @@ import (
 
 // SmaModbus charger implementation for the SMA eCharger (Modbus profile SW 2.7)
 type SmaModbus struct {
+	log        *util.Logger
 	conn       *modbus.Connection
+	mu         sync.Mutex
+	setpoint   []byte // last written WSptMax/WSptMin pair
 	phases     int
 	current    float64
 	minCurrent float64
@@ -69,7 +74,10 @@ const (
 	smaModbusRegRelease    = 41475 // ENUM32
 	smaModbusRegChargeLock = 41477 // ENUM32, access management: free charging mode or app/RFID release
 	smaModbusRegStpWhenFl  = 41485 // UINT32, disconnect after full charge
-	smaModbusRegSetpoint   = 44383 // INT32 W
+	smaModbusRegWSptMax    = 41431 // INT32 W, active power setpoint upper bound
+	smaModbusRegWSptMin    = 41433 // INT32 W, active power setpoint lower bound
+	smaModbusRegCtlTimeout = 41525 // UINT32 0.01 s, active power control timeout
+	smaModbusRegMaxPower   = 44383 // INT32 W, configured maximum power WMaxIn, must not be used for control
 	smaModbusRegMinPower   = 44387 // INT32 W
 
 	smaModbusYes          = 1129
@@ -82,6 +90,9 @@ const (
 
 	// the charger drops to 1p below this power, matches the 4500 W WMaxIn minimum of the EV Charger
 	smaModbusMinPower3p = 4500 // W
+
+	// setpoint refresh interval if the control timeout is unknown
+	smaModbusRefresh = time.Minute
 )
 
 func init() {
@@ -116,6 +127,7 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 	conn.Logger(log.TRACE)
 
 	wb := &SmaModbus{
+		log:    log,
 		conn:   conn,
 		phases: 3,
 	}
@@ -127,7 +139,7 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 		log.WARN.Printf("charging mode is %d, fast charging (%d) required", v, smaModbusModeFast)
 	}
 
-	// the charger may reject values outside its range, e.g. a 4500 W minimum on the EV Charger
+	// setpoints are limited to the configured power range
 	if v, err := wb.readHolding32(smaModbusRegMinCurrent); err == nil {
 		wb.minCurrent = smaModbusUint32(v) / 10
 	}
@@ -137,8 +149,15 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 	if v, err := wb.readHolding32(smaModbusRegMinPower); err == nil {
 		wb.minPower = smaModbusInt32(v)
 	}
+	if v, err := wb.readHolding32(smaModbusRegMaxPower); err == nil {
+		wb.maxPower = smaModbusInt32(v)
+	}
+
+	// earlier versions of this driver controlled the charger via WMaxIn
 	if v, err := wb.read32(smaModbusRegMaxPowerRtg, 1); err == nil {
-		wb.maxPower = smaModbusInt32(v[0])
+		if rated := math.Abs(smaModbusInt32(v[0])); rated > 0 && math.Abs(wb.maxPower) < rated {
+			log.WARN.Printf("maximum power (WMaxIn) is %.0fW, below rated %.0fW", math.Abs(wb.maxPower), rated)
+		}
 	}
 
 	// the charger may already charge on 1p after a restart
@@ -161,7 +180,45 @@ func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, e
 		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
 	}
 
+	// setpoints fall back after the control timeout
+	interval := smaModbusRefresh
+	if v, err := wb.readHolding32(smaModbusRegCtlTimeout); err == nil {
+		if timeout := time.Duration(smaModbusUint32(v)*10) * time.Millisecond; timeout > 0 {
+			interval = max(timeout/2, time.Second)
+		}
+	}
+
+	go wb.watchdog(ctx, interval)
+
 	return wb, nil
+}
+
+// watchdog rewrites the setpoint before the charger falls back after the control timeout
+func (wb *SmaModbus) watchdog(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		wb.mu.Lock()
+		var err error
+		if wb.setpoint != nil {
+			err = wb.writeSetpoint(wb.setpoint)
+		}
+		wb.mu.Unlock()
+
+		if err != nil {
+			wb.log.ERROR.Println("watchdog:", err)
+		}
+	}
+}
+
+// writeSetpoint writes WSptMax and WSptMin in one request
+func (wb *SmaModbus) writeSetpoint(b []byte) error {
+	_, err := wb.conn.WriteMultipleRegisters(smaModbusRegWSptMax, 4, b)
+	return err
 }
 
 func (wb *SmaModbus) write(reg uint16, val uint32) error {
@@ -291,8 +348,20 @@ func (wb *SmaModbus) setPower(current float64, phases int) error {
 		power = min(power, maxPower)
 	}
 
-	// the charger rejects positive setpoints, consumption is negative
-	return wb.write(smaModbusRegSetpoint, uint32(int32(-math.Ceil(power))))
+	// consumption is negative, equal bounds make the setpoint exact
+	val := uint32(int32(-math.Ceil(power)))
+	b := binary.BigEndian.AppendUint32(binary.BigEndian.AppendUint32(nil, val), val)
+
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	if err := wb.writeSetpoint(b); err != nil {
+		return err
+	}
+
+	wb.setpoint = b
+
+	return nil
 }
 
 // voltageFactor scales from nominal to measured voltage since the charger derives the phase current from the latter
@@ -499,7 +568,10 @@ func (wb *SmaModbus) Diagnose() {
 		{"Release", smaModbusRegRelease},
 		{"Charge lock", smaModbusRegChargeLock},
 		{"Disconnect after full charge", smaModbusRegStpWhenFl},
-		{"Max power", smaModbusRegSetpoint},
+		{"Setpoint max", smaModbusRegWSptMax},
+		{"Setpoint min", smaModbusRegWSptMin},
+		{"Control timeout", smaModbusRegCtlTimeout},
+		{"Max power", smaModbusRegMaxPower},
 		{"Min power", smaModbusRegMinPower},
 		{"Rated max current", smaModbusRegMaxCurrent},
 		{"Min current", smaModbusRegMinCurrent},
