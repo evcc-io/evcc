@@ -48,7 +48,7 @@ func TestSgReadyRelayFromConfig(t *testing.T) {
 
 		boost.EXPECT().Enable(false)
 		dim.EXPECT().Enable(true)
-		require.NoError(t, wb.(api.Dimmer).Dim(true))
+		require.NoError(t, wb.(api.Dimmer).Dim(true, 0))
 	})
 
 	t.Run("unknown reference", func(t *testing.T) {

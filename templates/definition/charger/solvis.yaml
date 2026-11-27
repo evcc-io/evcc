@@ -36,8 +36,10 @@ params:
     type: choice
     choice: ["warmwater", "buffer"]
     default: warmwater
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   # The controller has no mode register, the mode is tracked by evcc.
   # It could be read back from 2305:
   # getmode:

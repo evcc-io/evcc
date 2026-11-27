@@ -20,6 +20,7 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater"]
+  - name: dimpower
 render: |
   {{- include "stiebel-sgready" . }}
   {{- if .tempsource }}

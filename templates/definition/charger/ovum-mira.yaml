@@ -32,8 +32,10 @@ params:
     help:
       de: Modbus Slave-ID des Wärmepumpenmoduls (WPM 1 = 111 … WPM 8 = 118)
       en: Modbus slave id of the heat pump module (WPM 1 = 111 … WPM 8 = 118)
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   getmode:
     source: map
     values:

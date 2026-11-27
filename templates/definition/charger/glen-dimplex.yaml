@@ -12,8 +12,10 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   getmode:
     source: map
     values:

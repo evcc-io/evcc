@@ -54,8 +54,10 @@ params:
     description:
       de: Interne Energiemessung
       en: Internal energy metering
+  - name: dimpower
 render: |
   type: sgready
+  dimpower: {{ .dimpower }}
   setmode:
     source: map
     values:

@@ -19,6 +19,7 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
+  - name: dimpower
 render: |
   {{- include "stiebel-wpm-base" . }}
   {{- include "stiebel-wpm-power" . }}

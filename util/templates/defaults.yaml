@@ -86,6 +86,18 @@ params:
     type: float
     usages: ["pv", "curtailer"]
     advanced: true
+  - name: dimpower
+    unit: W
+    description:
+      de: Max. Verbrauch (gedimmt)
+      en: Max. consumption (dimmed)
+    help:
+      de: Zugeordnete maximale Leistungsaufnahme während der aktiven Dimmung (§14a EnWG). Die Summe über alle Geräte darf Pmin nicht überschreiten. Negative Werte nehmen das Gerät von der Dimmung aus.
+      en: Assigned maximum consumption while dimmed. The sum across all devices must not exceed Pmin. Negative values exempt the device from dimming.
+    default: 0
+    example: 4200
+    type: float
+    advanced: true
   - name: vin
     private: true
     description:

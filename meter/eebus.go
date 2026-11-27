@@ -35,11 +35,14 @@ type EEBus struct {
 	scenarios maScenarios
 
 	mu          sync.Mutex
+	dimMu       sync.Mutex // serializes limit writes so a reconnect restatement cannot overtake a newer decision
 	maEntity    spineapi.EntityRemoteInterface
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
 
-	dimmedState    bool // last limits written, re-stated on reconnect
+	dimPower       float64 // configured residual consumption power while dimmed
+	dimmedState    bool    // last limits written, re-stated on reconnect
+	dimLimit       float64
 	curtailPercent int
 }
 
@@ -85,6 +88,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, e
 	var cc struct {
 		Ski, Ip  string
 		Usage    *templates.Usage
+		DimPower float64
 		Timeout_ time.Duration `mapstructure:"timeout"` // TODO deprecated
 	}
 
@@ -92,12 +96,12 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, e
 		return nil, err
 	}
 
-	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Usage)
+	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Usage, cc.DimPower)
 }
 
 // NewEEBus creates an EEBus meter
 // Uses MGCP only when usage="grid", otherwise uses MPC (default)
-func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.Meter, error) {
+func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, dimPower float64) (api.Meter, error) {
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
@@ -124,6 +128,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 		mm:             mm,
 		scenarios:      scenarios,
 		connector:      eebus.NewConnector(),
+		dimPower:       dimPower,
 		curtailPercent: 100,
 	}
 
@@ -169,7 +174,7 @@ func (c *EEBus) Capability(typ reflect.Type) (any, bool) {
 	switch typ {
 	case reflect.TypeFor[api.Dimmer]():
 		if c.egLpcEntity != nil && c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, eebus.LPCLimit) {
-			return implement.Dimmer(c.dim, c.dimmed), true
+			return implement.Dimmer(c.dim, c.getDimPower, c.dimmed), true
 		}
 	case reflect.TypeFor[api.Curtailer]():
 		if c.egLppEntity != nil && c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(c.egLppEntity, eebus.LPPLimit) {
@@ -201,11 +206,15 @@ func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.Ent
 	return res, nil
 }
 
-func (c *EEBus) lastDimmed() bool {
+func (c *EEBus) lastDimmed() (bool, float64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	return c.dimmedState
+	return c.dimmedState, c.dimLimit
+}
+
+func (c *EEBus) getDimPower() float64 {
+	return c.dimPower
 }
 
 func (c *EEBus) lastCurtailPercent() int {
@@ -275,18 +284,28 @@ func (c *EEBus) dimmed() (bool, error) {
 		return false, err
 	}
 
-	// an active limit means dimmed; the applied limit value is 0W, so a
+	// an active limit means dimmed; the applied limit value may be 0W, so a
 	// value-based check would never report the dimmed state and never release it
 	return limit.IsActive, nil
 }
 
-func (c *EEBus) dim(dim bool) error {
-	// Sets or removes the consumption power limit
+// dim sets or removes the consumption power limit
+func (c *EEBus) dim(dim bool, limit float64) error {
+	c.dimMu.Lock()
+	defer c.dimMu.Unlock()
 
-	// TODO: change api.Dimmer to make limit configurable
-	// For now, we use a fixed safe limit of 0W
-	limit := 0.0
+	return c.writeDim(dim, limit)
+}
 
+// restateDim writes the last applied limit again
+func (c *EEBus) restateDim() error {
+	c.dimMu.Lock()
+	defer c.dimMu.Unlock()
+
+	return c.writeDim(c.lastDimmed())
+}
+
+func (c *EEBus) writeDim(dim bool, limit float64) error {
 	var value float64
 	if dim {
 		value = limit
@@ -308,6 +327,7 @@ func (c *EEBus) dim(dim bool) error {
 
 	c.mu.Lock()
 	c.dimmedState = dim
+	c.dimLimit = value
 	c.mu.Unlock()
 
 	return nil

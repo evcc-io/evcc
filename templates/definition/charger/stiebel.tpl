@@ -1,5 +1,6 @@
 {{ define "stiebel-sgready" }}
 type: sgready
+dimpower: {{ .dimpower }}
 getmode:
   source: map
   values:
