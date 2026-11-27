@@ -1510,7 +1510,7 @@
       "total": "Total"
     },
     "stat": {
-      "autarky": "Autarky",
+      "autarky": "Self-sufficiency",
       "co2Saved": "CO₂ saved",
       "co2SavedTooltip": "Compared to drawing the consumed {energy} from the grid.",
       "configure": "Configure now",

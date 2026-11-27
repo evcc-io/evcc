@@ -37,7 +37,7 @@ for (const [name, viewport] of Object.entries(viewports)) {
     // pending: progress line, labels in place, no values
     await expect(progress).toBeVisible();
     await expect(summary.getByText("Self-consumption")).toBeVisible();
-    await expect(autarky).toContainText("Autarky");
+    await expect(autarky).toContainText("Self-sufficiency");
     await expect(autarky).not.toContainText("%");
     await expect(overview.getByRole("heading", { name: "Overview" })).toBeVisible();
     const pending = [await height(summary), await height(overview)];
