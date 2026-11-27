@@ -267,11 +267,6 @@ var (
 // repeatedGet reports the first time url is fetched again within a second, a sign
 // the response should be cached. It fires once per url to avoid log spam.
 func repeatedGet(url string, now time.Time) bool {
-	// a query selects the values to read, such requests are not expected to be cached
-	if strings.Contains(url, "?") {
-		return false
-	}
-
 	httpSeenMu.Lock()
 	defer httpSeenMu.Unlock()
 
