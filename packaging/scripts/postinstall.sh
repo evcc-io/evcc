@@ -75,7 +75,7 @@ EOF
 	fi
 
 	# move apt sources of older installs from Cloudsmith to the evcc download host
-	sed -i 's#https://dl\.cloudsmith\.io/public/evcc/#https://dl.evcc.io/public/evcc/#' /etc/apt/sources.list.d/evcc-* 2> /dev/null || true
+	sed -i 's#https://dl\.cloudsmith\.io/public/evcc/#https://dl.evcc.io/public/evcc/#g' /etc/apt/sources.list.d/evcc-* 2> /dev/null || true
 fi
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ]; then
