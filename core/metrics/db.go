@@ -248,9 +248,6 @@ func meterTableCurrent() (bool, error) {
 	return true, nil
 }
 
-// OnPersist, if set, is called with the slot start after a slot is written.
-var OnPersist func(slot time.Time)
-
 // persist stores a completed 15min slot
 func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp *float64, recovered bool) error {
 	slot := ts.Truncate(tariff.SlotDuration)
@@ -258,7 +255,7 @@ func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp 
 	if recovered {
 		origin = slotRecovered
 	}
-	if err := writeDays(slot, slot.Add(tariff.SlotDuration), func(tx *gorm.DB) error {
+	return writeDays(slot, slot.Add(tariff.SlotDuration), func(tx *gorm.DB) error {
 		return tx.Create(&meter{
 			Meter:        entity.Id,
 			Timestamp:    slot.Unix(),
@@ -267,11 +264,5 @@ func persist(entity entity, ts time.Time, energy, returnEnergy float64, socTemp 
 			SocTemp:      socTemp,
 			Recovered:    origin,
 		}).Error
-	}); err != nil {
-		return err
-	}
-	if OnPersist != nil {
-		OnPersist(slot)
-	}
-	return nil
+	})
 }

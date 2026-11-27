@@ -225,9 +225,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 	site.collectors[metrics.Home] = me
 
-	// reload history in the UI on each persisted 15min slot instead of polling
-	metrics.OnPersist = func(slot time.Time) { site.publish(keys.HistoryUpdated, slot) }
-
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
@@ -1269,6 +1266,7 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	for _, lp := range site.activeLoadpoints() {
 		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
+			lp.updateChargeEnergy()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
 
 			mu.Lock()
@@ -1396,6 +1394,9 @@ func (site *Site) update(lp updater) {
 	site.publishSuggestions()
 
 	site.stats.Update(site)
+
+	// publish last, after all collectors have persisted the completed slot
+	site.publish(keys.HistoryUpdated, time.Now().Truncate(tariff.SlotDuration))
 }
 
 // updatePower calculates the site power balance and updates the given loadpoint
