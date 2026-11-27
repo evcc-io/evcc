@@ -545,6 +545,7 @@
 				/>
 				<MeterModal
 					:is-sponsor="isSponsor"
+					:temperatureTariffConfigured="temperatureTariffConfigured"
 					@changed="meterChanged"
 					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
 				/>

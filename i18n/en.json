@@ -755,6 +755,9 @@
         "link": "Convert to consumer"
       },
       "delete": "Delete",
+      "demandPredictor": {
+        "label": "Separate demand forecast"
+      },
       "generic": "Generic integrations",
       "option": {
         "aux": "Add self-regulating consumer",

@@ -36,6 +36,7 @@ type demandType string
 
 const (
 	demandTypeHome         demandType = "home"
+	demandTypeConsumer     demandType = "consumer"
 	demandTypeHeating      demandType = "heating"
 	demandTypeUnmodelled   demandType = "unmodelled"
 	demandTypePrecondition demandType = "precondition"
@@ -114,20 +115,30 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		firstSlotDuration,
 	)
 
-	gt, err := site.homeProfile(minLen)
+	// consumers with their own forecast are taken out of the home profile
+	consumers := site.consumerDemands(minLen)
+
+	gt, err := site.homeProfile(minLen, lo.Map(consumers, func(c consumerDemand, _ int) *metrics.Collector { return c.col })...)
 	if err != nil {
 		return req, details, err
 	}
 
 	// blend measured energy of the last metrics slot into the first slots
 	if v := site.measuredSlotEnergy(metrics.Home); v > 0 {
+		v = max(0, v-lo.SumBy(consumers, func(c consumerDemand) float64 { return c.measured }))
 		orig := slices.Clone(gt[:min(optimizerDecaySlots, len(gt))])
 		blendMeasured(gt, v, optimizerDecaySlots)
 		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f -> %.0f", v, orig, gt[:len(orig)])
 	}
 
-	// base load before the loadpoint contributions are summarized into gt
+	// base load before the consumer and loadpoint contributions are summarized into gt
 	home := slices.Clone(gt)
+
+	for _, c := range consumers {
+		for i := range min(len(gt), len(c.values)) {
+			gt[i] += c.values[i]
+		}
+	}
 
 	// heating loadpoints add their forecast demand on top of the measured base load
 	heaters := site.addHeatingDemand(gt, minLen)
@@ -173,6 +184,14 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		DemandDetails: []demandDetail{
 			{Type: demandTypeHome, Values: prorate(home, firstSlotDuration)},
 		},
+	}
+
+	for _, c := range consumers {
+		details.DemandDetails = append(details.DemandDetails, demandDetail{
+			Type:   demandTypeConsumer,
+			Title:  c.title,
+			Values: prorate(c.values, firstSlotDuration),
+		})
 	}
 
 	if site.circuit != nil {

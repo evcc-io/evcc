@@ -26,7 +26,7 @@ TODO
 
 ### Base load energy demand
 
-Collected 15min energy profile over the last 4 weeks, averaged per slot. A per-slot percentile (e.g. 50 = median, robust against a few heavy days) can be configured via `/api/profilepercentile` instead.
+Collected 15min energy profile over the last 4 weeks, averaged per slot. A per-slot percentile (e.g. 50 = median, robust against a few heavy days) can be configured via `/api/profilepercentile` instead. Consumer meters with their own demand forecast are subtracted from this profile and added as separate demand.
 
 ### Forecast uncertainty
 

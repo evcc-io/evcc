@@ -136,6 +136,16 @@ func TestConfigReqMarshalToMap(t *testing.T) {
 	assert.Equal(t, map[string]any{
 		"deviceDisable": true,
 	}, res)
+
+	// empty preferences are omitted
+	res, err = propsToMap(config.Properties{
+		Type:        "type",
+		Preferences: config.Preferences{DemandPredictor: "weekday"},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{
+		"devicePreferences": map[string]any{"demandPredictor": "weekday"},
+	}, res)
 }
 
 type testStruct struct {

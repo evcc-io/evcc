@@ -755,6 +755,9 @@
         "link": "In Verbraucher umwandeln"
       },
       "delete": "Löschen",
+      "demandPredictor": {
+        "label": "Eigene Verbrauchsprognose"
+      },
       "generic": "Generische Integrationen",
       "option": {
         "aux": "Selbstregelnden Verbraucher hinzufügen",

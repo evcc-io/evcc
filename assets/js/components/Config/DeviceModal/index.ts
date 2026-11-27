@@ -1,4 +1,10 @@
-import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage, ServiceValue } from "@/types/evcc";
+import type {
+  DevicePreferences,
+  DeviceType,
+  MODBUS_COMSET,
+  MeterTemplateUsage,
+  ServiceValue,
+} from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
@@ -94,6 +100,7 @@ export type DeviceValues = {
   deviceTitle?: string;
   deviceIcon?: string;
   deviceDisable?: boolean;
+  devicePreferences?: DevicePreferences;
   usage?: MeterTemplateUsage;
   heating?: boolean;
   integrateddevice?: boolean;

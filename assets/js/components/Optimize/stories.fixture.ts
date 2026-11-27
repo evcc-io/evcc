@@ -22,6 +22,18 @@ export const home: DemandDetail = {
     (h) => 0.4 + 0.3 * Math.exp(-(((h - 12.5) / 1) ** 2)) + 0.6 * Math.exp(-(((h - 19) / 1.5) ** 2))
   ),
 };
+// frost guard running at night, forecast separately from the base load
+export const frostGuard: DemandDetail = {
+  type: "consumer",
+  title: "Frost guard",
+  values: wh((h) => (h < 8 || h >= 20 ? 0.8 : 0)),
+};
+// washing machine heating up, then tumbling, forecast from its weekday pattern
+export const washingMachine: DemandDetail = {
+  type: "consumer",
+  title: "Washing machine",
+  values: wh((h) => (h >= 10 && h < 10.5 ? 2 : h >= 10.5 && h < 12 ? 0.3 : 0)),
+};
 // heat pump tapering off after the morning
 export const heatPump: DemandDetail = {
   type: "heating",
@@ -44,7 +56,7 @@ export const carport: DemandDetail = {
 const vehicle = wh((h) => (h >= 11 && h < 15 ? 5 : 0));
 
 // palette colors aligned with the demand details, base load stays muted
-export const demandColors = ["", "#F8961E", "#00B4D8"];
+export const demandColors = ["", "#F8961E", "#00B4D8", "#9B5DE5"];
 export const batteryColors = ["#0077B6", "#40A578"];
 
 export const batteryDetails: BatteryDetail[] = [

@@ -6,8 +6,11 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -178,5 +181,49 @@ func TestSurplusOnly(t *testing.T) {
 		lp.vehicleSoc = 50
 
 		assert.Equal(t, tc.expected, surplusOnly(lp), tc.name)
+	}
+}
+
+func TestConsumerDemands(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, metrics.SetupSchema())
+
+	home, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
+	require.NoError(t, err)
+	consumer, err := metrics.NewCollector(metrics.Consumer, "db:0", "heater")
+	require.NoError(t, err)
+
+	conf := &config.Config{Properties: config.Properties{Title: "heater", Preferences: config.Preferences{DemandPredictor: "weekday"}}}
+
+	site := &Site{
+		log:            util.NewLogger("foo"),
+		consumerMeters: []config.Device[api.Meter]{config.NewConfigurableDevice[api.Meter](conf, nil)},
+		collectors:     map[string]*metrics.Collector{metrics.Home: home, "db:0": consumer},
+	}
+
+	// incomplete profile: the consumer remains part of the home load
+	require.Empty(t, site.consumerDemands(96))
+
+	// 28 days of 1 kWh home slots containing 0.4 kWh of the consumer
+	seed := func(name string, energy float64) {
+		for ts := now.BeginningOfDay().AddDate(0, 0, -28); ts.Before(now.BeginningOfDay()); ts = ts.Add(tariff.SlotDuration) {
+			require.NoError(t, db.Instance.Exec(
+				`INSERT INTO meters (meter, ts, energy) SELECT id, ?, ? FROM entities WHERE name = ?`, ts.Unix(), energy, name,
+			).Error)
+		}
+	}
+	seed(metrics.Home, 1)
+	seed("db:0", 0.4)
+
+	demands := site.consumerDemands(96)
+	require.Len(t, demands, 1)
+	assert.Equal(t, "heater", demands[0].title)
+
+	profile, err := site.homeProfile(96, demands[0].col)
+	require.NoError(t, err)
+
+	for i := range 96 {
+		assert.InDelta(t, 400, demands[0].values[i], 1e-6, "consumer slot %d", i)
+		assert.InDelta(t, 600, profile[i], 1e-6, "home slot %d", i)
 	}
 }

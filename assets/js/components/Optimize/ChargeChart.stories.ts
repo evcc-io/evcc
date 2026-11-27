@@ -7,10 +7,12 @@ import {
   carport,
   demandColors,
   evopt,
+  frostGuard,
   heatPump,
   heatingRod,
   home,
   timestamps,
+  washingMachine,
 } from "./stories.fixture";
 
 export default {
@@ -54,4 +56,12 @@ HeatingAndUnmodelled.args = {
   ...base,
   evopt: evopt([home, carport, heatPump]),
   demandDetails: [home, carport, heatPump],
+};
+
+// consumer meters with their own forecast, taken out of the base load
+export const ConsumerAndHeating = Template.bind({});
+ConsumerAndHeating.args = {
+  ...base,
+  evopt: evopt([home, frostGuard, washingMachine, heatPump]),
+  demandDetails: [home, frostGuard, washingMachine, heatPump],
 };

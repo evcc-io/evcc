@@ -186,8 +186,13 @@ func (c *Collector) SetSocTemp(value float64, isTemp bool) error {
 	return c.entity.updateIsTemp(isTemp)
 }
 
-func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
-	return energyProfileFiltered(c.entity, from, nil, profilePercentile())
+// EnergyProfile returns the 96-slot energy profile in kWh since from, without the energy of the given collectors
+func (c *Collector) EnergyProfile(from time.Time, without ...*Collector) (*[96]float64, error) {
+	exclude := make([]any, 0, len(without))
+	for _, o := range without {
+		exclude = append(exclude, o.entity.Id)
+	}
+	return energyProfileFiltered(c.entity, from, nil, profilePercentile(), exclude...)
 }
 
 func (c *Collector) EnergyProfileWeekday(weekday time.Weekday) (*[96]float64, error) {
