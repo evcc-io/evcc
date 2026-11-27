@@ -92,8 +92,10 @@ const (
 
 	smaModbusNaN32 = 0x80000000
 
-	// the charger selects 3p from this power and 1p below, matches the 4500 W WMaxIn minimum of the EV Charger
-	smaModbusMinPower3p = 4500 // W
+	// the charger selects 3p from about 4350 W and 1p below without hysteresis, setpoints keep a margin
+	smaModbusPhaseThreshold = 4350 // W
+	smaModbusMinPower3p     = 4500 // W
+	smaModbusMaxPower1p     = 4300 // W
 
 	// setpoint refresh if the control timeout is unknown
 	smaModbusRefresh = 30 * time.Second
@@ -384,7 +386,7 @@ func (wb *SmaModbus) calcPower(current float64, phases int) float64 {
 	if phases > 1 {
 		power = max(power, smaModbusMinPower3p)
 	} else {
-		power = min(power, smaModbusMinPower3p-1)
+		power = min(power, smaModbusMaxPower1p)
 	}
 
 	// limits are reported as negative consumption values
@@ -428,7 +430,7 @@ func (wb *SmaModbus) voltageFactor(phases int) float64 {
 
 // phaseSwitching reports whether the charger reaches 3p, it selects 1p below the threshold power
 func (wb *SmaModbus) phaseSwitching() bool {
-	if maxPower := math.Abs(wb.maxPower); maxPower > 0 && maxPower < smaModbusMinPower3p {
+	if maxPower := math.Abs(wb.maxPower); maxPower > 0 && maxPower < smaModbusPhaseThreshold {
 		wb.log.DEBUG.Printf("max power %.0fW below 3p threshold, charging 1p only", maxPower)
 		return false
 	}
@@ -486,7 +488,7 @@ func (wb *SmaModbus) getPhases() (int, error) {
 
 // smaModbusPhases returns the phases the charger selects for the setpoint power
 func smaModbusPhases(power float64) int {
-	if power >= smaModbusMinPower3p {
+	if power >= smaModbusPhaseThreshold {
 		return 3
 	}
 	return 1
