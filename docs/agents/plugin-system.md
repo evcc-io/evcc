@@ -30,6 +30,12 @@ type BoolGetter   func() (bool, error)
 
 Plugins support chained transforms: `scale`, `offset`, `lookup`, `regex`.
 
+HTTP setters run the response through the configured pipeline and propagate
+errors. To reject unsuccessful JSON acknowledgements, use a `jq` expression such
+as `if type == "object" and .result == true then . else error("write rejected") end`.
+Returning `false` alone does not fail a write. A configured JSON transform also
+rejects empty or non-JSON responses; setters without transforms still accept them.
+
 ## Template-Based Device Configuration
 
 Devices can be defined entirely via YAML templates using plugins:
