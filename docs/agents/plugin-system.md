@@ -64,6 +64,22 @@ register in `init()` via `service.Register` (`server/service/registry.go`),
 object responses use `service.Option` (`util/service/helper.go`) and render as
 `Helper/Combobox.vue`.
 
+For values the device can report itself (nameplate ratings, power limits),
+keep the param optional with a `service:` suggestion and fall back to the
+device at runtime via the `fallback` plugin instead of making the param
+required. `fallback` returns `value` if set and non-zero, otherwise reads the
+`fallback` source once (failures and zero readings retry). With `set` it writes that value,
+optionally `scale`d, ignoring the value passed in:
+
+```yaml
+- source: fallback
+  value: {{ .maxchargepower }}
+  fallback:
+    source: modbus # device maximum
+  set:
+    source: modbus # limit register
+```
+
 Local network discovery lives in `util/discovery` (mDNS, SSDP, neighbor table,
 reverse DNS; no raw sockets, no port scans) and feeds `network/hosts`,
 `network/report` and `network/scan` in `util/service/network*.go`. The vendor
