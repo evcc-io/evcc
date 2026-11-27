@@ -70,6 +70,8 @@ params:
     help:
       en: Power limit applied to the root circuit while the limit is active. Required if W4 is mapped.
       de: Leistungsbegrenzung des Hauptstromkreises während die Limitierung aktiv ist. Erforderlich, wenn W4 belegt ist.
+  - name: cache
+    default: 1s
 render: |
   {{- define "input" }}
   source: http
@@ -80,23 +82,23 @@ render: |
     user: {{ .user }}
     password: {{ .password }}
   {{- end }}
-  cache: 1s # inputs share one /status response per cycle
+  cache: {{ .cache }} # inputs share one /status response per cycle
   jq: .inputs[{{ sub (int .input) 1 }}].input | if . == 1 then true elif . == 0 then false else error("invalid input state") end
   {{- end }}
   type: fnn
   productionnominalmax: {{ .productionnominalmax }}
   w3:
-    {{- include "input" (dict "host" .host "user" .user "password" .password "input" .w3input) | indent 2 }}
+    {{- include "input" (dict "host" .host "user" .user "password" .password "cache" .cache "input" .w3input) | indent 2 }}
   {{- if .s1input }}
   s1:
-    {{- include "input" (dict "host" .host "user" .user "password" .password "input" .s1input) | indent 2 }}
+    {{- include "input" (dict "host" .host "user" .user "password" .password "cache" .cache "input" .s1input) | indent 2 }}
   {{- end }}
   {{- if .s2input }}
   s2:
-    {{- include "input" (dict "host" .host "user" .user "password" .password "input" .s2input) | indent 2 }}
+    {{- include "input" (dict "host" .host "user" .user "password" .password "cache" .cache "input" .s2input) | indent 2 }}
   {{- end }}
   {{- if .w4input }}
   maxdimpower: {{ .maxconsumptionpower }}
   w4:
-    {{- include "input" (dict "host" .host "user" .user "password" .password "input" .w4input) | indent 2 }}
+    {{- include "input" (dict "host" .host "user" .user "password" .password "cache" .cache "input" .w4input) | indent 2 }}
   {{- end }}

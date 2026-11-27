@@ -40,6 +40,8 @@ params:
       en: Only required if multiple systems are registered in the account. Serial number (e.g. `v4-00014176`) or system ID (e.g. `P4H1-01GU14324-0105-FD`).
   - name: maxacpower
   - preset: battery-minmaxsoc
+  - name: cache
+    default: 1s
 render: |
   {{ define "senec-connect-plugin" }}
   source: http
@@ -47,7 +49,7 @@ render: |
   headers:
   - accept: application/json
   - Ocp-Apim-Subscription-Key: {{ .token }}
-  cache: 1s
+  cache: {{ .cache }}
   {{- end }}
   {{ define "senec-connect-system" }}.[]{{ if .serial }} | select(.bessNameplate.serial_number == {{ toJson .serial }} or .bessNameplate.system_id == {{ toJson .serial }}){{ end }}{{ end }}
   type: custom
