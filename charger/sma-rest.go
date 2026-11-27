@@ -176,7 +176,7 @@ func NewSmaRest(ctx context.Context, uri, user, password string, cache time.Dura
 	}
 
 	// the charger selects 1p below the threshold power, the legacy path never sets less than its 4500 W minimum
-	if maxPower := wb.maxPower(); wb.useSetpoint && maxPower > 0 && maxPower < sma.MinPower3p {
+	if maxPower := wb.maxPower(); wb.useSetpoint && maxPower > 0 && maxPower < sma.PhaseThreshold {
 		wb.phases = 1
 	} else if wb.useSetpoint {
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
@@ -197,7 +197,7 @@ func NewSmaRest(ctx context.Context, uri, user, password string, cache time.Dura
 	}
 
 	// relay switching pauses charging beyond the loadpoint phase switch grace period
-	if v, err := wb.code(sma.ChrgMinSwTm); err == nil && v == sma.SwitchingTime120s {
+	if v, err := wb.code(sma.ChrgMinSwTm); err == nil && (v == sma.SwitchingTime120s || v == sma.SwitchingTime90s) {
 		log.WARN.Println(`"Minimum relay switching time" should be at most 60s`)
 	}
 
@@ -432,7 +432,7 @@ func (wb *SmaRest) calcPower(current float64, phases int) float64 {
 		if phases > 1 {
 			power = max(power, sma.MinPower3p)
 		} else {
-			power = min(power, sma.MinPower3p-1)
+			power = min(power, sma.MaxPower1p)
 		}
 
 		// the setpoint is limited by the configured maximum power

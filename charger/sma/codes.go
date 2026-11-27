@@ -24,12 +24,16 @@ const (
 	SetpointWSptMin     = "Setpoint.PlantControl.Inverter.WModCfg.WCtlComCfg.WSptMin"
 )
 
-// MinPower3p is the setpoint power from which the charger selects 3p, below it selects 1p
-const MinPower3p = 4500 // W
+// The charger selects 3p from about 4350 W setpoint power and 1p below without hysteresis, setpoints keep a margin
+const (
+	PhaseThreshold = 4350 // W
+	MinPower3p     = 4500 // W
+	MaxPower1p     = 4300 // W
+)
 
 // Phases returns the phases the charger selects for the setpoint power
 func Phases(power float64) int {
-	if power >= MinPower3p {
+	if power >= PhaseThreshold {
 		return 3
 	}
 	return 1
@@ -80,9 +84,13 @@ const (
 	ChargingRelease Code = 5172 // Ladefreigabe
 )
 
-// Parameter.Chrg.MinSwTm, codes for 15 to 90 s are unknown
+// Parameter.Chrg.MinSwTm
 const (
 	SwitchingTime120s Code = 6715 // 120 s
+	SwitchingTime90s  Code = 6716 // 90 s
+	SwitchingTime60s  Code = 6717 // 60 s
+	SwitchingTime30s  Code = 6718 // 30 s
+	SwitchingTime15s  Code = 6719 // 15 s
 )
 
 // ChargeStatus maps the charging status
