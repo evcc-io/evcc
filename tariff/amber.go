@@ -76,6 +76,13 @@ func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
+type amberInterval struct {
+	start, end time.Time
+	value      float64
+	isCurrent  bool
+	estimate   bool
+}
+
 func (t *Amber) run(done chan error) {
 	var once sync.Once
 
@@ -94,11 +101,7 @@ func (t *Amber) run(done chan error) {
 		}
 
 		// Create and sort time-ordered list of all Amber intervals
-		var intervals []struct {
-			start, end time.Time
-			value      float64
-			isCurrent  bool
-		}
+		var intervals []amberInterval
 
 		for _, r := range res {
 			if t.channel == strings.ToLower(r.ChannelType) {
@@ -115,15 +118,12 @@ func (t *Amber) run(done chan error) {
 					value = -value
 				}
 
-				intervals = append(intervals, struct {
-					start, end time.Time
-					value      float64
-					isCurrent  bool
-				}{
+				intervals = append(intervals, amberInterval{
 					start:     startTime.Local(),
 					end:       endTime.Local(),
 					value:     value,
 					isCurrent: r.Type == "CurrentInterval",
+					estimate:  r.Estimate || r.Type == "ForecastInterval",
 				})
 			}
 		}
@@ -135,11 +135,7 @@ func (t *Amber) run(done chan error) {
 		}
 
 		// Sort intervals by start time to ensure correct processing
-		slices.SortFunc(intervals, func(a, b struct {
-			start, end time.Time
-			value      float64
-			isCurrent  bool
-		}) int {
+		slices.SortFunc(intervals, func(a, b amberInterval) int {
 			return a.start.Compare(b.start)
 		})
 
@@ -152,16 +148,13 @@ func (t *Amber) run(done chan error) {
 
 // buildSlotRates converts Amber intervals into 15-minute slots using bucket sharding
 // to avoid O(slots × intervals) complexity and only create slots with actual data
-func (t *Amber) buildSlotRates(intervals []struct {
-	start, end time.Time
-	value      float64
-	isCurrent  bool
-}) api.Rates {
+func (t *Amber) buildSlotRates(intervals []amberInterval) api.Rates {
 	// Build slot buckets using sharding approach
 	type bucket struct {
 		totalSecs   float64
 		weightedSum float64
 		current     *float64
+		estimate    bool
 	}
 	buckets := make(map[time.Time]*bucket)
 
@@ -201,6 +194,9 @@ func (t *Amber) buildSlotRates(intervals []struct {
 				b.totalSecs += overlapSecs
 			}
 
+			// the slot stays an estimate while any part of it is, even if the current price is final
+			b.estimate = b.estimate || iv.estimate
+
 			slot = next
 		}
 	}
@@ -222,9 +218,10 @@ func (t *Amber) buildSlotRates(intervals []struct {
 		// Only add slots with actual data
 		if hasValue {
 			data = append(data, api.Rate{
-				Start: start,
-				End:   start.Add(SlotDuration),
-				Value: finalValue,
+				Start:    start,
+				End:      start.Add(SlotDuration),
+				Value:    finalValue,
+				Estimate: b.estimate,
 			})
 		}
 	}

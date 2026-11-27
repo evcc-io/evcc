@@ -29,6 +29,7 @@
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</div>
+			<slot name="footer" />
 			<div v-if="danger" class="alert alert-danger my-2" role="alert">
 				<strong>{{ $t("config.form.danger") }}:</strong> {{ danger }}
 			</div>

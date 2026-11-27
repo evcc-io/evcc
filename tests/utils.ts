@@ -17,6 +17,15 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
   await expect(modal).toHaveAttribute("aria-hidden", "true");
 }
 
+export async function skipOnboarding(page: Page): Promise<void> {
+  const wizard = page.getByTestId("onboarding-modal");
+  await expectModalVisible(wizard);
+  await wizard.getByRole("button", { name: "Get started" }).click();
+  await wizard.getByRole("button", { name: "Continue" }).click();
+  await wizard.getByRole("button", { name: "Skip setup" }).click();
+  await expectModalHidden(wizard);
+}
+
 export async function editorClear(editor: Locator): Promise<void> {
   const content = editor.locator(".cm-content");
   // wait for the async content load, otherwise clearing races the arriving text
@@ -72,7 +81,7 @@ export async function addDemoCharger(
 export async function addDemoMeter(page: Page, power = "0"): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
-  await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
+  await lpModal.getByRole("button", { name: "Add meter" }).click();
 
   const modal = page.getByTestId("meter-modal");
   await expectModalVisible(modal);
@@ -111,7 +120,7 @@ export async function newLoadpoint(
 
 export async function finishLoadpoint(page: Page): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
-  await lpModal.getByText("Close", { exact: true }).click();
+  await lpModal.getByRole("button", { name: "Continue" }).click();
   await expectModalHidden(lpModal);
 }
 
@@ -122,7 +131,7 @@ export async function dragElement(
 ): Promise<void> {
   // hover() waits for animations to settle before grabbing the source —
   // avoids stale coordinates during the modal slide-in.
-  await sourceElement.hover();
+  await sourceElement.getByTestId("drag-handle").hover();
   await page.mouse.down();
 
   const targetBox = await targetElement.boundingBox();
@@ -133,13 +142,20 @@ export async function dragElement(
   await page.mouse.up();
 }
 
-export async function getDatalistOptions(input: Locator): Promise<string[]> {
-  return input.evaluate((element: HTMLInputElement) => {
+export async function expectDatalistOptions(input: Locator, expected: string[]): Promise<void> {
+  // list attribute and datalist render together, wait for it before reading the options
+  if (expected.length > 0) {
+    await expect(input).toHaveAttribute("list");
+  } else {
+    await expect(input).not.toHaveAttribute("list");
+  }
+  const options = await input.evaluate((element: HTMLInputElement) => {
     const datalistId = element.getAttribute("list");
     if (!datalistId) return [];
     const datalist = document.getElementById(datalistId);
     return Array.from(datalist?.querySelectorAll("option") || []).map((opt) => opt.value);
   });
+  expect(options).toEqual(expected);
 }
 
 type AppState = {
@@ -147,6 +163,18 @@ type AppState = {
   __appEvent: unknown;
   ReactNativeWebView: { postMessage: (m: string) => void };
 };
+
+export async function enableExperimental(page: Page): Promise<void> {
+  await page
+    .getByTestId("generalconfig-experimental")
+    .getByRole("button", { name: "edit" })
+    .click();
+  const modal = page.getByTestId("experimental-modal");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Enable experimental features.").click();
+  await modal.getByRole("button", { name: "Close" }).click();
+  await expectModalHidden(modal);
+}
 
 export async function enableAppContext(page: Page): Promise<void> {
   await page.addInitScript(() => {

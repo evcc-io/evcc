@@ -3,6 +3,10 @@ products:
   - brand: go-e
     description:
       generic: Controller
+discovery:
+  mdns: ["_go-e_controller._tcp"]
+  hostname: ["go-econtroller*"]
+  mac: ["D455AD", "98FC841"]
 params:
   - name: usage
     choice: ["grid", "pv"]

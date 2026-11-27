@@ -52,7 +52,7 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, dc bool, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*SMA, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, usage string, dc bool, capacity func() (float64, error), batterySocLimits, batteryPowerLimits func() (float64, float64, error)) (*SMA, error) {
 	sm := &SMA{
 		Caps:  implement.New(),
 		uri:   uri,
@@ -94,6 +94,9 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64, usage str
 
 	if isInverter && usage == "battery" {
 		implement.Has(sm, implement.Battery(sm.soc))
+		if capacity == nil && dc {
+			capacity = sm.deviceCapacity()
+		}
 		implement.May(sm, implement.BatteryCapacity(capacity))
 		implement.May(sm, implement.BatterySocLimiter(batterySocLimits))
 		implement.May(sm, implement.BatteryPowerLimiter(batteryPowerLimits))
@@ -126,10 +129,21 @@ func (sm *SMA) CurrentPower() (float64, error) {
 			return sma.AsFloat(values[sunny.GridPowerImport]) - sma.AsFloat(values[sunny.GridPowerExport]), err
 		case "pv":
 			if sm.dc {
-				return sma.AsFloat(values[sunny.PvPower]), err
+				for _, id := range []sunny.ValueID{sunny.PvPower, sunny.PvGenPower} {
+					if p, ok := values[id]; ok {
+						return sma.AsFloat(p), err
+					}
+				}
+				// some hybrids (e.g. STP SE) don't provide PvPower, only per-string DC power
+				return sma.AsFloat(values[sunny.DcPower]), err
 			}
 		case "battery":
 			if sm.dc {
+				discharge, okDischarge := values[sunny.BatteryDischargePower]
+				charge, okCharge := values[sunny.BatteryChargePower]
+				if okDischarge && okCharge {
+					return sma.AsFloat(discharge) - sma.AsFloat(charge), err
+				}
 				return sma.AsFloat(values[sunny.BatteryVoltage]) * sma.AsFloat(values[sunny.BatteryCurrent]), err
 			}
 		}
@@ -143,49 +157,62 @@ var _ api.MeterEnergy = (*SMA)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
+	if err != nil {
+		return 0, err
+	}
 
 	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
-			return sma.AsFloat(values[sunny.GridEnergyImportKWh]), err
+			return sma.AsEnergy(values, sunny.GridEnergyImportKWh)
 		case "pv":
 			if sm.dc {
-				return sma.AsFloat(values[sunny.PvEnergyTotalKWh]), err
+				if _, ok := values[sunny.PvEnergyTotalKWh]; !ok {
+					return sma.AsEnergy(values, sunny.PvGenEnergyKWh)
+				}
+				return sma.AsEnergy(values, sunny.PvEnergyTotalKWh)
 			}
 		case "battery":
 			if sm.dc {
-				return sma.AsFloat(values[sunny.BatteryEnergyDischargeKWh]), err
+				return sma.AsEnergy(values, sunny.BatteryEnergyDischargeKWh)
 			}
 		}
 	}
 
+	id := sunny.ActiveEnergyPlus
 	if sm.scale < 0 {
-		return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
+		id = sunny.ActiveEnergyMinus
 	}
 
-	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
+	f, err := sma.AsEnergy(values, id)
+	return f / 3600000, err
 }
 
 // returnEnergy implements the api.MeterReturnEnergy interface
 func (sm *SMA) returnEnergy() (float64, error) {
 	values, err := sm.device.Values()
+	if err != nil {
+		return 0, err
+	}
 
 	if !sm.device.IsEnergyMeter() {
 		switch sm.usage {
 		case "grid":
-			return sma.AsFloat(values[sunny.GridEnergyExportKWh]), err
+			return sma.AsEnergy(values, sunny.GridEnergyExportKWh)
 		case "battery":
 			if sm.dc {
-				return sma.AsFloat(values[sunny.BatteryEnergyChargeKWh]), err
+				return sma.AsEnergy(values, sunny.BatteryEnergyChargeKWh)
 			}
 		}
 	}
 
+	id := sunny.ActiveEnergyMinus
 	if sm.scale < 0 {
-		return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
+		id = sunny.ActiveEnergyPlus
 	}
 
-	return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
+	f, err := sma.AsEnergy(values, id)
+	return f / 3600000, err
 }
 
 var _ api.PhaseVoltages = (*SMA)(nil)
@@ -244,6 +271,28 @@ func (sm *SMA) maxACPower() float64 {
 	}
 
 	return sma.AsFloat(values[sunny.ActivePowerMax])
+}
+
+// deviceCapacity returns the rated battery capacity reported by the device, nil if not available
+func (sm *SMA) deviceCapacity() func() (float64, error) {
+	values, err := sm.device.Values()
+	if err != nil {
+		return nil
+	}
+
+	if _, ok := values[sunny.BatteryCapacity]; !ok {
+		return nil
+	}
+
+	return func() (float64, error) {
+		values, err := sm.device.Values()
+		if err != nil {
+			return 0, err
+		}
+
+		wh, err := sma.AsEnergy(values, sunny.BatteryCapacity)
+		return wh / 1e3, err
+	}
 }
 
 // soc implements the api.Battery interface

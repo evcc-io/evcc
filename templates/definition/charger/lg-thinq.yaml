@@ -1,0 +1,70 @@
+template: lg-thinq
+products:
+  - brand: LG
+    description:
+      de: Warmwasser-Wärmepumpe (ThinQ)
+      en: Heat pump water heater (ThinQ)
+group: heating
+requirements:
+  description:
+    de: |
+      Steuert LG Warmwasser-Wärmepumpen (z.B. WH27S) über die LG ThinQ Connect Cloud API.
+      Ein persönlicher Zugriffstoken (PAT) muss unter https://connect-pat.lgthinq.com mit den Rechten "Geräte anzeigen", "Gerätestatus abfragen" und "Geräte steuern" erstellt werden.
+      evcc setzt die Zieltemperatur des Warmwasserbereiters: außerhalb des Boosts auf die normale Temperatur, während des Boosts auf die Boost Temperatur.
+    en: |
+      Controls LG heat pump water heaters (e.g. WH27S) via the LG ThinQ Connect cloud API.
+      A personal access token (PAT) must be created at https://connect-pat.lgthinq.com with the permissions "view devices", "view device status" and "control devices".
+      evcc sets the water heater target temperature: the normal temperature outside of boost, the boost temperature during boost.
+params:
+  - name: token
+    required: true
+    description:
+      de: Persönlicher Zugriffstoken (PAT)
+      en: Personal access token (PAT)
+  - name: country
+    default: DE
+    description:
+      de: Ländercode
+      en: Country code
+    help:
+      de: Ländercode des LG Kontos (ISO 3166-1 alpha-2)
+      en: Country code of the LG account (ISO 3166-1 alpha-2)
+  - name: device
+    description:
+      de: Geräte-ID
+      en: Device ID
+    help:
+      de: Notwendig falls mehrere Warmwasserbereiter im Konto vorhanden sind
+      en: Required if multiple water heaters are present in the account
+  - name: normal
+    type: float
+    unit: °C
+    default: 50
+    description:
+      de: Normale Temperatur
+      en: Normal temperature
+    help:
+      de: Zieltemperatur außerhalb des Boosts
+      en: Target temperature outside of boost
+  - name: setpoint
+    type: float
+    unit: °C
+    default: 60
+    description:
+      de: Boost Temperatur
+      en: Boost temperature
+    help:
+      de: Zieltemperatur während des Boosts, muss über der normalen Temperatur liegen
+      en: Target temperature during boost, must exceed the normal temperature
+  - name: cache
+    default: 1m
+render: |
+  type: lg-thinq
+  token: {{ .token }}
+  country: {{ .country }}
+  {{- if .device }}
+  device: {{ .device }}
+  {{- end }}
+  normal: {{ .normal }}
+  setpoint: {{ .setpoint }}
+  cache: {{ .cache }}

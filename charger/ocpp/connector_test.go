@@ -408,6 +408,170 @@ func (suite *connTestSuite) TestOnMeterValuesBoundaryContextFirst() {
 	suite.Equal(241.010, res, "live reading must not be shadowed by the boundary snapshot")
 }
 
+// Huawei SCharger reports a zero energy register outside transactions
+func (suite *connTestSuite) TestOnMeterValuesIgnoreZeroEnergy() {
+	suite.meterValues(energySample("0.00", types.ReadingContextTrigger))
+
+	_, err := suite.conn.TotalEnergy()
+	suite.ErrorIs(err, api.ErrNotAvailable, "zero must not be stored")
+
+	suite.meterValues(energySample("537960", types.ReadingContextTransactionBegin))
+
+	suite.clock.Add(time.Hour)
+	suite.meterValues(energySample("0.00", types.ReadingContextTrigger))
+	suite.False(suite.conn.isMeterTimeout(), "zero must still update meter freshness")
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(537.960, res, "zero must not overwrite known energy")
+}
+
+func (suite *connTestSuite) TestOnMeterValuesIgnoreZeroPhaseEnergy() {
+	phase := func(value string, p types.Phase) types.SampledValue {
+		s := energySample(value, types.ReadingContextSamplePeriodic)
+		s.Phase = p
+		return s
+	}
+
+	suite.meterValues(phase("1000", types.PhaseL1), phase("2000", types.PhaseL2), phase("3000", types.PhaseL3))
+	suite.meterValues(phase("0", types.PhaseL1), phase("0", types.PhaseL2), phase("0", types.PhaseL3))
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(6.0, res, "zero must not overwrite known phase energy")
+}
+
+func (suite *connTestSuite) startTransactionAt(ts time.Time, meterStart int) {
+	_, err := suite.conn.OnStartTransaction(&core.StartTransactionRequest{
+		ConnectorId: 1,
+		IdTag:       "rfid",
+		MeterStart:  meterStart,
+		Timestamp:   types.NewDateTime(ts),
+	})
+	suite.NoError(err)
+}
+
+// ABB Terra AC resets the energy register per transaction
+func (suite *connTestSuite) TestOnStartTransactionResetsEnergy() {
+	suite.meterValues(energySample("18367", types.ReadingContextTrigger))
+
+	suite.clock.Add(time.Minute)
+	suite.startTransactionAt(suite.clock.Now(), 0)
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(0.0, res, "meterStart must reset the register")
+
+	suite.meterValues(energySample("0", types.ReadingContextTransactionBegin))
+	suite.clock.Add(time.Minute)
+	suite.meterValues(energySample("24", types.ReadingContextSamplePeriodic))
+
+	res, err = suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(0.024, res)
+}
+
+func (suite *connTestSuite) TestOnStartTransactionIgnoresQueuedMeterStart() {
+	suite.meterValues(energySample("18367", types.ReadingContextTrigger))
+	suite.startTransactionAt(suite.clock.Now().Add(-time.Hour), 12000)
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(18.367, res, "outdated meterStart must not overwrite the register")
+}
+
+func (suite *connTestSuite) TestOnStartTransactionAfterIdle() {
+	suite.meterValues(energySample("18367", types.ReadingContextTrigger))
+
+	suite.clock.Add(time.Hour)
+	suite.startTransactionAt(suite.clock.Now(), 0)
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "meterStart must be readable despite stale meter values")
+	suite.Equal(0.0, res)
+
+	_, err = suite.conn.CurrentPower()
+	suite.ErrorIs(err, api.ErrTimeout, "meterStart must not refresh other measurements")
+
+	suite.clock.Add(time.Hour)
+	_, err = suite.conn.TotalEnergy()
+	suite.ErrorIs(err, api.ErrTimeout, "meterStart must expire like a meter value")
+}
+
+func (suite *connTestSuite) TestOnStartTransactionRejectsDelayedEnergy() {
+	start := suite.clock.Now()
+	suite.meterValuesAt(start.Add(-time.Hour), energySample("18000", types.ReadingContextTrigger))
+	suite.startTransactionAt(start, 0)
+
+	suite.meterValuesAt(start.Add(-time.Minute), energySample("18367", types.ReadingContextSamplePeriodic))
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(0.0, res, "energy sampled before meterStart must not replace it")
+}
+
+func (suite *connTestSuite) TestOnStartTransactionIgnoresUnrelatedSamples() {
+	start := suite.clock.Now()
+	suite.meterValuesAt(start.Add(-time.Hour), energySample("18367", types.ReadingContextTrigger))
+
+	power := types.SampledValue{Value: "0", Measurand: types.MeasurandPowerActiveImport, Unit: types.UnitOfMeasureW}
+	suite.meterValuesAt(start.Add(time.Second), power)
+	suite.startTransactionAt(start, 0)
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(0.0, res, "newer non-energy samples must not block meterStart")
+}
+
+func (suite *connTestSuite) TestOnStartTransactionKeepsPhaseEnergy() {
+	phase := func(value string, p types.Phase) types.SampledValue {
+		s := energySample(value, types.ReadingContextSamplePeriodic)
+		s.Phase = p
+		return s
+	}
+
+	suite.meterValues(phase("1000", types.PhaseL1), phase("2000", types.PhaseL2), phase("3000", types.PhaseL3))
+
+	suite.clock.Add(time.Minute)
+	suite.startTransactionAt(suite.clock.Now(), 6000)
+	suite.clock.Add(time.Minute)
+	suite.meterValues(phase("1100", types.PhaseL1), phase("2000", types.PhaseL2), phase("3000", types.PhaseL3))
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.Equal(6.1, res, "meterStart must not shadow phase registers")
+}
+
+// meterValuesAt feeds the given samples with an explicit charger-side timestamp
+func (suite *connTestSuite) meterValuesAt(ts time.Time, samples ...types.SampledValue) {
+	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
+		ConnectorId: 1,
+		MeterValue: []types.MeterValue{{
+			Timestamp:    types.NewDateTime(ts),
+			SampledValue: samples,
+		}},
+	})
+	suite.NoError(err)
+}
+
+// Charger sample timestamps may lag behind local time (Mennekes AMTRON: 6-7s).
+// Freshness must be measured on receipt or the watchdog re-triggers meter
+// values on every tick once the lag approaches the meter interval (#32236).
+func (suite *connTestSuite) TestOnMeterValuesLaggingTimestamp() {
+	suite.conn.meterInterval = 10 * time.Second
+	suite.clock.Add(time.Hour)
+
+	suite.meterValuesAt(suite.clock.Now().Add(-7*time.Second), energySample("241010", types.ReadingContextSamplePeriodic))
+	suite.clock.Add(5 * time.Second)
+	suite.Less(suite.clock.Since(suite.conn.meterUpdated), suite.conn.meterInterval, "lagging timestamp must not expire fresh meter values")
+
+	// samples older than the last applied one are still ignored
+	suite.meterValuesAt(suite.clock.Now().Add(-time.Minute), energySample("240970", types.ReadingContextSamplePeriodic))
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(241.010, res, "stale sample must not overwrite newer reading")
+}
+
 // chargers reporting the transaction's start value only as Transaction.Begin
 // must keep it as there is no live reading to prefer over it
 func (suite *connTestSuite) TestOnMeterValuesBoundaryContextOnly() {
@@ -431,9 +595,62 @@ func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
 	suite.Equal(res, 3.0, "CurrentPower")
 
 	// set powers to zero
-	suite.conn.OnStopTransaction(nil)
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{})
 
 	res, err = suite.conn.CurrentPower()
 	suite.NoError(err, "CurrentPower")
 	suite.Equal(res, 0.0, "CurrentPower")
+}
+
+func (suite *connTestSuite) TestOnStopTransactionUpdatesEnergy() {
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1899.53", Unit: types.UnitOfMeasureKWh}
+
+	suite.conn.startTransaction(1, &core.StartTransactionRequest{IdTag: "evcc", MeterStart: 1899530})
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: 1, MeterStop: 1899600})
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.InDelta(1899.6, res, 1e-9)
+
+	// lower readings are ignored
+	suite.conn.OnStopTransaction(&core.StopTransactionRequest{TransactionId: 1, MeterStop: 1000})
+
+	res, err = suite.conn.TotalEnergy()
+	suite.NoError(err)
+	suite.InDelta(1899.6, res, 1e-9)
+}
+
+func (suite *connTestSuite) TestOnStatusChange() {
+	var calls int
+	suite.conn.OnStatusChange(func() { calls++ })
+
+	now := suite.clock.Now()
+	status := func(s core.ChargePointStatus, errorCode core.ChargePointErrorCode, d time.Duration) {
+		_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      s,
+			ErrorCode:   errorCode,
+			Timestamp:   types.NewDateTime(now.Add(d)),
+		})
+		suite.NoError(err)
+	}
+
+	for _, tc := range []struct {
+		status    core.ChargePointStatus
+		errorCode core.ChargePointErrorCode
+		d         time.Duration
+		calls     int
+	}{
+		{core.ChargePointStatusAvailable, core.NoError, 0, 1},
+		{core.ChargePointStatusPreparing, core.NoError, time.Second, 2},
+		{core.ChargePointStatusCharging, core.NoError, 2 * time.Second, 3},
+		{core.ChargePointStatusAvailable, core.NoError, -time.Second, 3}, // outdated
+		{core.ChargePointStatusSuspendedEV, core.NoError, 3 * time.Second, 4},
+		{core.ChargePointStatusSuspendedEVSE, core.NoError, 4 * time.Second, 4}, // same class
+		{core.ChargePointStatusSuspendedEVSE, core.GroundFailure, 5 * time.Second, 5},
+		{core.ChargePointStatusAvailable, core.NoError, 6 * time.Second, 6},
+	} {
+		status(tc.status, tc.errorCode, tc.d)
+		suite.Equal(tc.calls, calls, "%s %s", tc.status, tc.errorCode)
+	}
 }

@@ -1,0 +1,115 @@
+template: matismart-mpm4000
+products:
+  - brand: Matismart
+    description:
+      generic: MPM4000
+requirements:
+  description:
+    de: |
+      Jeder der vier dreiphasigen Messkreise (X1 bis X4) wird als eigener Zähler konfiguriert, z. B. Netz auf X1 und Wallbox auf X2.
+
+      Anschlussart und Stromrichtung werden am Gerät eingestellt.
+    en: |
+      Each of the four three-phase measuring circuits (X1 to X4) is configured as a separate meter, e.g. grid on X1 and charger on X2.
+
+      Wiring mode and current direction are configured on the device.
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge", "aux"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 1
+    baudrate: 9600
+    port: 502
+  - name: channel
+    type: choice
+    choice: ["1", "2", "3", "4"]
+    default: "1"
+    required: true
+    description:
+      de: Messkreis
+      en: Measuring circuit
+    help:
+      de: Messkreis X1 bis X4
+      en: Measuring circuit X1 to X4
+render: |
+  {{- $base := mul (sub (atoi (toString .channel)) 1) 10000 }}
+  {{- $scale := 1000 }}
+  {{- $energy := 2512 }}
+  {{- $return := 2528 }}
+  {{- if eq .usage "pv" }}
+  {{- $scale = -1000 }}
+  {{- $energy = 2528 }}
+  {{- $return = 2512 }}
+  {{- end }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ add 1034 $base }}
+      type: holding
+      encoding: float32
+    scale: {{ $scale }} # kW
+    block:
+      register: {{ add 1000 $base }}
+      count: 36
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ add $energy $base }}
+      type: holding
+      encoding: int64
+    scale: 0.001 # Wh
+    block:
+      register: {{ add 2512 $base }}
+      count: 20
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ add $return $base }}
+      type: holding
+      encoding: int64
+    scale: 0.001 # Wh
+    block:
+      register: {{ add 2512 $base }}
+      count: 20
+  powers:
+  {{- range $address := list 1028 1030 1032 }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ add $address $base }}
+      type: holding
+      encoding: float32
+    scale: {{ $scale }} # kW
+    block:
+      register: {{ add 1000 $base }}
+      count: 36
+  {{- end }}
+  voltages:
+  {{- range $address := list 1010 1012 1014 }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ add $address $base }}
+      type: holding
+      encoding: float32
+    block:
+      register: {{ add 1000 $base }}
+      count: 36
+  {{- end }}
+  currents:
+  {{- range $address := list 1000 1002 1004 }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ add $address $base }}
+      type: holding
+      encoding: float32
+    block:
+      register: {{ add 1000 $base }}
+      count: 36
+  {{- end }}

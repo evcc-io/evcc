@@ -6,12 +6,13 @@ test.use({ baseURL: baseUrl() });
 const BASIC = "basics.evcc.yaml";
 
 test("set initial password", async ({ page }) => {
-  await start(BASIC, null, "");
+  await start(BASIC, undefined, ["--disable-onboarding"]);
   await page.goto("/");
 
-  const modal = page.getByTestId("password-setup-modal");
-
+  // wizard takes over, password first
+  const modal = page.getByTestId("onboarding-modal");
   await expectModalVisible(modal);
+  await modal.getByRole("button", { name: "Get started" }).click();
   await expect(modal.getByRole("heading", { name: "Set Administrator Password" })).toBeVisible();
 
   // should not be closable via ESC or outside click
@@ -21,26 +22,28 @@ test("set initial password", async ({ page }) => {
   await expectModalVisible(modal);
 
   // empty password
-  await modal.getByRole("button", { name: "Create Password" }).click();
+  await modal.getByRole("button", { name: "Create password" }).click();
   await expect(modal.getByText("Password should not be empty")).toBeVisible();
 
   // invalid repeat
   await modal.getByLabel("New password").fill("foo");
   await modal.getByLabel("Repeat password").fill("bar");
-  await modal.getByRole("button", { name: "Create Password" }).click();
+  await modal.getByRole("button", { name: "Create password" }).click();
   await expect(modal.getByText("Passwords do not match")).toBeVisible();
 
   // success
   await modal.getByLabel("New password").fill("secret");
   await modal.getByLabel("Repeat password").fill("secret");
-  await modal.getByRole("button", { name: "Create Password" }).click();
+  await modal.getByRole("button", { name: "Create password" }).click();
+  await expect(modal.getByRole("heading", { name: "Your site" })).toBeVisible();
+  await modal.getByRole("button", { name: "Skip setup" }).click();
   await expectModalHidden(modal);
 
   await stop();
 });
 
 test("login", async ({ page }) => {
-  await start(BASIC, "password.sql", "");
+  await start(BASIC, "password.sql", ["--disable-onboarding"]);
   await page.goto("/");
 
   // go to config
@@ -67,7 +70,7 @@ test("login", async ({ page }) => {
 });
 
 test("http iframe hint", async ({ page }) => {
-  await start(BASIC, "password.sql", "");
+  await start(BASIC, "password.sql", ["--disable-onboarding"]);
   await page.goto("/");
 
   // go to config
@@ -95,7 +98,7 @@ test("http iframe hint", async ({ page }) => {
 });
 
 test("update password", async ({ page }) => {
-  await start(BASIC, "password.sql", "");
+  await start(BASIC, "password.sql", ["--disable-onboarding"]);
 
   const oldPassword = "secret";
   const newPassword = "newsecret";
@@ -164,18 +167,44 @@ test("update password", async ({ page }) => {
 });
 
 test("disable auth", async ({ page }) => {
-  await start(BASIC, null, "--disable-auth");
+  await start(BASIC, undefined, ["--disable-auth", "--disable-onboarding"]);
   await page.goto("/");
 
-  // no password modal
-  const modal = page.getByTestId("password-setup-modal");
-  await expectModalHidden(modal);
+  // no setup wizard
+  await expect(page.getByTestId("onboarding-modal")).toHaveCount(0);
 
   // configuration page without login
   const menu = await openMoreMenu(page);
   await expect(menu.getByRole("button", { name: "Logout" })).not.toBeVisible();
   await menu.getByRole("link", { name: "Configuration" }).click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+
+  await stop();
+});
+
+test("session edit requires login", async ({ page, request }) => {
+  await start("sessions.evcc.yaml", "sessions.sql", ["--disable-onboarding"]);
+  await request.put("/api/auth/password", { data: { current: "", new: "secret" } });
+
+  await page.goto("/#/sessions?year=2023&month=5");
+  await page.getByTestId("sessions-entry").nth(0).click();
+  const modal = page.getByTestId("session-details");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Charging point").selectOption("Carport");
+
+  // login replaces the details modal and returns to it
+  const login = page.getByTestId("login-modal");
+  await expectModalVisible(login);
+  await expectModalHidden(modal);
+  await login.getByLabel("Administrator Password").fill("secret");
+  await login.getByRole("button", { name: "Login" }).click();
+  await expectModalHidden(login);
+  await expectModalVisible(modal);
+
+  await modal.getByLabel("Charging point").selectOption("Carport");
+  await page.reload();
+  await page.getByTestId("sessions-entry").nth(0).click();
+  await expect(modal.getByLabel("Charging point")).toHaveValue("Carport");
 
   await stop();
 });

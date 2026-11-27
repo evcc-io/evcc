@@ -1,6 +1,8 @@
 template: iometer
 products:
   - brand: IOmeter
+discovery:
+  mdns: ["_iometer._tcp"]
 params:
   - name: usage
     choice: ["grid"]

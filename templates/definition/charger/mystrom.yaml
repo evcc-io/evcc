@@ -5,6 +5,8 @@ products:
       generic: Switch
 capabilities: ["meter"]
 group: switchsockets
+discovery:
+  hostname: ["mystrom-*"]
 params:
   - name: host
   - name: token

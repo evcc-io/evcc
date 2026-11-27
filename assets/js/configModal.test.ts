@@ -98,6 +98,13 @@ describe("fadeDirections", () => {
     expect(fadeDirections([a, b], [a])).toEqual({ b: "right", a: "left" });
   });
 
+  test("wizard branches vertically", () => {
+    const w = { name: "onboarding" };
+    expect(fadeDirections([w], [w, a])).toEqual({});
+    expect(fadeDirections([w, a], [w])).toEqual({});
+    expect(fadeDirections([w, a], [w, a, b])).toEqual({ a: "left", b: "right" });
+  });
+
   test("same top keeps running transition", () => {
     expect(fadeDirections([a], [{ name: "a", id: 1 }])).toBeUndefined();
     expect(fadeDirections([a, b], [a, b])).toBeUndefined();

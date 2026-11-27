@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -38,6 +39,7 @@ type Weishaupt struct {
 	conn    *modbus.Connection
 	lp      loadpoint.API
 	power   uint16
+	enabled bool
 	tempReg uint16
 }
 
@@ -52,8 +54,6 @@ const (
 	wsRegDhwTemp     = 32102 // Warmwassertemperatur, 0.1K
 	wsRegFlowTemp    = 33104 // Vorlauftemperatur, 0.1K
 	wsRegBufferTemp  = 33108 // Weichentemperatur, 0.1K
-	wsRegPowerDemand = 33103 // Leistungsanforderung
-	wsRegPower       = 33126 // El. Leistungsaufnahme W
 	wsRegSollwertPv  = 40002 // SollwertPV, W
 )
 
@@ -128,7 +128,7 @@ func (wb *Weishaupt) heartbeat(ctx context.Context, interval time.Duration) {
 		}
 
 		wb.mu.Lock()
-		if power := wb.power; power > 0 {
+		if power := wb.power; wb.enabled && power > 0 {
 			if err := wb.setPowerSetpoint(power); err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
 			}
@@ -144,16 +144,13 @@ func (wb *Weishaupt) setPowerSetpoint(power uint16) error {
 
 // Status implements the api.Charger interface
 func (wb *Weishaupt) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(wsRegPowerDemand, 1)
+	enabled, err := wb.Enabled()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	if binary.BigEndian.Uint16(b) > 0 {
-		return api.StatusC, nil
-	}
-
-	return api.StatusB, nil
+	status := map[bool]api.ChargeStatus{false: api.StatusB, true: api.StatusC}
+	return status[enabled], nil
 }
 
 func (wb *Weishaupt) getPowerSetpoint() (uint16, error) {
@@ -166,8 +163,21 @@ func (wb *Weishaupt) getPowerSetpoint() (uint16, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Weishaupt) Enabled() (bool, error) {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	power, err := wb.getPowerSetpoint()
-	return power > 0, err
+	if err != nil {
+		return false, err
+	}
+
+	// adopt the register so the heartbeat follows the heat pump after a restart or a lost write reply
+	wb.enabled = power > 0
+	if wb.enabled {
+		wb.power = power
+	}
+
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -175,13 +185,21 @@ func (wb *Weishaupt) Enable(enable bool) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	// writing 0 releases the power setpoint and returns the heat pump to normal operation
-	var power uint16
-	if enable {
-		power = max(1, wb.power)
+	if !enable {
+		wb.enabled = false
+		// writing 0 releases the power setpoint and returns the heat pump to normal operation
+		return wb.setPowerSetpoint(0)
 	}
 
-	return wb.setPowerSetpoint(power)
+	power := max(1, wb.power)
+	if err := wb.setPowerSetpoint(power); err != nil {
+		return err
+	}
+
+	wb.power = power
+	wb.enabled = true
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -198,30 +216,22 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 
 	phases := 1
 	if wb.lp != nil {
-		if p := wb.lp.GetPhases(); p != 0 {
+		if p := wb.lp.ActivePhases(); p != 0 {
 			phases = p
 		}
 	}
 
-	power := uint16(min(voltage*current*float64(phases), 65535))
+	power := uint16(min(grid.CurrentToPower(current, phases), 65535))
 
-	err := wb.setPowerSetpoint(power)
-	if err == nil {
-		wb.power = power
+	if wb.enabled {
+		if err := wb.setPowerSetpoint(power); err != nil {
+			return err
+		}
 	}
 
-	return err
-}
+	wb.power = power
 
-var _ api.Meter = (*Weishaupt)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *Weishaupt) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wsRegPower, 1)
-	if err != nil {
-		return 0, err
-	}
-	return float64(binary.BigEndian.Uint16(b)), nil
+	return nil
 }
 
 // temp reads a temperature sensor register. Values outside of -50..500°C

@@ -14,8 +14,16 @@ import (
 
 // retryTariff fails instantiation on demand
 type retryTariff struct {
-	mu  sync.Mutex
-	err error
+	mu    sync.Mutex
+	err   error
+	calls int
+}
+
+// created returns the number of creation attempts
+func (t *retryTariff) created() int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.calls
 }
 
 func (t *retryTariff) setErr(err error) {
@@ -42,6 +50,10 @@ var retryable = new(retryTariff)
 
 func init() {
 	registry.AddCtx("test-retry", func(context.Context, map[string]any) (api.Tariff, error) {
+		retryable.mu.Lock()
+		retryable.calls++
+		retryable.mu.Unlock()
+
 		if _, err := retryable.Rates(); err != nil {
 			return nil, err
 		}
@@ -58,11 +70,14 @@ func TestWrapperRetry(t *testing.T) {
 	res := NewWrapper(context.TODO(), "test-retry", nil, err)
 	w := res.(*Wrapper)
 
-	// first call retries immediately and fails
+	// creation has just failed: no immediate retry
+	assert.False(t, w.retriedAt.IsZero())
+	created := retryable.created()
+
 	_, err = res.Rates()
 	require.ErrorContains(t, err, "tariff not available")
 	assert.Equal(t, api.TariffType(0), res.Type())
-	assert.False(t, w.retriedAt.IsZero())
+	assert.Equal(t, created, retryable.created())
 
 	// tariff becomes available but retry interval not elapsed: still unavailable
 	retryable.setErr(nil)

@@ -47,6 +47,14 @@ const circuits: Record<string, Circuit> = {
     current: 6,
     maxCurrent: 16,
   },
+  garden: { name: "garden", title: "Garden (feed-in)", parent: "home", power: -1800 },
+  roof: {
+    name: "roof",
+    title: "Roof (feed-in, limited)",
+    parent: "home",
+    power: -3200,
+    maxPower: 5000,
+  },
 };
 
 const loadpoints: CircuitLoadpoint[] = [
@@ -62,7 +70,7 @@ const card = `
     <DeviceCard title="Load Management" editable>
       <template #icon><CircuitsIcon /></template>
       <template #tags>
-        <CircuitTags :nodes="[root]" :loadpoints="loadpoints" />
+        <CircuitTags :nodes="[root]" :loadpoints="loadpoints" :noMeter="noMeter" />
       </template>
     </DeviceCard>
   </div>
@@ -74,6 +82,14 @@ export const Tree: StoryFn = () => ({
   components,
   setup() {
     return { root: circuitTree(circuits), loadpoints };
+  },
+  template: card,
+});
+
+export const NoMeter: StoryFn = () => ({
+  components,
+  setup() {
+    return { root: circuitTree(circuits), loadpoints, noMeter: true };
   },
   template: card,
 });

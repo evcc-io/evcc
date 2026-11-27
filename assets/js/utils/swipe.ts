@@ -8,15 +8,35 @@ interface SwipeOptions {
 const DWELL_MS = 100;
 const DWELL_SLOP_PX = 10;
 
+// last pointer position in viewport coordinates and whether a finger on a gated
+// chart produced it, so chart tooltips can be placed against the viewport
+const pointer = { x: 0, y: 0, touch: false };
+export const pointerState = () => pointer;
+document.addEventListener(
+  "mousemove",
+  (e) => {
+    pointer.x = e.clientX;
+    pointer.y = e.clientY;
+  },
+  { capture: true, passive: true }
+);
+
 // Touch tooltip gate: the chart never sees raw touch events (zrender would otherwise
 // ignore mouse events for 700ms after every touchend). The tooltip appears only after
 // the finger rests for a moment, then follows it; fast movement (swipes, scrolling)
 // keeps it hidden and a pause re-arms it. The tooltip is driven by a synthetic
 // mousemove at the finger position, which both chart libs handle natively.
-export function attachTouchTooltipGate(el: HTMLElement, hide: () => void): () => void {
+// onTap reports a short touch without movement, relative to the element; the
+// gate swallows the compat click so this is the only way a tap reaches the chart
+export function attachTouchTooltipGate(
+  el: HTMLElement,
+  hide: () => void,
+  onTap?: (x: number, y: number) => void
+): () => void {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let shown = false;
   let latched = false;
+  let moved = false;
   let x = 0;
   let y = 0;
   let anchorX = 0;
@@ -51,8 +71,10 @@ export function attachTouchTooltipGate(el: HTMLElement, hide: () => void): () =>
     // WebKit long-press jumps selection to the nearest selectable content
     // outside the chart; block selection page-wide for the gesture
     document.body.classList.add("user-select-none");
+    pointer.touch = true;
     shown = false;
     latched = false;
+    moved = false;
     x = touch.clientX;
     y = touch.clientY;
     gestureX = x;
@@ -66,6 +88,7 @@ export function attachTouchTooltipGate(el: HTMLElement, hide: () => void): () =>
     e.stopPropagation();
     x = touch.clientX;
     y = touch.clientY;
+    if (Math.hypot(x - gestureX, y - gestureY) > DWELL_SLOP_PX) moved = true;
     // large displacement before the tooltip ever showed = scroll or swipe,
     // no tooltip for the rest of this gesture (scroll deceleration would
     // otherwise pass the dwell check while the page is still moving)
@@ -86,9 +109,15 @@ export function attachTouchTooltipGate(el: HTMLElement, hide: () => void): () =>
     // suppress compat mouse events after touch, they would re-trigger the tooltip
     if (e.cancelable) e.preventDefault();
     if (timer) clearTimeout(timer);
+    const tap = !shown && !latched && !moved && e.type === "touchend";
     shown = false;
+    pointer.touch = false;
     document.body.classList.remove("user-select-none");
     hide();
+    if (tap && onTap) {
+      const rect = el.getBoundingClientRect();
+      onTap(x - rect.left, y - rect.top);
+    }
   };
 
   el.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
@@ -98,6 +127,7 @@ export function attachTouchTooltipGate(el: HTMLElement, hide: () => void): () =>
 
   return () => {
     if (timer) clearTimeout(timer);
+    pointer.touch = false;
     document.body.classList.remove("user-select-none");
     el.removeEventListener("touchstart", onTouchStart, { capture: true });
     el.removeEventListener("touchmove", onTouchMove, { capture: true });
@@ -113,6 +143,8 @@ export function attachSwipeHandler(el: HTMLElement, options: SwipeOptions): () =
   let startY = 0;
   let startTime = 0;
   let ignored = false;
+  // the gesture's direction, decided once the finger left the slop
+  let horizontal: boolean | null = null;
 
   const onTouchStart = (e: TouchEvent) => {
     if (e.touches.length !== 1) {
@@ -120,9 +152,24 @@ export function attachSwipeHandler(el: HTMLElement, options: SwipeOptions): () =
       return;
     }
     ignored = false;
+    horizontal = null;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     startTime = Date.now();
+  };
+
+  // a horizontal swipe does not scroll the page: its vertical drift would carry
+  // momentum into the period switch and fight the scroll hold
+  const onTouchMove = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (ignored || horizontal === false || !touch) return;
+    if (horizontal === null) {
+      const dx = Math.abs(touch.clientX - startX);
+      const dy = Math.abs(touch.clientY - startY);
+      if (Math.max(dx, dy) < DWELL_SLOP_PX) return;
+      horizontal = dx > dy;
+    }
+    if (horizontal && e.cancelable) e.preventDefault();
   };
 
   const onTouchEnd = (e: TouchEvent) => {
@@ -141,10 +188,12 @@ export function attachSwipeHandler(el: HTMLElement, options: SwipeOptions): () =
   // capture phase, so the touch tooltip gate's stopPropagation on chart elements
   // cannot starve the swipe detection
   el.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+  el.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
   el.addEventListener("touchend", onTouchEnd, { capture: true, passive: true });
 
   return () => {
     el.removeEventListener("touchstart", onTouchStart, { capture: true });
+    el.removeEventListener("touchmove", onTouchMove, { capture: true });
     el.removeEventListener("touchend", onTouchEnd, { capture: true });
   };
 }

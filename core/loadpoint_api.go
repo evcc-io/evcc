@@ -208,6 +208,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 		}
 
 		lp.requestUpdate()
+		lp.triggerOptimizer()
 	}
 }
 
@@ -250,7 +251,11 @@ func (lp *Loadpoint) SetAlwaysCharge(ac api.AlwaysCharge) error {
 	}
 
 	lp.log.DEBUG.Println("set always charge:", ac)
-	lp.setAlwaysCharge(ac)
+
+	if ac != lp.alwaysCharge {
+		lp.setAlwaysCharge(ac)
+		lp.triggerOptimizer()
+	}
 
 	return nil
 }
@@ -381,6 +386,7 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 	if lp.limitSoc != soc {
 		lp.setLimitSoc(soc)
 		lp.requestUpdate()
+		lp.triggerOptimizer()
 	}
 }
 
@@ -409,6 +415,7 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	if lp.minSoc != soc {
 		lp.setMinSoc(soc)
 		lp.requestUpdate()
+		lp.triggerOptimizer()
 	}
 }
 
@@ -442,6 +449,7 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 	if lp.limitEnergy != energy {
 		lp.setLimitEnergy(energy)
 		lp.requestUpdate()
+		lp.triggerOptimizer()
 	}
 }
 
@@ -496,6 +504,7 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
 		lp.setPlanEnergy(finishAt, energy)
 		lp.requestUpdate()
+		lp.triggerOptimizer()
 	}
 
 	return nil
@@ -737,6 +746,8 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 			lp.batteryBoost = boostStart
 			lp.requestUpdate()
 		}
+
+		lp.triggerOptimizer()
 	}
 
 	return nil
@@ -799,6 +810,11 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 		return 0
 	}
 
+	// an optimizer setpoint does not yield to a higher priority loadpoint
+	if s := lp.activeSuggestion(); s != nil && s.Action == actionCharge && !lp.surplusRegime(s) {
+		return 0
+	}
+
 	if loadpoint.SurplusFlexible(lp) {
 		return lp.GetChargePower()
 	}
@@ -816,10 +832,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	if lp.chargeCurrents == nil {
-		return lp.offeredCurrent
-	}
-	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	return lp.actualMaxChargeCurrent()
 }
 
 // GetMinCurrent returns the min loadpoint current
@@ -985,25 +998,47 @@ func (lp *Loadpoint) StartVehicleDetection() {
 	lp.startVehicleDetection()
 }
 
-// GetSmartCostLimit gets the smart cost limit
+// GetSmartCostLimit gets the smart cost limit. The optimizer replaces it in
+// automatic mode, so it reads as unset and none of its consumers apply it.
 func (lp *Loadpoint) GetSmartCostLimit() *float64 {
+	if lp.optimizerControlled() {
+		return nil
+	}
+
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.smartCostLimit
 }
 
 // SetSmartCostLimit sets the smart cost limit
-func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
+func (lp *Loadpoint) SetSmartCostLimit(val *float64) error {
+	if lp.optimizerControlled() {
+		// the getter reads nil in automatic mode- a config round-trip writing it
+		// back must not discard the stored limit
+		if val != nil {
+			return ErrOptimizerAutomatic
+		}
+
+		return nil
+	}
+
+	lp.setSmartCostLimit(val)
+
+	return nil
+}
+
+func (lp *Loadpoint) setSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.3f", val))
 
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
 
 		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
 		lp.publish(keys.SmartCostLimit, val)
+		lp.triggerOptimizer()
 	}
 }
 
@@ -1028,19 +1063,38 @@ func (lp *Loadpoint) SetSolarShare(val float64) {
 	}
 }
 
-// GetSmartFeedInPriorityLimit gets the smart feed-in limit
+// GetSmartFeedInPriorityLimit gets the smart feed-in limit. The optimizer
+// replaces it in automatic mode, so it reads as unset.
 func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
+	if lp.optimizerControlled() {
+		return nil
+	}
+
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.smartFeedInPriorityLimit
 }
 
 // SetSmartFeedInPriorityLimit sets the smart cost feed-in
-func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) {
+func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) error {
+	if lp.optimizerControlled() {
+		if val != nil {
+			return ErrOptimizerAutomatic
+		}
+
+		return nil
+	}
+
+	lp.setSmartFeedInPriorityLimit(val)
+
+	return nil
+}
+
+func (lp *Loadpoint) setSmartFeedInPriorityLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart feed-in limit:", printPtr("%.3f", val))
 
 	if !ptrValueEqual(lp.smartFeedInPriorityLimit, val) {
 		lp.smartFeedInPriorityLimit = val

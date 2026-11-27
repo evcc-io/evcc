@@ -31,6 +31,7 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
@@ -46,6 +47,8 @@ type OCPP struct {
 	enabled bool
 	current float64
 	lp      loadpoint.API
+
+	enableSet bool // enabled reflects a profile actually sent
 
 	stackLevelZero      bool
 	profileKindRelative bool
@@ -185,8 +188,11 @@ func NewOCPP(ctx context.Context,
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
+	// remotestart is the master switch, idtag only applies when it is enabled
 	if remoteStart {
 		idTag = cmp.Or(idTag, cp.IdTag, defaultIdTag)
+	} else {
+		idTag = ""
 	}
 
 	conn, err := ocpp.NewConnector(ctx, log, connector, cp, idTag, meterInterval)
@@ -288,6 +294,12 @@ func (c *OCPP) Enabled() (bool, error) {
 			core.ChargePointStatusSuspendedEVSE:
 			return false, nil
 		case
+			// idle chargers may offer their hardware maximum regardless of the profile
+			core.ChargePointStatusAvailable:
+			if c.enableSet {
+				return c.enabled, nil
+			}
+		case
 			core.ChargePointStatusCharging,
 			core.ChargePointStatusSuspendedEV:
 			return true, nil
@@ -326,6 +338,7 @@ func (c *OCPP) Enable(enable bool) error {
 	if err == nil {
 		// cache enabled state as last fallback option
 		c.enabled = enable
+		c.enableSet = true
 	}
 
 	return err
@@ -378,7 +391,7 @@ func (c *OCPP) createChargingProfile(current float64, transactionID int) *types.
 		if phases == 0 {
 			phases = 3
 		}
-		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
+		period = types.NewChargingSchedulePeriod(0, math.Trunc(grid.CurrentToPower(current, phases)))
 	} else {
 		// OCPP assumes phases == 3 if not set
 		if phases != 0 {
@@ -510,4 +523,5 @@ var _ loadpoint.Controller = (*OCPP)(nil)
 // LoadpointControl implements loadpoint.Controller
 func (c *OCPP) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
+	c.conn.OnStatusChange(lp.RequestUpdate)
 }

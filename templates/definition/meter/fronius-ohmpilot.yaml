@@ -3,6 +3,8 @@ products:
   - brand: Fronius
     description:
       generic: Ohmpilot
+discovery:
+  mac: ["0003AC"]
 params:
   - name: usage
     choice: ["aux"]

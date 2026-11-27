@@ -1,0 +1,358 @@
+template: solax-hybrid-g2
+products:
+  - brand: Solax
+    description:
+      generic: X3 Hybrid G2
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 1
+    baudrate: 19200
+  - name: maxacpower
+  - preset: battery-params
+  - name: maxchargepower
+    required: true
+  - name: maxdischargepower
+    required: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 192 # 0x00C0
+      type: input
+      decode: int32s
+    scale: -1
+  powers:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 130 # 0x0082
+        type: input
+        decode: int32s
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 132 # 0x0084
+        type: input
+        decode: int32s
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 134 # 0x0086
+        type: input
+        decode: int32s
+      scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10 # 0x000A Powerdc1
+        type: input
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 11 # 0x000B Powerdc2
+        type: input
+        decode: uint16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 148 # 0x0094 SolarEnergyTotal
+      type: input
+      decode: uint32s
+    scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 22 # 0x0016 Batpower_Charge1
+      type: input
+      decode: int16
+    scale: -1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 28 # 0x001C Battery Capacity
+      type: input
+      decode: uint16
+  # the sequence hides the switch, so the modes are declared here
+  batterymodes: ["normal", "holddischarge", "charge", "holdcharge", "discharge"]
+  batterymode:
+    source: sequence
+    set:
+    - source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x001F # SolarChargeUseMode
+                type: writesingle
+                decode: uint16
+          - source: const
+            value: 250
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0024 # charge current limit
+                type: writesingle
+                decode: uint16
+          - source: const
+            value: 250
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0025 # discharge current limit
+                type: writesingle
+                decode: uint16
+      - case: 2 # holddischarge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 250
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0024 # charge current limit
+                type: writesingle
+                decode: uint16
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0025 # discharge current limit
+                type: writesingle
+                decode: uint16
+      - case: 3 # charge
+        set:
+          source: go
+          in:
+          - name: status
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x00BF # inverter status
+                type: input
+                decode: uint16
+          script: |
+            res := 0
+            if status == 9 {
+              res = 1
+            }
+            res
+          out:
+          - name: awakeRequired
+            type: int
+            config:
+              source: ifelse
+              if:
+                source: sequence
+                set:
+                - source: const
+                  value: 1
+                  set:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0x0056 # Bat_Awaken
+                      type: writesingle
+                      decode: uint16
+                - source: error
+                  error: ErrMustRetry
+              else:
+                source: sequence
+                set:
+                - source: const
+                  value: 120
+                  set:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0x009F
+                      type: writesingle
+                      decode: int16
+                - source: const
+                  value: 1
+                  set:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0x0051 # manual mode
+                      type: writesingle
+                      decode: uint16
+                - source: const
+                  value: 250
+                  set:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0x0024 # charge current limit
+                      type: writesingle
+                      decode: uint16
+                - source: const
+                  value: 250
+                  set:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0x0025 # discharge current limit
+                      type: writesingle
+                      decode: uint16
+      - case: 4 # holdcharge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0024 # charge current limit
+                type: writesingle
+                decode: uint16
+          - source: const
+            value: 250
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0025 # discharge current limit
+                type: writesingle
+                decode: uint16
+      - case: 5 # discharge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 120
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x009F
+                type: writesingle
+                decode: int16
+          - source: const
+            value: 1
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0051 # manual mode
+                type: writesingle
+                decode: uint16
+          - source: const
+            value: 250
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0024 # charge current limit
+                type: writesingle
+                decode: uint16
+          - source: const
+            value: 250
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0025 # discharge current limit
+                type: writesingle
+                decode: uint16
+    # manual mode falls back to self use unless the power setpoint is written within 120s
+    - source: watchdog
+      timeout: 120s
+      reset: [1, 2, 4]
+      set:
+        source: switch
+        switch:
+        - case: 3 # charge
+          set:
+            source: const
+            value: {{ .maxchargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0052 # manual mode power, positive charges
+                type: writesingle
+                decode: int16
+        - case: 5 # discharge
+          set:
+            source: const
+            value: {{ mul .maxdischargepower -1 }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0052 # manual mode power, negative discharges
+                type: writesingle
+                decode: int16
+        default:
+          # leave manual mode if it is still active
+          source: go
+          in:
+          - name: manualmode
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x0051 # manual mode
+                type: holding
+                decode: uint16
+          script: |
+            manualmode != 0
+          out:
+          - name: resetrequired
+            type: bool
+            config:
+              source: ifelse
+              if:
+                source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 0x0051 # manual mode
+                    type: writesingle
+                    decode: uint16
+              else:
+                source: sleep
+                duration: 0s
+  {{- include "battery-params" . }}
+  {{- end }}

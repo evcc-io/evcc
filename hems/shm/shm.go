@@ -8,13 +8,15 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"uuid"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
 )
@@ -56,13 +58,10 @@ func NewFromConfig(cfg Config, hostUri string, site site.API, addr string, route
 		return fmt.Errorf("invalid vendor id: %v. Must be 8 characters HEX string", vendorId)
 	}
 
-	uid := uuid.New()
+	uid := persistentUUID()
 
 	// Only if DeviceSerial is explicitly configured: validate it and patch the
-	// UUID node (last 6 bytes) to ensure the UDN and DeviceSerial are stable across restarts.
-	// Ideally we'd have used the same machine-id approach as UniqueDeviceID does, but that
-	// would break existing installations that relied on the node ID of the UUID which was set to the MAC address
-	// of the host. See https://github.com/evcc-io/evcc/issues/28126 for context.
+	// UUID node (last 6 bytes). See https://github.com/evcc-io/evcc/issues/28126 for context.
 	if cfg.DeviceSerial != "" {
 		b, err := hex.DecodeString(cfg.DeviceSerial)
 		if err != nil {
@@ -274,6 +273,22 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.writeXML(w, msg)
+}
+
+// persistentUUID returns the UDN from settings. On first use it is seeded with the host MAC
+// as node like the former v1 UUID, so the DeviceSerial known to Sunny Portal is kept.
+func persistentUUID() uuid.UUID {
+	if s, err := settings.String(keys.ShmUuid); err == nil {
+		if uid, err := uuid.Parse(s); err == nil {
+			return uid
+		}
+	}
+
+	uid := uuid.New()
+	copy(uid[10:], uuid.NodeID())
+	settings.SetString(keys.ShmUuid, uid.String())
+
+	return uid
 }
 
 func (s *SEMP) serialNumber(id int) string {

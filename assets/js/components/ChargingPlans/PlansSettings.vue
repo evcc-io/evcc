@@ -37,6 +37,7 @@
 					:precondition="effectivePlanStrategy?.precondition"
 					:continuous="effectivePlanStrategy?.continuous"
 					:smart-cost-type="smartCostType"
+					:optimizer-controlled="optimizerControlled"
 					@update="updatePlanStrategy"
 				/>
 			</div>
@@ -76,6 +77,7 @@ import type {
 	PlanResponse,
 	PlanStrategy,
 	PlanWrapper,
+	Rate,
 	RepeatingPlan,
 	SMART_COST_TYPE,
 	StaticEnergyPlan,
@@ -102,12 +104,14 @@ export default defineComponent({
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
 		effectivePlanStrategy: Object as PropType<PlanStrategy>,
+		activePlan: Array as PropType<Rate[] | null>,
 		planEnergy: Number,
 		limitEnergy: Number,
 		socBasedPlanning: Boolean,
 		socPerKwh: Number,
 		rangePerSoc: Number,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		optimizerControlled: Boolean,
 		currency: String as PropType<CURRENCY>,
 		mode: String,
 		capacity: Number,
@@ -128,6 +132,7 @@ export default defineComponent({
 			plan: {} as PlanWrapper,
 			activeTab: "time",
 			nextPlanId: 0,
+			planRequest: 0,
 			updatePlanPreviewDebounced: null as any as () => void,
 			updateActivePlanDebounced: null as any as () => void,
 		};
@@ -148,11 +153,11 @@ export default defineComponent({
 				end: new Date(end),
 				value,
 			}));
-			const { duration, plan, power, planTime } = this.plan;
+			const { duration, plan, power, planTime, optimizer } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;
 			return rates
-				? { duration, plan, power, rates, targetTime, currency, smartCostType }
+				? { duration, plan, power, rates, targetTime, currency, smartCostType, optimizer }
 				: null;
 		},
 		alreadyReached(): boolean {
@@ -163,6 +168,9 @@ export default defineComponent({
 		},
 	},
 	watch: {
+		socBasedPlanning() {
+			this.updatePlanDebounced();
+		},
 		effectivePlanTime(newValue: string) {
 			if (null !== newValue) {
 				this.updatePlanDebounced();
@@ -171,6 +179,15 @@ export default defineComponent({
 		effectivePlanStrategy: {
 			deep: true,
 			handler(vNew: PlanStrategy, vOld: PlanStrategy) {
+				if (!deepEqual(vNew, vOld)) {
+					this.updatePlanDebounced();
+				}
+			},
+		},
+		// the optimizer delivers its schedule after the plan was saved
+		activePlan: {
+			deep: true,
+			handler(vNew: Rate[] | null, vOld: Rate[] | null) {
 				if (!deepEqual(vNew, vOld)) {
 					this.updatePlanDebounced();
 				}
@@ -215,8 +232,10 @@ export default defineComponent({
 			}
 		},
 		async updateActivePlan(): Promise<void> {
+			const request = ++this.planRequest;
 			try {
 				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
+				if (request !== this.planRequest) return;
 				this.plan = res?.data ?? ({} as PlanWrapper);
 				this.nextPlanId = this.plan.planId;
 			} catch (e) {
@@ -261,6 +280,7 @@ export default defineComponent({
 			// only show preview if no plan is active
 			if (!this.noActivePlan) return;
 
+			const request = ++this.planRequest;
 			try {
 				let planRes: PlanResponse | undefined = undefined;
 				if (this.staticPlanPreview) {
@@ -280,6 +300,7 @@ export default defineComponent({
 						});
 					}
 				}
+				if (request !== this.planRequest) return;
 				this.plan = planRes?.data ?? ({} as PlanWrapper);
 			} catch (e) {
 				console.error(e);

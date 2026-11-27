@@ -25,6 +25,9 @@ func init() {
 	registry.Add("peugeot", func(other map[string]any) (api.Vehicle, error) {
 		return newPSA("peugeot", "clientsB2CPeugeot", other)
 	})
+	registry.Add("vauxhall", func(other map[string]any) (api.Vehicle, error) {
+		return newPSA("vauxhall", "clientsB2CVauxhall", other)
+	})
 }
 
 // PSA is an api.Vehicle implementation for PSA cars

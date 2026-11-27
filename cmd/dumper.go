@@ -151,20 +151,32 @@ func (d *dumper) Dump(name string, v any) {
 		}
 	}
 
-	if v, ok := api.Cap[api.BatteryCapacity](v); ok {
+	if bc, ok := api.Cap[api.BatteryCapacity](v); ok {
+		if capacity, err := bc.Capacity(); err != nil {
+			fmt.Fprintf(w, "Capacity:\t%v\t\t\n", err)
+		} else {
+			fmt.Fprintf(w, "Capacity:\t%.1fkWh\t\t\n", capacity)
+		}
+	} else if v, ok := v.(api.Vehicle); ok {
 		fmt.Fprintf(w, "Capacity:\t%.1fkWh\t\t\n", v.Capacity())
 	}
 
 	if v, ok := api.Cap[api.BatterySocLimiter](v); ok {
-		min, max := v.GetSocLimits()
-		fmt.Fprintf(w, "Min soc:\t%.0f%%\t\t\n", min)
-		fmt.Fprintf(w, "Max soc:\t%.0f%%\t\t\n", max)
+		if min, max, err := v.GetSocLimits(); err != nil {
+			fmt.Fprintf(w, "Soc limits:\t%v\t\t\n", err)
+		} else {
+			fmt.Fprintf(w, "Min soc:\t%.0f%%\t\t\n", min)
+			fmt.Fprintf(w, "Max soc:\t%.0f%%\t\t\n", max)
+		}
 	}
 
 	if v, ok := api.Cap[api.BatteryPowerLimiter](v); ok {
-		charge, discharge := v.GetPowerLimits()
-		fmt.Fprintf(w, "Max charge power:\t%.0fW\t\t\n", charge)
-		fmt.Fprintf(w, "Max discharge power:\t%.0fW\t\t\n", discharge)
+		if charge, discharge, err := v.GetPowerLimits(); err != nil {
+			fmt.Fprintf(w, "Power limits:\t%v\t\t\n", err)
+		} else {
+			fmt.Fprintf(w, "Max charge power:\t%.0fW\t\t\n", charge)
+			fmt.Fprintf(w, "Max discharge power:\t%.0fW\t\t\n", discharge)
+		}
 	}
 
 	if v, ok := api.Cap[api.MaxACPowerGetter](v); ok {

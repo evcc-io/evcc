@@ -6,12 +6,13 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math/rand/v2"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
 
-	paho "github.com/eclipse/paho.mqtt.golang"
-	"github.com/evcc-io/evcc/api"
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/sync/semaphore"
@@ -21,6 +22,10 @@ import (
 var Instance *Client
 
 const parallelInflightLimit int64 = 32
+
+// cleanupMaxDuration stops Cleanup from blocking forever on brokers that never
+// stop delivering non-empty messages for the cleaned topic
+const cleanupMaxDuration = 30 * time.Second
 
 // ClientID created unique mqtt client id
 func ClientID() string {
@@ -43,7 +48,8 @@ type Config struct {
 type Client struct {
 	log      *util.Logger
 	mux      sync.Mutex
-	client   paho.Client
+	client   *autopaho.ConnectionManager
+	router   *paho.StandardRouter
 	broker   string
 	Qos      byte
 	listener map[string][]func(string)
@@ -54,7 +60,7 @@ type Client struct {
 	connCancel context.CancelFunc
 }
 
-type Option func(*paho.ClientOptions)
+type Option func(*autopaho.ClientConfig)
 
 const secure = "tls://"
 
@@ -66,26 +72,23 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	broker = util.DefaultPort(broker, 1883)
 	if isSecure {
 		broker = secure + broker
+	} else if !strings.Contains(broker, "://") {
+		broker = "mqtt://" + broker
+	}
+
+	u, err := url.Parse(broker)
+	if err != nil {
+		return nil, fmt.Errorf("invalid broker: %w", err)
 	}
 
 	mc := &Client{
 		log:      log,
+		router:   paho.NewStandardRouter(),
+		broker:   u.String(),
 		Qos:      qos,
 		listener: make(map[string][]func(string)),
 		inflight: semaphore.NewWeighted(parallelInflightLimit),
 	}
-
-	options := paho.NewClientOptions()
-	options.AddBroker(broker)
-	options.SetUsername(user)
-	options.SetPassword(password)
-	options.SetClientID(clientID)
-	options.SetCleanSession(true)
-	options.SetAutoReconnect(true)
-	options.SetOnConnectHandler(mc.ConnectionHandler)
-	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
-	options.SetConnectTimeout(request.Timeout)
-	options.SetWriteTimeout(request.Timeout)
 
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: insecure,
@@ -104,29 +107,101 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		}
 		tlsConfig.Certificates = []tls.Certificate{clientKeyPair}
 	}
-	options.SetTLSConfig(tlsConfig)
+
+	// session expiry is left at 0, so every connection starts without broker-side subscriptions
+	cfg := autopaho.ClientConfig{
+		ServerUrls:                    []*url.URL{u},
+		TlsCfg:                        tlsConfig,
+		KeepAlive:                     30,
+		CleanStartOnInitialConnection: true,
+		ConnectTimeout:                request.Timeout,
+		ConnectUsername:               user,
+		ConnectPassword:               []byte(password),
+		OnConnectionUp:                mc.ConnectionHandler,
+		OnConnectionDown: func() bool {
+			mc.cancelConnContext()
+			return true
+		},
+		ClientConfig: paho.ClientConfig{
+			ClientID:      clientID,
+			PacketTimeout: request.Timeout,
+			OnPublishReceived: OnPublish(func(msg *paho.Publish) {
+				mc.router.Route(msg.Packet())
+			}),
+			OnClientError: func(err error) {
+				log.ERROR.Printf("%s connection lost: %v", mc.broker, err)
+			},
+			OnServerDisconnect: func(d *paho.Disconnect) {
+				log.ERROR.Printf("%s connection lost: disconnected by broker (reason %d)", mc.broker, d.ReasonCode)
+			},
+		},
+	}
 
 	// additional options
 	for _, o := range opts {
-		o(options)
+		o(&cfg)
 	}
 
-	client := paho.NewClient(options)
-
-	or := client.OptionsReader()
-	mc.broker = fmt.Sprintf("%v", or.Servers())
-	if len(or.Servers()) == 1 {
-		mc.broker = or.Servers()[0].String()
-	}
 	log.INFO.Printf("connecting %s at %s", clientID, mc.broker)
 
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		return nil, fmt.Errorf("error connecting: %w", token.Error())
+	client, err := Connect(context.Background(), cfg, request.Timeout)
+	if err != nil {
+		return nil, fmt.Errorf("error connecting: %w", err)
 	}
 
 	mc.client = client
 
 	return mc, nil
+}
+
+// Connect returns the connection once the broker is reached, failing on the first connect error
+func Connect(ctx context.Context, cfg autopaho.ClientConfig, timeout time.Duration) (*autopaho.ConnectionManager, error) {
+	errC := make(chan error, 1)
+	cfg.OnConnectError = func(err error) {
+		select {
+		case errC <- err:
+		default:
+		}
+	}
+
+	cm, err := autopaho.NewConnection(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	waitCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	upC := make(chan error, 1)
+	go func() { upC <- cm.AwaitConnection(waitCtx) }()
+
+	select {
+	case err = <-upC:
+	case err = <-errC:
+	}
+
+	if err != nil {
+		// stop the connection manager, it retries forever otherwise
+		go func() { _ = cm.Disconnect(context.Background()) }()
+		return nil, err
+	}
+
+	return cm, nil
+}
+
+// OnPublish adapts handler to the client config's publish callbacks
+func OnPublish(handler func(*paho.Publish)) []func(paho.PublishReceived) (bool, error) {
+	return []func(paho.PublishReceived) (bool, error){
+		func(pr paho.PublishReceived) (bool, error) {
+			handler(pr.Packet)
+			return true, nil
+		},
+	}
+}
+
+// timeout returns a context limiting a single broker request
+func timeout() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), request.Timeout)
 }
 
 // connContext returns a context that is cancelled on disconnect and replaced
@@ -158,14 +233,8 @@ func (m *Client) cancelConnContext() {
 	}
 }
 
-// ConnectionLostHandler logs cause of connection loss as warning
-func (m *Client) ConnectionLostHandler(client paho.Client, reason error) {
-	m.log.ERROR.Printf("%s connection lost: %v", m.broker, reason.Error())
-	m.cancelConnContext()
-}
-
 // ConnectionHandler restores listeners
-func (m *Client) ConnectionHandler(client paho.Client) {
+func (m *Client) ConnectionHandler(_ *autopaho.ConnectionManager, _ *paho.Connack) {
 	m.log.DEBUG.Printf("%s connected", m.broker)
 	m.renewConnContext()
 
@@ -180,10 +249,7 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 	go func() {
 		for _, topic := range topics {
 			m.log.DEBUG.Printf("%s subscribe %s", m.broker, topic)
-			token := m.listen(topic)
-			if !token.WaitTimeout(request.Timeout) {
-				m.log.ERROR.Printf("subscribe %s: timeout", topic)
-			} else if err := token.Error(); err != nil {
+			if err := m.subscribe(topic); err != nil {
 				m.log.ERROR.Printf("subscribe %s: %v", topic, err)
 			}
 		}
@@ -193,34 +259,68 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 // Cleanup recursively removes a topic
 func (m *Client) Cleanup(topic string, retained bool) error {
 	timer := time.NewTimer(time.Second)
+	defer timer.Stop()
+
+	// callbacks hand topics to the loop below, so no delete runs after cleanup returns
+	topics := make(chan string)
+	done := make(chan struct{})
 
 	statusTopic := topic + "/status"
-	if !m.client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
-		if len(msg.Payload()) == 0 || msg.Topic() == statusTopic {
+	filter := topic + "/#"
+
+	m.router.RegisterHandler(filter, func(msg *paho.Publish) {
+		if len(msg.Payload) == 0 || msg.Topic == statusTopic {
 			return
 		}
 
-		m.log.TRACE.Printf("delete: %s", msg.Topic())
-		// Delete synchronously at QoS 0 so the cleanup burst self-throttles
-		// to one in-flight message at a time and avoids overwhelming the
-		// broker (see #30086).
-		token := m.client.Publish(msg.Topic(), 0, true, "")
-		token.WaitTimeout(request.Timeout)
+		select {
+		case topics <- msg.Topic:
+		case <-done:
+		}
+	})
+	defer m.router.UnregisterHandler(filter)
 
-		// reset timeout
-		timer.Reset(time.Second)
-	}).WaitTimeout(request.Timeout) {
-		return api.ErrTimeout
+	if err := m.subscribe(filter); err != nil {
+		close(done)
+		return err
 	}
+
+	deadline := time.NewTimer(cleanupMaxDuration)
+	defer deadline.Stop()
 
 	// wait for cleanup to finish
-	<-timer.C
+wait:
+	for {
+		select {
+		case t := <-topics:
+			m.log.TRACE.Printf("delete: %s", t)
+			// Delete synchronously at QoS 0 so the cleanup burst self-throttles
+			// to one in-flight message at a time and avoids overwhelming the
+			// broker (see #30086).
+			ctx, cancel := timeout()
+			_, _ = m.client.Publish(ctx, &paho.Publish{Topic: t, Retain: true})
+			cancel()
 
-	if !m.client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
-		return api.ErrTimeout
+			// reset timeout
+			timer.Reset(time.Second)
+
+		case <-timer.C:
+			break wait
+
+		case <-deadline.C:
+			m.log.WARN.Printf("cleanup %s: broker still sending retained messages after %v, continuing", topic, cleanupMaxDuration)
+			break wait
+		}
 	}
 
-	return nil
+	// release blocked callbacks before unsubscribing, they hold up paho's message routing
+	close(done)
+
+	ctx, cancel := timeout()
+	defer cancel()
+
+	_, err := m.client.Unsubscribe(ctx, &paho.Unsubscribe{Topics: []string{filter}})
+	return err
 }
 
 // Publish asynchronously publishes payload using client qos
@@ -243,17 +343,10 @@ func (m *Client) Publish(topic string, retained bool, payload string) {
 		}
 
 		m.log.TRACE.Printf("send %s: '%v'", topic, request.Truncate(payload))
-		token := m.client.Publish(topic, m.Qos, retained, payload)
-
-		select {
-		case <-connCtx.Done():
-			return
-		case <-token.Done():
-			if err := token.Error(); err != nil {
-				m.log.ERROR.Printf("send: %s: %v", topic, err)
-			}
-		case <-time.After(request.Timeout):
-			m.log.ERROR.Printf("send: %s: timeout", topic)
+		// limited by the packet timeout
+		_, err := m.client.Publish(connCtx, &paho.Publish{Topic: topic, QoS: m.Qos, Retain: retained, Payload: []byte(payload)})
+		if err != nil && connCtx.Err() == nil {
+			m.log.ERROR.Printf("send: %s: %v", topic, err)
 		}
 	}()
 }
@@ -261,17 +354,20 @@ func (m *Client) Publish(topic string, retained bool, payload string) {
 // Listen attaches listener to slice of listeners for given topic
 func (m *Client) Listen(topic string, callback func(string)) error {
 	m.mux.Lock()
+	first := len(m.listener[topic]) == 0
 	m.listener[topic] = append(m.listener[topic], callback)
 	m.mux.Unlock()
 
-	token := m.listen(topic)
-
-	select {
-	case <-time.After(request.Timeout):
-		return fmt.Errorf("subscribe: %s: %w", topic, api.ErrTimeout)
-	case <-token.Done():
-		return nil
+	// registered outside the lock, the router holds its own lock while running handlers
+	if first {
+		m.router.RegisterHandler(topic, m.handler(topic))
 	}
+
+	if err := m.subscribe(topic); err != nil {
+		return fmt.Errorf("subscribe: %s: %w", topic, err)
+	}
+
+	return nil
 }
 
 // ListenSetter creates a /set listener that resets the payload after handling
@@ -286,10 +382,21 @@ func (m *Client) ListenSetter(topic string, callback func(string) error) error {
 	return err
 }
 
-// listen attaches listener to topic
-func (m *Client) listen(topic string) paho.Token {
-	token := m.client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
-		payload := string(msg.Payload())
+// subscribe subscribes topic at the broker, failing if the broker refuses it
+func (m *Client) subscribe(topic string) error {
+	ctx, cancel := timeout()
+	defer cancel()
+
+	_, err := m.client.Subscribe(ctx, &paho.Subscribe{
+		Subscriptions: []paho.SubscribeOptions{{Topic: topic, QoS: m.Qos}},
+	})
+	return err
+}
+
+// handler dispatches messages to the listeners of topic
+func (m *Client) handler(topic string) paho.MessageHandler {
+	return func(msg *paho.Publish) {
+		payload := string(msg.Payload)
 		m.log.TRACE.Printf("recv %s: '%v'", topic, request.Truncate(payload))
 		if len(payload) > 0 {
 			m.mux.Lock()
@@ -300,6 +407,5 @@ func (m *Client) listen(topic string) paho.Token {
 				cb(payload)
 			}
 		}
-	})
-	return token
+	}
 }

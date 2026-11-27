@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/warp"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -38,6 +39,8 @@ type WarpWS struct {
 	// config
 	log        *util.Logger
 	meterIndex uint
+
+	lp loadpoint.API
 
 	mu sync.RWMutex
 
@@ -273,6 +276,11 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 				return err
 			}
 
+			// the energy manager has its own meters, evse and ev topics that must not overwrite the charger's
+			if role == wsRolePM && !isPmTopic(event.Topic) {
+				continue
+			}
+
 			// only drop PM topics on the main WS when a dedicated PM connection exists;
 			// on single-WS setups (WARP3) PM events arrive here and must be processed
 			if role == wsRoleMain && w.pm != w.Connection && isPmTopic(event.Topic) {
@@ -310,7 +318,12 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	case "evse/user_enabled":
 		err = json.Unmarshal(payload, &w.evse.UserEnabled)
 	case "evse/state":
-		err = json.Unmarshal(payload, &w.evse.State)
+		prev, _ := w.statusFromEvseStatus(w.evse.State.Iec61851State)
+		if err = json.Unmarshal(payload, &w.evse.State); err == nil {
+			if status, _ := w.statusFromEvseStatus(w.evse.State.Iec61851State); status != prev && w.lp != nil {
+				w.lp.RequestUpdate()
+			}
+		}
 	case "meter/all_values":
 		if !w.hasFeature(warp.FeatureMeterAllValues) || w.hasFeature(warp.FeatureMeters) {
 			return nil
@@ -596,4 +609,13 @@ func (w *WarpWS) getWarpType() (string, error) {
 	uri := fmt.Sprintf("%s/info/name", w.URI)
 	err := w.GetJSON(uri, &res)
 	return res.WarpType, err
+}
+
+var _ loadpoint.Controller = (*WarpWS)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (w *WarpWS) LoadpointControl(lp loadpoint.API) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.lp = lp
 }

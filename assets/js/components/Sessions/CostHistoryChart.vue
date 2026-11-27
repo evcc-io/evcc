@@ -131,14 +131,10 @@ export default defineComponent({
 					const items = dataset.data.filter((v): v is number => v !== null);
 					const min = Math.min(...items);
 					const max = Math.max(...items);
-					const format = (value: number, withUnit: boolean) => {
-						return this.costType === TYPES.PRICE
-							? this.fmtPricePerKWh(value, this.currency, false, withUnit)
-							: withUnit
-								? this.fmtCo2Medium(value)
-								: this.fmtGrams(value, false);
-					};
-					value = `${format(min, false)} – ${format(max, true)}`;
+					value =
+						this.costType === TYPES.PRICE
+							? this.fmtPriceRange(min, max, this.currency)
+							: `${this.fmtGrams(min, false)} – ${this.fmtCo2Medium(max)}`;
 					type = "line";
 				} else {
 					const total = dataset.data.reduce((acc: number, curr) => acc + (curr || 0), 0);
@@ -174,6 +170,8 @@ export default defineComponent({
 			const { labels, datasets } = this.chartData;
 			const head = this.tooltipHead;
 			const isPrice = this.costType === TYPES.PRICE;
+			// without sessions the scales are made up, only their lines show
+			const named = (unit: string) => (this.hasSessions ? unit : "");
 			const fmtBarValue = (value: number) =>
 				isPrice ? this.fmtMoney(value, this.currency, true, true) : this.fmtGrams(value);
 			const fmtLineValue = (value: number) =>
@@ -255,7 +253,7 @@ export default defineComponent({
 						},
 						...(this.costType === TYPES.CO2
 							? {
-									name: this.co2Scale.small ? "g" : "kg",
+									name: named(this.co2Scale.small ? "g" : "kg"),
 									...(this.co2Scale.small
 										? {
 												max: this.co2Scale.limit,
@@ -266,6 +264,7 @@ export default defineComponent({
 							: {}),
 						...axisNameStyle(),
 						axisLabel: {
+							show: this.hasSessions,
 							color: colors.muted || "",
 							hideOverlap: true,
 							formatter: (value: number) =>
@@ -284,9 +283,10 @@ export default defineComponent({
 					forecastYAxis({
 						position: "left",
 						splitLine: { show: false },
-						name: isPrice ? this.pricePerKWhUnit(this.currency, false) : "g/kWh",
+						name: named(isPrice ? this.pricePerKWhUnit(this.currency, false) : "g/kWh"),
 						...axisNameStyle("right"),
 						axisLabel: {
+							show: this.hasSessions,
 							color: colors.muted || "",
 							hideOverlap: true,
 							formatter: (value: number) =>

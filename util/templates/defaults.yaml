@@ -21,7 +21,8 @@ params:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
-    pattern:
+    service: network/hosts?template={template}
+    pattern: &host-pattern
       regex: "^[^\\/\\s]+(:[0-9]{1,5})?$" # any char except slash/space, optional :port
       examples: ["192.168.1.100", "example.com", "server.local:8080"]
   - name: ip
@@ -83,7 +84,7 @@ params:
     default: 0
     example: 5000
     type: float
-    usages: ["pv"]
+    usages: ["pv", "curtailer"]
     advanced: true
   - name: vin
     private: true
@@ -164,8 +165,8 @@ params:
       de: Maximaler Ladestand
       en: Maximum charge
     help:
-      de: Obere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer und für Netzladen genutzt.
-      en: Upper limit as configured on the battery system. Used by optimizer and for grid charging.
+      de: Obere Grenze wie am Batteriesystem eingestellt. Genutzt vom Optimizer und, bei manchen Geräten, für Netzladen.
+      en: Upper limit as configured on the battery system. Used by optimizer and, on some devices, for grid charging.
     example: 95
     default: 100
     type: int
@@ -401,8 +402,8 @@ params:
       en: Maximum charge power
       de: Maximale Ladeleistung
     help:
-      en: For forced charging of the battery.
-      de: Für erzwungenes Laden des Speichers.
+      en: Highest power the battery system can charge with. The optimizer plans with charging up to this power. Some devices also use it as grid charging power.
+      de: Höchste Leistung, mit der das Batteriesystem laden kann. Der Optimizer plant mit Laden bis zu dieser Leistung. Manche Geräte nutzen diesen Wert auch als Leistung für Netzladen.
     advanced: true
   - name: maxchargerate
     unit: "%"
@@ -424,8 +425,8 @@ params:
       en: Maximum discharge power
       de: Maximale Entladeleistung
     help:
-      en: Maximum discharge power of the storage.
-      de: Maximale Entladeleistung des Speichers.
+      en: Highest power the battery system can discharge with. The optimizer plans with discharging up to this power. Smart mode assumes the battery supplies at most this power to vehicle charging.
+      de: Höchste Leistung, mit der das Batteriesystem entladen kann. Der Optimizer plant mit Entladen bis zu dieser Leistung. Der Smart-Modus geht davon aus, dass die Batterie höchstens diese Leistung zum Fahrzeugladen beisteuert.
     advanced: true
 
   - name: accesstoken
@@ -526,6 +527,9 @@ params:
     description:
       generic: API Key
     mask: true
+  - name: siteid
+    description:
+      generic: Site ID
   - name: tempsource
     description:
       de: Temperaturquelle
@@ -775,8 +779,8 @@ presets:
         en: Authentication token
         de: Authentifizierungs-Token
       help:
-        de: "Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert. (Verwendet OCPP RemoteStartTransaction)"
-        en: "This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions. (Uses OCPP RemoteStartTransaction)"
+        de: "Nur wirksam, wenn der Remote-Start aktiviert ist. Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert. Ohne Angabe wird ein Standard-Token verwendet. (Verwendet OCPP RemoteStartTransaction)"
+        en: "Only effective if remote start is enabled. This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions. If empty, a default token is used. (Uses OCPP RemoteStartTransaction)"
       example: evcc
     - name: connecttimeout
       advanced: true
@@ -870,7 +874,6 @@ modbus:
     - name: id
       description:
         generic: Modbus ID
-      default: 1
       type: int
     - name: device
       description:
@@ -929,6 +932,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay
@@ -939,6 +943,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay
@@ -949,6 +954,7 @@ modbus:
       params:
         - name: id
         - name: host
+          pattern: *host-pattern
         - name: port
           default: 502
         - name: delay

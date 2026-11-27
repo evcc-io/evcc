@@ -1,20 +1,20 @@
 package homewizard
 
 // ApiResponse returns allows you to get basic information from the HomeWizard Energy Socket
-// https://homewizard-energy-api.readthedocs.io/endpoints.html#basic-information-api
+// https://api-documentation.homewizard.com/docs/v1/api/
 type ApiResponse struct {
 	ProductType string `json:"product_type"`
 	ApiVersion  string `json:"api_version"`
 }
 
 // StateResponse returns the actual state of the HomeWizard Energy Socket
-// https://homewizard-energy-api.readthedocs.io/endpoints.html#recent-measurement-api-v1-data
+// https://api-documentation.homewizard.com/docs/v1/state/
 type StateResponse struct {
 	PowerOn bool `json:"power_on"`
 }
 
 // DataResponse returns the most recent measurements from the HomeWizard device
-// https://homewizard-energy-api.readthedocs.io/endpoints.html#state-api-v1-state
+// https://api-documentation.homewizard.com/docs/v1/measurement/
 type DataResponse struct {
 	ActivePowerW          float64  `json:"active_power_w"`
 	ActivePowerL1W        float64  `json:"active_power_l1_w"`

@@ -4,6 +4,7 @@ import store from "@/store";
 
 import Modal from "bootstrap/js/dist/modal";
 import { isSystemError } from "@/utils/fatal.js";
+import { isConfigModal } from "@/configModal";
 
 const auth = reactive({
   configured: true,
@@ -86,21 +87,14 @@ export function openLoginModal(nextUrl: string | null = null, nextModal: Modal |
   modal.show();
 }
 
-// show/hide password modal based on auth status
-watch(
-  () => auth.configured,
-  (configured) => {
-    console.log("configured", configured);
-    const modal = Modal.getOrCreateInstance(
-      document.getElementById("passwordSetupModal") as HTMLElement
-    );
-    if (configured) {
-      modal.hide();
-    } else {
-      modal.show();
-    }
-  }
-);
+export function interruptWithLogin() {
+  const open = document.querySelector<HTMLElement>(".modal.show");
+  if (open?.id === "loginModal") return;
+
+  const resumable = open && !isConfigModal(open) ? Modal.getOrCreateInstance(open) : null;
+  resumable?.hide();
+  openLoginModal(null, resumable);
+}
 
 let timeoutId: number | undefined = undefined;
 function debounedUpdateAuthStatus() {

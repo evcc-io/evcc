@@ -3,7 +3,7 @@ package cardata
 import (
 	"context"
 	"fmt"
-	"maps"
+	"math"
 	"slices"
 	"strings"
 	"sync"
@@ -34,7 +34,7 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, clientID, vin string, cache time.Duration) *Provider {
+func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, mqtt *MqttConnector, vin string, cache time.Duration) *Provider {
 	v := &Provider{
 		log:       log,
 		api:       api,
@@ -45,7 +45,6 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 		streaming: make(map[string]StreamingData),
 	}
 
-	mqtt := NewMqttConnector(context.Background(), log, clientID, ts)
 	recvC := mqtt.Subscribe(vin)
 
 	go func() {
@@ -56,13 +55,29 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 	go func() {
 		for msg := range recvC {
 			v.mu.Lock()
-			maps.Copy(v.streaming, msg.Data)
-			v.updated = time.Now()
+			// a delayed or redelivered message must not overwrite newer data, data without a time counts as new
+			for key, data := range msg.Data {
+				if cur, ok := v.streaming[key]; !ok || data.TimeStamp.IsZero() || !data.TimeStamp.Before(cur.TimeStamp) {
+					v.streaming[key] = data
+				}
+			}
+			// an old message does not postpone the rest refresh past its own age
+			if ts := streamTime(msg.TimeStamp); ts.After(v.updated) {
+				v.updated = ts
+			}
 			v.mu.Unlock()
 		}
 	}()
 
 	return v
+}
+
+// streamTime is the message time, capped at now against clock skew. Messages without one count as new
+func streamTime(ts time.Time) time.Time {
+	if now := time.Now(); ts.IsZero() || ts.After(now) {
+		return now
+	}
+	return ts
 }
 
 func (v *Provider) findOrCreateContainer() (string, error) {
@@ -71,12 +86,11 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		return "", err
 	}
 
-	// obsolete containers keep streaming, resulting in duplicate messages
-	defer v.deleteObsoleteContainers(containers)
-
 	if i := slices.IndexFunc(containers, func(c Container) bool {
-		return c.Name == containerName && c.Purpose == requiredVersion
+		return c.State == "ACTIVE" && c.Name == containerName && c.Purpose == requiredVersion
 	}); i >= 0 {
+		// obsolete containers keep streaming, resulting in duplicate messages
+		v.deleteObsoleteContainers(containers)
 		return containers[i].ContainerId, nil
 	}
 
@@ -85,13 +99,20 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		Purpose:              requiredVersion,
 		TechnicalDescriptors: requiredKeys,
 	})
+	if err != nil {
+		// keep the old container streaming when the replacement cannot be created
+		return "", err
+	}
 
-	return res.ContainerId, err
+	v.deleteObsoleteContainers(containers)
+
+	return res.ContainerId, nil
 }
 
 func (v *Provider) deleteObsoleteContainers(containers []Container) {
 	for _, c := range containers {
-		if c.Name != containerName || c.Purpose == requiredVersion {
+		// deleted containers stay listed for 29 days, see TA2k/ioBroker.bmw@1b67ef4
+		if c.State == "DELETED" || c.Name != containerName || c.Purpose == requiredVersion {
 			continue
 		}
 
@@ -186,7 +207,12 @@ func (v *Provider) Float(key string) (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	return cast.ToFloat64E(res)
+	f, err := cast.ToFloat64E(res)
+	if err == nil && (math.IsNaN(f) || math.IsInf(f, 0)) {
+		return 0, api.ErrNotAvailable
+	}
+
+	return f, err
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -196,7 +222,11 @@ func (v *Provider) Soc() (float64, error) {
 	if res, err := v.Float("vehicle.drivetrain.batteryManagement.header"); err == nil {
 		return res, nil
 	}
-	return v.Float("vehicle.powertrain.electric.battery.stateOfCharge.displayed")
+	if res, err := v.Float("vehicle.powertrain.electric.battery.stateOfCharge.displayed"); err == nil {
+		return res, nil
+	}
+	// Neue Klasse, only updated at trip end, see openWB/core@0f92a95
+	return v.Float("vehicle.trip.segment.end.drivetrain.batteryManagement.hvSoc")
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -252,14 +282,20 @@ func (v *Provider) Range() (int64, error) {
 	if res, err := v.Int("vehicle.drivetrain.electricEngine.kombiRemainingElectricRange"); err == nil {
 		return res, nil
 	}
-	return v.Int("vehicle.drivetrain.lastRemainingRange")
+	if res, err := v.Int("vehicle.drivetrain.lastRemainingRange"); err == nil {
+		return res, nil
+	}
+	return v.Int("vehicle.drivetrain.electricEngine.remainingElectricRange")
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
-	return v.Float("vehicle.vehicle.travelledDistance")
+	if res, err := v.Float("vehicle.vehicle.travelledDistance"); err == nil {
+		return res, nil
+	}
+	return v.Float("vehicle.trip.segment.end.travelledDistance")
 }
 
 var _ api.SocLimiter = (*Provider)(nil)

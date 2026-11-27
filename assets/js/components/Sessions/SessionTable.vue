@@ -525,7 +525,7 @@ export default defineComponent({
 	z-index: 2;
 }
 .sticky-bottom th {
-	padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+	padding-bottom: max(0.5rem, var(--safe-area-inset-bottom));
 	border-bottom: none;
 }
 @media (max-width: 576px) {

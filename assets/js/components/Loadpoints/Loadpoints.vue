@@ -80,6 +80,8 @@
 				:smartCostType="smartCostType"
 				:battery-configured="batteryConfigured"
 				:forecast="forecast"
+				:voltage="voltage"
+				:grid-connection="gridConnection"
 			/>
 		</div>
 	</div>
@@ -91,6 +93,7 @@ import "@h2d2/shopicons/es/bold/circle";
 import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
+import Dropdown from "bootstrap/js/dist/dropdown";
 import { defineComponent, type PropType } from "vue";
 import type {
 	UiLoadpoint,
@@ -100,6 +103,7 @@ import type {
 	BATTERY_MODE,
 	UiForecast,
 	CURRENCY,
+	GRID_CONNECTION,
 } from "@/types/evcc";
 import ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
 import SettingsModal from "../Loadpoints/SettingsModal.vue";
@@ -119,6 +123,8 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		selectedId: String,
 		gridConfigured: Boolean,
+		gridConnection: String as PropType<GRID_CONNECTION>,
+		voltage: Number,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
 		batterySoc: Number,
@@ -194,6 +200,13 @@ export default defineComponent({
 			const carousel = this.$refs["carousel"] as HTMLElement | undefined;
 			if (!carousel || !carousel.children.length) {
 				return;
+			}
+
+			// swiping doesn't fire a click, so bootstrap's own outside-click auto-close
+			// never triggers and an open "always charge" popover would stay put
+			const openToggle = carousel.querySelector('[data-bs-toggle="dropdown"].show');
+			if (openToggle) {
+				Dropdown.getInstance(openToggle)?.hide();
 			}
 
 			const { scrollLeft } = carousel;

@@ -19,17 +19,23 @@ type Measurement struct {
 	ExcessDCPower float64     `json:"excessdcpower,omitempty"`
 	Capacity      *float64    `json:"capacity,omitempty"`
 	Soc           *float64    `json:"soc,omitempty"`
+	MinSoc        *float64    `json:"minSoc,omitempty"` // battery soc limits
+	MaxSoc        *float64    `json:"maxSoc,omitempty"`
 	Controllable  *bool       `json:"controllable,omitempty"`
+	Modes         []string    `json:"modes,omitempty"`
 	Suggestion    *Suggestion `json:"suggestion,omitempty"`
 }
 
 // Suggestion is the optimizer's advisory action for the current slot
 type Suggestion struct {
 	// Action is the recommended action for the current slot.
-	// home battery: normal|hold|charge|holdcharge; loadpoint/vehicle: charge|stop
-	Action    string  `json:"action"`
-	Charge    float64 `json:"charge"`    // recommended charge power, W
-	Discharge float64 `json:"discharge"` // recommended discharge power, W
+	// home battery: normal|holddischarge|charge|holdcharge; loadpoint/vehicle: charge|stop
+	Action           string  `json:"action"`
+	Charge           float64 `json:"charge"`           // recommended charge power, W
+	Discharge        float64 `json:"discharge"`        // recommended discharge power, W
+	Grid             float64 `json:"grid"`             // planned site grid flow, positive means import, W
+	BatteryDischarge float64 `json:"batteryDischarge"` // planned home battery discharge feeding the site, W
+	BatteryCharge    float64 `json:"batteryCharge"`    // planned home battery charge, W
 	// Actionable indicates the suggestion differs from the current operating mode.
 	Actionable bool `json:"actionable"`
 }

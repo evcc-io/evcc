@@ -1,0 +1,20 @@
+interval: 0.1s
+
+loadpoints:
+  - title: Carport
+    charger: charger
+    vehicle: mqtt_car
+
+chargers:
+  - name: charger
+    type: template
+    template: demo-charger
+    status: B
+
+vehicles:
+  - name: mqtt_car
+    type: custom
+    soc:
+      source: mqtt
+      broker: localhost:7072 # replaced by per-worker port, broker down at startup
+      topic: car/soc

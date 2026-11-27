@@ -291,8 +291,9 @@ func (c *Zaptec) Enable(enable bool) error {
 
 	err := c.DoJSON(req, &res)
 
-	// ignore 528: Charging is not Paused nor Scheduled; Resume command cannot be sent
-	if err == nil || res.Code == 528 {
+	// ignore 528 (Go 2) and 520 (Pro): command rejected as it would not change the charger state,
+	// e.g. "Charging is not Paused nor Scheduled; Resume command cannot be sent"
+	if err == nil || res.Code == 520 || res.Code == 528 {
 		c.enabled = enable
 		c.statusG.Reset()
 		return nil
@@ -381,6 +382,12 @@ func (c *Zaptec) ConnectionDuration() (time.Duration, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
 		return 0, err
+	}
+
+	// forget the session on real disconnect, otherwise the first identifier of the next plug-in counts as a swap
+	if mode, err := res.ObservationByID(zaptec.ChargerOperationMode).Int(); err == nil && mode == zaptec.OpModeDisconnected {
+		c.session = ""
+		c.sessionStart = time.Time{}
 	}
 
 	var session string

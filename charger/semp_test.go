@@ -382,12 +382,54 @@ func TestSEMPChargerReady(t *testing.T) {
 		assert.Equal(t, api.StatusB, status) // EMSignalsAccepted=true but Status!=On -> Status B
 	})
 
-	t.Run("EnabledWhenReady", func(t *testing.T) {
+	t.Run("DisabledWhenReady", func(t *testing.T) {
 		enabled, err := wb.Enabled()
 		require.NoError(t, err)
-		// Returns true because EMSignalsAccepted=true and wb.enabled=true (workaround for phase switching)
-		assert.True(t, enabled)
+		// Returns false because the device is not running and evcc has not enabled it
+		assert.False(t, enabled)
 	})
+}
+
+// https://github.com/evcc-io/evcc/issues/35950
+func TestSEMPChargerInitialEnabled(t *testing.T) {
+	handler := &sempTestHandler{
+		statusResponse:   mockDeviceStatusReadyResponse,
+		planningResponse: mockPlanningRequestResponse,
+		infoResponse:     mockDeviceInfoResponse,
+	}
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
+
+	newSEMP := func(status string) api.Charger {
+		handler.statusResponse = status
+		wb, err := NewSEMP(t.Context(), server.URL+"/semp", "F-12345678-ABCDEF123456-00", 0)
+		require.NoError(t, err)
+		return wb
+	}
+
+	// Enabled() returns the cached state while EM signals are accepted but the device is not running
+	cachedEnabled := func(wb api.Charger) bool {
+		handler.statusResponse = mockDeviceStatusReadyResponse
+		enabled, err := wb.Enabled()
+		require.NoError(t, err)
+		return enabled
+	}
+
+	// vehicle connected, device not running: must not report enabled after startup
+	wb := newSEMP(mockDeviceStatusReadyResponse)
+	assert.False(t, cachedEnabled(wb), "initial state with device not running")
+
+	// phase switch workaround: keep enabled state set by evcc while device is not running
+	require.NoError(t, wb.Enable(true))
+	assert.True(t, cachedEnabled(wb), "phase switch workaround")
+
+	// device already running at startup
+	wb = newSEMP(mockDeviceStatusResponse)
+	assert.True(t, cachedEnabled(wb), "initial state with device running")
+
+	// no vehicle connected at startup
+	wb = newSEMP(mockDeviceStatusOffResponse)
+	assert.False(t, cachedEnabled(wb), "initial state without vehicle")
 }
 
 func TestSEMPChargerPhases1p3p(t *testing.T) {
@@ -499,4 +541,30 @@ func TestSEMPChargerAutoDetectDeviceID(t *testing.T) {
 	status, err := wb.Status()
 	require.NoError(t, err)
 	assert.Equal(t, api.StatusC, status)
+}
+
+// https://github.com/evcc-io/evcc/issues/35933
+func TestSEMPChargerEnabledResetOnDisconnect(t *testing.T) {
+	handler := &sempTestHandler{
+		statusResponse:   mockDeviceStatusReadyResponse,
+		planningResponse: mockPlanningRequestResponse,
+		infoResponse:     mockDeviceInfoResponse,
+	}
+	server := httptest.NewTestServer(t, handler)
+	server.Start()
+
+	wb, err := NewSEMP(t.Context(), server.URL+"/semp", "F-12345678-ABCDEF123456-00", 0)
+	require.NoError(t, err)
+	require.NoError(t, wb.Enable(true))
+
+	enabled := func(status string) bool {
+		handler.statusResponse = status
+		enabled, err := wb.Enabled()
+		require.NoError(t, err)
+		return enabled
+	}
+
+	assert.True(t, enabled(mockDeviceStatusReadyResponse), "phase switch workaround")
+	assert.False(t, enabled(mockDeviceStatusOffResponse), "vehicle disconnected")
+	assert.False(t, enabled(mockDeviceStatusReadyResponse), "stale enabled state after reconnect")
 }

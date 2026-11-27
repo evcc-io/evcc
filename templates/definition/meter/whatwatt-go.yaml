@@ -1,0 +1,86 @@
+template: whatwatt-go
+products:
+  - brand: whatwatt
+    description:
+      generic: Go
+requirements:
+  description:
+    de: |
+      Erfordert eine aktive Plus-Lizenz oder höher und Zugriff auf die lokale REST-API.
+      Die Uhrzeiten des Geräts und von evcc müssen synchronisiert sein.
+      Messwerte hängen vom angeschlossenen Zähler ab.
+    en: |
+      Requires an active Plus license or higher and access to the local REST API.
+      The device and evcc clocks must be synchronized.
+      Available measurements depend on the connected meter.
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: password
+    advanced: true
+    help:
+      de: Optionales Passwort der whatwatt-Weboberfläche. Erfordert Firmware mit HTTP-Digest-Authentifizierung.
+      en: Optional whatwatt web interface password. Requires firmware with HTTP Digest authentication.
+  - name: cache
+    default: 1s
+render: |
+  {{- define "getter" }}
+  source: http
+  uri: http://{{ .host }}/api/v1/report
+  {{- if .password }}
+  auth:
+    type: digest
+    user: ""
+    password: {{ .password | quote }}
+  {{- end }}
+  cache: {{ .cache }}
+  {{- end }}
+  {{- define "validate" }}
+  (now - (.report.date_time_utc | fromdateiso8601)) as $age |
+  if .meter.status == "OK" and ($age >= -10 and $age <= 60)
+  then . else error("whatwatt: report unavailable or stale") end |
+  {{- end }}
+  type: custom
+  power:
+    {{- include "getter" . | indent 2 }}
+    jq: >-
+      {{ include "validate" . | trim | indent 4 | trim }}
+      .report.instantaneous_power.active |
+      if (.positive.total | type) == "number" and (.negative.total | type) == "number"
+      then (.positive.total - .negative.total) * 1000
+      else error("whatwatt: total power unavailable") end
+  energy:
+    {{- include "getter" . | indent 2 }}
+    jq: >-
+      {{ include "validate" . | trim | indent 4 | trim }}
+      .report.energy.active.positive.total
+  returnenergy:
+    {{- include "getter" . | indent 2 }}
+    jq: >-
+      {{ include "validate" . | trim | indent 4 | trim }}
+      .report.energy.active.negative.total
+  powers:
+  {{- range list "l1" "l2" "l3" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: >-
+        {{ include "validate" $ | trim | indent 6 | trim }}
+        .report.instantaneous_power.active |
+        if (.positive.{{ . }} | type) == "number" and (.negative.{{ . }} | type) == "number"
+        then (.positive.{{ . }} - .negative.{{ . }}) * 1000
+        else error("whatwatt: phase power unavailable") end
+  {{- end }}
+  currents:
+  {{- range list "l1" "l2" "l3" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: >-
+        {{ include "validate" $ | trim | indent 6 | trim }}
+        .report.current.{{ . }}
+  {{- end }}
+  voltages:
+  {{- range list "l1" "l2" "l3" }}
+    - {{ include "getter" $ | indent 4 | trim }}
+      jq: >-
+        {{ include "validate" $ | trim | indent 6 | trim }}
+        .report.voltage.{{ . }}
+  {{- end }}

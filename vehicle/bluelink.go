@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/bluelink"
 )
@@ -17,6 +18,7 @@ import (
 type Bluelink struct {
 	*embed
 	*bluelink.Provider
+	implement.Caps
 }
 
 func init() {
@@ -60,6 +62,10 @@ func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
 				ClientName:           "hyundai",
 				OSVersion:            "18.7",
 				NotificationProvider: "APNS",
+				// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+				FingerprintClientName: "HyundaiEU",
+				FingerprintKey:        "OsZDfDuCyVX" + "yfqjCoA2JbX" + "2MrLpGwNBC",
+				BrandLabel:            "Hyundai",
 			},
 		}
 	case "australia", "new zealand":
@@ -105,6 +111,10 @@ func NewKiaFromConfig(other map[string]any) (api.Vehicle, error) {
 			ClientName:           "kia",
 			OSVersion:            "27",
 			NotificationProvider: "IOS_APPSTORE",
+			// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+			FingerprintClientName: "KiaEU",
+			FingerprintKey:        "yb4Z1n2nlKe" + "ukNilE7QEdb" + "KB34nStPVa",
+			BrandLabel:            "Kia",
 		},
 	}
 
@@ -134,6 +144,10 @@ func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
 			ClientName:           "genesis",
 			OSVersion:            "18.7",
 			NotificationProvider: "APNS",
+			// signing constants of the Android OneApp 1.4.0 build, they rotate with app releases
+			FingerprintClientName: "GenesisEU",
+			FingerprintKey:        "SGcyufLERcZ" + "g8d7THY41KO" + "8l1fHRfZZb",
+			BrandLabel:            "Genesis",
 		},
 	}
 
@@ -145,7 +159,7 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
-		VIN            string
+		VIN, PIN       string
 		Language       string
 		Region         string
 		Expiry         time.Duration
@@ -160,10 +174,9 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 		return nil, err
 	}
 
-	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
-	identity := bluelink.NewIdentity(log, settings)
-
-	if err := identity.Login(cc.User, cc.Password, cc.Language, brand); err != nil {
+	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN, cc.PIN)
+	identity, err := bluelink.LoginIdentity(log, settings, cc.User, cc.Password, cc.Language, brand)
+	if err != nil {
 		return nil, err
 	}
 
@@ -182,6 +195,14 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 	v := &Bluelink{
 		embed:    &cc.embed,
 		Provider: bluelink.NewProvider(api, vehicle, cc.Cache),
+		Caps:     implement.New(),
+	}
+
+	// CCS2 vehicles need the PIN for start/stop
+	if cc.PIN != "" || vehicle.CcuCCS2ProtocolSupport == 0 {
+		implement.Has(v, implement.ChargeController(func(enable bool) error {
+			return api.ChargeEnable(identity, vehicle, cc.PIN, enable)
+		}))
 	}
 
 	// Try to fetch battery capacity from vehicle if the user didn't provide one in the configuration

@@ -39,6 +39,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 1
     timeout: 10s
   - name: timeout
     deprecated: true
@@ -117,7 +118,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         {{ if gt $heatint 0 -}}
         - source: const
@@ -127,7 +128,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         {{- end }}
         {{ if gt $waterint 0 -}}
@@ -138,7 +139,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         {{- end }}
     - case: 2 # normal
@@ -152,7 +153,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         {{ if gt $heatint 0 -}}
         - source: const
@@ -162,7 +163,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         {{- end }}
         {{ if gt $waterint 0 -}}
@@ -173,7 +174,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         {{- end }}
     - case: 3 # boost
@@ -187,7 +188,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         {{ if gt $heatint 0 -}}
         - source: const
@@ -197,7 +198,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         - source: const
           value: {{ $heatint }}
@@ -206,7 +207,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10002 # Heiz. Offset [0.1 K]
-              type: writeholding
+              type: writesingle
               encoding: int16
         {{- end }}
         {{ if gt $waterint 0 -}}
@@ -217,7 +218,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
-              type: writeholding
+              type: writesingle
               encoding: uint16
         - source: const
           value: {{ $waterint }}
@@ -226,7 +227,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 10007 # WW Offset [0.1 K]
-              type: writeholding
+              type: writesingle
               encoding: int16
         {{- end }}
   temp:

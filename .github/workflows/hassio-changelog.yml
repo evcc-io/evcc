@@ -1,5 +1,7 @@
 name: Hassio Addon Changelog Update (Reusable)
 
+permissions: {}
+
 on:
   workflow_call:
     inputs:
@@ -12,6 +14,10 @@ on:
         required: false
         type: boolean
         default: false
+    secrets:
+      HASSIO_DEPLOY_TOKEN:
+        required: true
+
 jobs:
   update-changelog:
     name: Update Hassio Changelog
@@ -26,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout hassio-addon
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: evcc-io/hassio-addon
           token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}

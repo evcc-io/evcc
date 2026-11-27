@@ -1,0 +1,29 @@
+template: ocpp-kathrein
+products:
+  - brand: Kathrein
+    description:
+      generic: KWB-AC20 (OCPP)
+  - brand: Kathrein
+    description:
+      generic: KWB-AC35 (OCPP)
+  - brand: Kathrein
+    description:
+      generic: KWB-AC40 (OCPP)
+  - brand: Kathrein
+    description:
+      generic: KWB-AC60 (OCPP)
+  - brand: Kathrein
+    description:
+      generic: KWB-AC40 E (OCPP)
+  - brand: Kathrein
+    description:
+      generic: KWB-AC60 E (OCPP)
+capabilities: ["mA", "rfid", "1p3p", "meter", "dim"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+  - name: metervalues
+    default: -Current.Offered
+render: |
+  {{ include "ocpp" . }}

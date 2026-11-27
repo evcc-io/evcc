@@ -22,11 +22,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/encoding"
@@ -105,11 +107,13 @@ const (
 // a zero power limit makes the station report the connector as unavailable and
 // abort a running session, so charging is inhibited with a limit that is too low
 // for any connector to actually charge- see hycRegMinPowerAbsorption
-const (
-	hycPowerPerAmp = 230 * 3 // W/A on the AC side
-	hycMinPowerAC  = 1547    // W
-	hycMinCurrent  = 2.25    // A, lowest current exceeding hycMinPowerAC
-)
+const hycMinPowerAC = 1547 // W
+
+// hycMinCurrent returns the lowest current whose written power exceeds hycMinPowerAC
+func hycMinCurrent() float64 {
+	// 2 W margin survives float rounding and truncation to whole watts in hycPower
+	return math.Ceil(grid.PowerToCurrent(hycMinPowerAC+2, 3)*100) / 100
+}
 
 func init() {
 	registry.AddCtx("alpitronic", NewAlpitronicHYCFromConfig)
@@ -155,7 +159,7 @@ func NewAlpitronicHYC(ctx context.Context, settings modbus.TcpSettings, connecto
 func newAlpitronicHYC(conn *modbus.Connection, connector uint16) (*AlpitronicHYC, error) {
 	wb := &AlpitronicHYC{
 		conn:      conn,
-		curr:      hycMinCurrent,
+		curr:      hycMinCurrent(),
 		connector: connector,
 	}
 
@@ -173,7 +177,7 @@ func newAlpitronicHYC(conn *modbus.Connection, connector uint16) (*AlpitronicHYC
 	}
 
 	if power := encoding.Uint32(b); power > hycMinPowerAC {
-		wb.curr = float64(power) / hycPowerPerAmp
+		wb.curr = grid.PowerToCurrent(float64(power), 3)
 		wb.enabled = true
 	}
 
@@ -192,7 +196,7 @@ func hycPower(current float64) uint32 {
 		return 0
 	}
 
-	return uint32(current * hycPowerPerAmp)
+	return uint32(grid.CurrentToPower(current, 3))
 }
 
 // setPower writes the connector's power limit
@@ -313,7 +317,7 @@ var _ api.ChargerEx = (*AlpitronicHYC)(nil)
 // the connector power limit written by evcc itself, so using them as upper bound
 // would feed back into the limit. Use the loadpoint's maxcurrent instead.
 func (wb *AlpitronicHYC) MaxCurrentMillis(current float64) error {
-	if current < hycMinCurrent {
+	if current < hycMinCurrent() {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 

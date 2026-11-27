@@ -16,6 +16,7 @@
 				:sponsor="sponsor"
 				:fatal="fatal"
 				:experimental="experimental"
+				:hide-sessions="hideSessions"
 				:auth-disabled="authDisabled"
 				:optimizer="optimizer"
 				:installed="installed"
@@ -47,6 +48,7 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		hideSessions: Boolean,
 		authDisabled: Boolean,
 		optimizer: Boolean,
 		installed: String,

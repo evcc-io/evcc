@@ -1,9 +1,15 @@
 template: polestar
-deprecated: true
 products:
   - brand: Polestar
+    description:
+      generic: Polestar ID
 requirements:
   evcc: ["skiptest"]
+  description:
+    en: |
+      Uses the Polestar ID login of the app. For vehicles registered in the EU/EEA prefer the official Polestar Data Portal.
+    de: |
+      Nutzt den Polestar ID Login der App. Für in der EU/im EWR zugelassene Fahrzeuge ist das offizielle Polestar Data Portal vorzuziehen.
 params:
   - preset: vehicle-base
   - preset: vehicle-online

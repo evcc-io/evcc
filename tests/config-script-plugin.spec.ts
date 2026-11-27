@@ -38,7 +38,7 @@ async function addCustomGridMeter(page: Page, yaml: string) {
 
 test.describe("script plugin requires admin password", async () => {
   test("caches password across validate and create", async ({ page }) => {
-    await start(undefined, "password.sql", "");
+    await start(undefined, "password.sql", ["--disable-onboarding"]);
     await page.goto("/#/config");
     await login(page);
 
@@ -76,7 +76,7 @@ test.describe("script plugin requires admin password", async () => {
   });
 
   test("re-prompts on update after reload", async ({ page }) => {
-    await start(undefined, "password.sql", "");
+    await start(undefined, "password.sql", ["--disable-onboarding"]);
     await page.goto("/#/config");
     await login(page);
 

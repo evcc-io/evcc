@@ -11,10 +11,17 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	gridx "github.com/grid-x/modbus"
 )
 
 func Backoff() *backoff.ExponentialBackOff {
 	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(10*time.Second))
+}
+
+// IsException reports whether err is a Modbus exception response from the device
+func IsException(err error) bool {
+	_, ok := errors.AsType[*gridx.Error](err)
+	return ok
 }
 
 // DecodeMask converts a bit mask in decimal or hex format to uint64

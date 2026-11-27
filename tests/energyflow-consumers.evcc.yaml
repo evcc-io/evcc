@@ -2,10 +2,12 @@ site:
   title: Hello World
   meters:
     grid: grid
+    pv:
+      - pv
     consumer:
       - fridge
     aux:
-      - heater
+      - boiler
     ext:
       - submeter
 
@@ -14,17 +16,22 @@ meters:
     type: custom
     power:
       source: js
-      script: "1000"
+      script: "-1100"
+  - name: pv
+    type: custom
+    power:
+      source: js
+      script: "2000"
   - name: fridge
     type: custom
     power:
       source: js
       script: "200"
-  - name: heater
+  - name: boiler
     type: custom
     power:
       source: js
-      script: "800"
+      script: "450"
   - name: submeter
     type: custom
     power:

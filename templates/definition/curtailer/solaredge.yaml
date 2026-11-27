@@ -12,6 +12,9 @@ requirements:
     en: |
       Only one system can and may have a Modbus TCP connection to the inverter at the same time!
       Feed-in limitation limits the export power at the grid connection point to the requested percentage of the installed generator power.
+discovery:
+  mdns: ["_solaredge-modbus._tcp"]
+  mac: ["002702", "84D6C5", "28B77C1", "9405BBA", "480BB25", "88A9A71"]
 params:
   - name: modbus
     choice: ["tcpip", "rs485"]

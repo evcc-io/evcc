@@ -23,12 +23,12 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Add battery meter" }).click();
     await meterModal.getByLabel("Title").fill("Demo Battery");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
     await meterModal.getByLabel("Power").fill("4000");
     await meterModal.getByLabel("Charge").fill("80");
-    await expect(meterModal.getByLabel("Maximum AC power of the hybrid inverter")).toHaveCount(0);
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByTestId("device-tag-power")).toContainText("4.0 kW");
@@ -72,6 +72,7 @@ test.describe("battery meter", async () => {
     await page.getByRole("button", { name: "Add solar or battery" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Add battery meter" }).click();
     await meterModal.getByLabel("Title").fill("Demo Battery");
     await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");

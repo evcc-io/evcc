@@ -7,6 +7,8 @@ requirements:
   description:
     en: Requires a stromleser.one device accessible on the local network.
     de: Erfordert ein stromleser.one-Gerät im lokalen Netzwerk.
+discovery:
+  mdns: ["_stromleser._tcp"]
 params:
   - name: usage
     choice: ["grid", "pv"]

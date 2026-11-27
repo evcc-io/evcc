@@ -17,7 +17,10 @@
 		<div class="collapsible-wrapper" :class="{ open }">
 			<div class="collapsible-content ring-space">
 				<div class="row">
-					<div class="col-12 col-lg-6 mb-3">
+					<div
+						class="col-12 col-lg-6 mb-3"
+						:class="{ 'opacity-25 pe-none': optimizerControlled }"
+					>
 						<div class="row">
 							<label
 								:for="formId('continuous')"
@@ -39,6 +42,7 @@
 									:id="formId('continuous')"
 									v-model="localContinuous"
 									class="form-select"
+									:disabled="optimizerControlled"
 									@change="updateStrategy"
 								>
 									<option :value="false">
@@ -102,6 +106,20 @@
 						</div>
 					</div>
 				</div>
+				<p v-if="optimizerControlled" class="d-flex gap-3 text-muted small mb-3">
+					<OptimizerAuto class="flex-shrink-0" />
+					<i18n-t
+						keypath="main.chargingPlan.strategy.optimizerHint"
+						tag="span"
+						scope="global"
+					>
+						<template #optimizer>
+							<router-link to="/optimize" class="text-muted">
+								{{ $t("config.optimizer.linkWord") }}
+							</router-link>
+						</template>
+					</i18n-t>
+				</p>
 			</div>
 		</div>
 	</div>
@@ -112,6 +130,7 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import { SMART_COST_TYPE, type PlanStrategy } from "@/types/evcc";
 import DropdownIcon from "../MaterialIcon/Dropdown.vue";
+import OptimizerAuto from "../MaterialIcon/OptimizerAuto.vue";
 
 const HOUR = 60 * 60;
 const QUARTER_HOUR = 0.25 * HOUR;
@@ -122,13 +141,14 @@ const EVERYTHING = 7 * 24 * HOUR;
 
 export default defineComponent({
 	name: "ChargingPlanStrategy",
-	components: { DropdownIcon },
+	components: { DropdownIcon, OptimizerAuto },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
 		precondition: { type: Number, default: 0 },
 		continuous: { type: Boolean, default: false },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		optimizerControlled: Boolean,
 	},
 	emits: ["update"],
 	data() {
@@ -160,11 +180,13 @@ export default defineComponent({
 			if (this.disabled || this.precondition >= EVERYTHING) {
 				return this.$t("main.chargingPlan.precondition.summaryAll");
 			}
-			const parts = [
-				this.$t(
-					`main.chargingPlan.optimization.${this.continuous ? "continuous" : this.cheapestKey}`
-				),
-			];
+			// the optimizer schedules by grid price and does not know "continuous"
+			const optimization = this.optimizerControlled
+				? "cheapest"
+				: this.continuous
+					? "continuous"
+					: this.cheapestKey;
+			const parts = [this.$t(`main.chargingPlan.optimization.${optimization}`)];
 			if (this.precondition) {
 				parts.push(
 					this.$t("main.chargingPlan.precondition.summary", {

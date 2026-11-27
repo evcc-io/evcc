@@ -213,7 +213,8 @@
 /templates/definition/meter/solax-hybrid-cloud.yaml @DerAndereAndi @Starquake
 /templates/definition/meter/solax-inverter-cloud.yaml @Starquake
 /templates/definition/meter/solax.yaml @WordsOfMe @farcorben @mfuchs1984 @tomfrenzel @triumfas
-/templates/definition/meter/solinteg.yaml @vargai
+/templates/definition/meter/solinteg-gen2.yaml @jenskueper @negesti
+/templates/definition/meter/solinteg-gen3.yaml @frankb-CZ @jenskueper @vargai
 /templates/definition/meter/solis-hybrid-s.yaml @dreadnought @hbpv
 /templates/definition/meter/sonnenbatterie.yaml @Starquake @rivengh
 /templates/definition/meter/sonnenbatterie_eco56.yaml @ngehrsitz
@@ -236,8 +237,6 @@
 /templates/definition/meter/volkszaehler-http.yaml @StefanSchoof
 /templates/definition/meter/volkszaehler-importexport.yaml @StefanSchoof
 /templates/definition/meter/vzlogger.yaml @StefanSchoof @tolot27
-/templates/definition/meter/wattsonic-gen3.yaml @frankb-CZ @jenskueper
-/templates/definition/meter/wattsonic.yaml @jenskueper @negesti
 /templates/definition/meter/zendure-3ct.yaml @svenger87
 /templates/definition/meter/zendure-solarflow-pro.yaml @svenger87
 /templates/definition/tariff/api-akkudoktor-de.yaml @Glopix @RenatusRo

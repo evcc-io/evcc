@@ -11,6 +11,7 @@ const (
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
 	GridConfigured        = "gridConfigured"
+	GridConnection        = "gridConnection"
 	Grid                  = "grid"
 	HistoryUpdated        = "historyUpdated"
 	HomePower             = "homePower"
@@ -33,6 +34,7 @@ const (
 	TariffSolar           = "tariffSolar"
 	TariffTemperature     = "tariffTemperature"
 	Vehicles              = "vehicles"
+	Voltage               = "voltage"
 
 	// meters
 	GridMeter      = "gridMeter"
@@ -62,9 +64,13 @@ const (
 	SolarAdjusted     = "solarAdjusted"
 	ProfilePercentile = "profilePercentile"
 
+	// metrics
+	MetricsFillVersion = "metricsFillVersion"
+
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"
 	OptimizerChargingStrategies = "optimizerChargingStrategies"
+	OptimizerRiskProfile        = "optimizerRiskProfile"
 
 	// battery status
 	Battery     = "battery"

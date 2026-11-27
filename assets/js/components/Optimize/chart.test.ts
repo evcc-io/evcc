@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { dayBoundarySeries, isMidnight, slotXAxis } from "./chart";
+import { dayBoundarySeries, isMidnight, slotParents, slotXAxis, splitSlots } from "./chart";
 
 // 15min slots starting at the given local hour
 function times(startHour: number, count: number): number[] {
@@ -30,5 +30,21 @@ describe("slotXAxis", () => {
     expect(dayBoundarySeries(slots).markLine.data).toEqual([{ xAxis: 15.85 }]);
     // no line at the axis start, even if the first slot is midnight
     expect(dayBoundarySeries(times(0, 4)).markLine.data).toEqual([]);
+  });
+});
+
+describe("splitSlots", () => {
+  // partial first slot, a quarter, a clock hour, a half hour cut by a goal
+  const dt = [420, 900, 3600, 1800];
+  const parents = slotParents(dt);
+
+  test("shows hours as quarters", () => {
+    expect(parents).toEqual([0, 1, 2, 2, 2, 2, 3, 3]);
+    expect(splitSlots(dt, parents)).toEqual([420, 900, 900, 900, 900, 900, 900, 900]);
+  });
+
+  test("shares energy evenly, power per slot unchanged", () => {
+    expect(splitSlots([7, 10, 400, 100], parents)).toEqual([7, 10, 100, 100, 100, 100, 50, 50]);
+    expect(splitSlots([], parents)).toEqual([]);
   });
 });

@@ -3,16 +3,26 @@ products:
   - brand: Anker
     description:
       generic: SOLIX X1 Hybrid Inverter
+capabilities:
+  - battery-control
 requirements:
   description:
     de: |
       Die Modbus-TCP-Schnittstelle muss in der Anker-App freigeschaltet werden.
       Diese Konfiguration wurde mit der Firmware-Version 1.0.16.1 getestet.
       Ältere oder neuere Firmware-Versionen können andere Registeradressen verwenden und daher falsche Daten liefern.
+      evcc kann die Batterie aus dem Netz laden (Arbeitsmodus Drittanbietersteuerung mit der maximalen Ladeleistung `maxchargepower`) und sie zurück in den Eigenverbrauch schalten. Ein in der Anker-App eingestellter Arbeitsmodus wird dabei überschrieben.
+      evcc schreibt nur auf den X1, wenn eine Batteriefunktion aktiv ist (Netzladen, Entladesperre, automatische Steuerung des Optimizers oder ein externer Batteriemodus). Ohne diese behält der X1 den in der Anker-App eingestellten Modus.
+      Der X1 kehrt nicht von selbst in den Eigenverbrauch zurück: Endet evcc unerwartet während des Netzladens, lädt der X1 weiter, bis evcc wieder einen Modus setzt.
+      Halten wird nicht unterstützt und fällt auf den Normalbetrieb zurück: Der X1 bietet keine Möglichkeit, das Entladen zu sperren und gleichzeitig PV-Überschuss zu speichern.
     en: |
       The Modbus TCP interface must be enabled in the Anker app.
       This configuration was tested with the Firmware Version 1.0.16.1.
       Older or newer Firmware Versions may use different register addresses and therefore deliver incorrect data.
+      evcc can charge the battery from the grid (work mode third-party control with the maximum charge power `maxchargepower`) and return it to self-consumption. A work mode set in the Anker app is overwritten.
+      evcc only writes to the X1 when a battery function is enabled (grid charging, discharge lock, automatic optimizer control or an external battery mode). Otherwise the X1 keeps the mode set in the Anker app.
+      The X1 does not return to self-consumption on its own: if evcc stops unexpectedly while grid charging, the X1 keeps charging until evcc sets a mode again.
+      Holding is not supported and falls back to normal operation: the X1 offers no way to block discharging while still storing PV surplus.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -22,7 +32,12 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    required: true
+  - name: watchdog
+    default: 60s
 render: |
+  # no energy registers: their scale changes with the X1 firmware (0.01 or 0.1 kWh), evcc integrates power instead
   type: custom
   {{- if eq .usage "grid" }}
   power:
@@ -35,14 +50,6 @@ render: |
     block: # 10632-10645
       register: 10632
       count: 14
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 10656 # Meter Total Forward Active Energy (0.01 kWh/LSB on X1 firmware)
-      type: input
-      decode: uint32s
-    scale: 0.01
   powers:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -142,14 +149,6 @@ render: |
       address: 10183 # Total PV Power (W)
       type: input
       decode: int32s
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 10187 # Total PV Generation (0.01 kWh/LSB)
-      type: input
-      decode: uint32s
-    scale: 0.01
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -160,14 +159,6 @@ render: |
       address: 10008 # Battery Power (W, positive = discharging, negative = charging)
       type: input
       decode: int32s
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 10264 # Battery Total Discharge Energy (0.01 kWh/LSB on X1 firmware)
-      type: input
-      decode: uint32s
-    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -175,5 +166,61 @@ render: |
       address: 10014 # SOC (%)
       type: input
       decode: uint16
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }}
+    reset: 1
+    set:
+      source: switch
+      switch:
+        # writes are ordered so that a failed second write leaves the X1 in self_consumption,
+        # where the setpoint has no effect
+        - case: 1 # normal
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 0 # self_consumption
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064 # Work Mode
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071 # Battery Charge/Discharge Power (W, positive = discharge, negative = charge)
+                    type: writemultiple
+                    encoding: int32s
+        # holddischarge is not supported: third_party_control with 0 W also blocks pv charging
+        # and the backup soc registers (60002/60003) are not implemented on the X1
+        - case: 3 # charge
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: {{ .maxchargepower }} # W, the X1 limits it to what the battery accepts
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32s
+                  scale: -1 # negative = charge
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}

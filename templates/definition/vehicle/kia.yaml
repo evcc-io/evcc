@@ -21,8 +21,13 @@ params:
   - preset: vehicle-base
   - preset: vehicle-online
   - preset: vehicle-language
+  - name: pin
+    help:
+      en: Bluelink PIN. Required to start and stop charging.
+      de: Bluelink-PIN. Wird zum Starten und Stoppen des Ladens benötigt.
 render: |
   type: kia
   {{ include "base" . }}
   {{ include "language" . }}
   {{ include "features" . }}
+  pin: {{ quote .pin }}
