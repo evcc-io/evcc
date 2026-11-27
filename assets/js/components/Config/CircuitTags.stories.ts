@@ -86,7 +86,6 @@ export const Tree: StoryFn = () => ({
   template: card,
 });
 
-// root circuit without meter
 export const NoMeter: StoryFn = () => ({
   components,
   setup() {

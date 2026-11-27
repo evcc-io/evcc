@@ -640,7 +640,6 @@ test.describe("circuit grid meter", async () => {
     await meterSelection.selectOption({ label: "No meter" });
     await closeCircuitModals(circuitModal, circuitsModal, "Save");
 
-    // opens the root circuit on top of the tree
     await noMeter.click();
     await expectModalVisible(circuitModal);
     await expect(meterSelection).toHaveValue("none");
@@ -690,7 +689,6 @@ test.describe("circuit grid meter", async () => {
       "Grid meter",
       "Dedicated meter",
     ]);
-    // preselected for new root circuits
     await expect(meterSelection).toHaveValue("grid");
     await meterSelection.selectOption({ label: "No meter" });
     await expect(circuitModal.getByTestId("circuit-meter-selection")).toContainText(

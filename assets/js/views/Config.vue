@@ -1405,8 +1405,9 @@ export default defineComponent({
 		circuitsNoMeter(): boolean {
 			return !!this.rootCircuit && !this.rootCircuit.config.meter;
 		},
+		// yaml circuits come without id and config, they have no dialog
 		rootCircuit(): ConfigCircuit | undefined {
-			return this.circuits.find((c) => !c.config.parent);
+			return this.circuits.find((c) => c.id !== undefined && !c.config.parent);
 		},
 		circuitLoadpoints(): CircuitLoadpoint[] {
 			return this.loadpoints
