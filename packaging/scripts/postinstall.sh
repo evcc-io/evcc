@@ -75,7 +75,12 @@ EOF
 	fi
 
 	# move apt sources of older installs from Cloudsmith to the evcc download host
-	sed -i 's#https://dl\.cloudsmith\.io/public/evcc/#https://dl.evcc.io/public/evcc/#g' /etc/apt/sources.list.d/evcc-* 2> /dev/null || true
+	for f in /etc/apt/sources.list.d/evcc-*; do
+		if grep -qs 'https://dl\.cloudsmith\.io/public/evcc/' "$f"; then
+			sed -i 's#https://dl\.cloudsmith\.io/public/evcc/#https://dl.evcc.io/public/evcc/#g' "$f" ||
+				echo "ERROR: could not move apt source '$f' from dl.cloudsmith.io to dl.evcc.io" >&2
+		fi
+	done
 fi
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ]; then
