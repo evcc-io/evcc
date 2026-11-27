@@ -73,6 +73,14 @@ EOF
 		echo "Deleting old evcc binary '$USR_LOCAL_BIN'"
 		rm -v "$USR_LOCAL_BIN"
 	fi
+
+	# move apt sources of older installs from Cloudsmith to the evcc download host
+	for f in /etc/apt/sources.list.d/evcc-*; do
+		if grep -qs 'https://dl\.cloudsmith\.io/public/evcc/' "$f"; then
+			sed -i 's#https://dl\.cloudsmith\.io/public/evcc/#https://dl.evcc.io/public/evcc/#g' "$f" ||
+				echo "ERROR: could not move apt source '$f' from dl.cloudsmith.io to dl.evcc.io" >&2
+		fi
+	done
 fi
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ]; then
