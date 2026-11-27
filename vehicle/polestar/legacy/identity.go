@@ -3,6 +3,8 @@ package legacy
 import (
 	"context"
 	"errors"
+	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -55,6 +57,31 @@ func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	return oauth2.ReuseTokenSource(token, oauth.Redacted(log, OAuth2Config.TokenSource(ctx, token))), nil
 }
 
+var (
+	loginActionRe = regexp.MustCompile(`"loginAction":\s*"([^"]+)"`)
+	pageIdRe      = regexp.MustCompile(`"pageId":\s*"([^"]+)"`)
+)
+
+// loginAction returns the form target of the Keycloak login page Polestar ID redirects to
+func loginAction(body string) (string, error) {
+	matches := loginActionRe.FindStringSubmatch(body)
+	if len(matches) < 2 {
+		return "", errors.New("could not find login action")
+	}
+	return html.UnescapeString(strings.ReplaceAll(matches[1], `\/`, "/")), nil
+}
+
+// loginError explains why the login page did not redirect back with a code
+func loginError(body string) error {
+	if strings.Contains(body, "Invalid username or password") {
+		return errors.New("invalid username or password")
+	}
+	if m := pageIdRe.FindStringSubmatch(body); len(m) == 2 && m[1] != "login" {
+		return fmt.Errorf("additional login step required (%s): sign in once at polestar.com, then retry", m[1])
+	}
+	return errors.New("missing authorization code")
+}
+
 func (v *Identity) login() (*oauth2.Token, error) {
 	v.Client.Jar, _ = cookiejar.New(nil)
 
@@ -76,27 +103,20 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	matches := regexp.MustCompile(`(?:url|action):\s*"(.+?)"`).FindStringSubmatch(string(body))
-	if len(matches) < 2 {
-		return nil, errors.New("could not find resume path")
-	}
-
-	resumePath := matches[1]
-	if !strings.HasPrefix(resumePath, "http") {
-		resumePath = OAuthURI + "/" + strings.TrimLeft(resumePath, "/")
+	action, err := loginAction(string(body))
+	if err != nil {
+		return nil, err
 	}
 
 	data := url.Values{
-		"pf.username": {v.user},
-		"pf.pass":     {v.password},
-		"client_id":   {ClientID},
+		"username":     {v.user},
+		"password":     {v.password},
+		"credentialId": {""},
 	}
 
-	req, _ = request.New(http.MethodPost, resumePath, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-		"Accept":       "application/json",
-	})
+	req, _ = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
 
+	// redirects lead back through Polestar ID to the redirect uri carrying the code
 	resp, err = v.Do(req)
 	if err != nil {
 		return nil, err
@@ -105,7 +125,8 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	code := resp.Request.URL.Query().Get("code")
 	if code == "" {
-		return nil, errors.New("missing authorization code")
+		body, _ := io.ReadAll(resp.Body)
+		return nil, loginError(string(body))
 	}
 
 	cctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
