@@ -39,6 +39,22 @@ Calls (type 2) initiated by upstream are injected into the charger via `CS.Write
 
 When a rule sets `ReadOnly`, upstream may observe but cannot control the charger. Any incoming Call from upstream is answered with a `SecurityError` and not forwarded. `ReadOnly` is applied live per message, so toggling it does not require reconnecting the sidecar.
 
+## Read-only mirrors
+
+A rule can list further upstreams in `Mirrors` (`forwarder_mirror.go`). They are meant for reporting or monitoring, for example a third party that must see the charger's data while another backoffice does the billing. Unlike the main upstream, a mirror only watches:
+
+- Every Call of the charger is copied to it. Nothing is relayed, so its replies never reach the charger and evcc's handler is never bypassed because of it.
+- Calls from the mirror's upstream are answered with a `SecurityError` CallError. Results and errors from it are discarded.
+- On (re)connect it first receives the cached `BootNotification` and the last `StatusNotification` per connector, with fresh message ids.
+- Frames wait in a bounded backlog (oldest dropped first) while the mirror is offline and are delivered in order after it reconnects.
+- After a reconnect the replayed boot and last status come before the backlog, so a newer status can precede older frames such as `StartTransaction` and `StopTransaction`. The backlog holds 1000 frames, so a long outage can drop transactions without notice. That is acceptable for reporting: a mirror is not a delivery guarantee.
+- Mirrors are dialled with backoff for as long as the charger is connected, are keyed by URL and station id within their rule, and are redialled when their connection parameters change.
+- A mirror that reaches the same upstream station as the main connection (an omitted station id means the charger's own) or as another mirror is not started, since a second connection under one identity would displace the first. The rule is resolved and the sessions are installed under the locks that guard the charger's connection state, so reconciliations cannot overwrite each other and a charger that just disconnected gets none.
+- Queued `BootNotification` and `StatusNotification` frames that the replay snapshot already covers are dropped, so a reconnect does not repeat or reorder state.
+- Once an hour, each mirror logs what was written to its upstream (messages, meter values, reported energy, disconnects) to compare with that side. Nothing is persisted.
+
+Note that the main upstream is not read-only in this sense even with the `ReadOnly` flag: that flag only blocks its commands, it still answers `Authorize`, `StartTransaction`, `StopTransaction` and `DataTransfer` for the charger.
+
 ## Connection lifecycle
 
 Frames that arrive from a charger before its sidecar finishes dialling are buffered (`pendingMsgs`) and flushed in order once the sidecar connects, so early messages such as `BootNotification` still reach upstream. If the dial fails or upstream drops mid-session, any buffered or in-flight relay Calls are answered to the charger with a `CallError` so it is not left hanging, and the failure is surfaced to the UI via `forwarderErrors`.
