@@ -389,6 +389,8 @@
 									v-else
 									:nodes="[circuitsRoot]"
 									:loadpoints="circuitLoadpoints"
+									:noMeter="circuitsNoMeter"
+									@edit="openRootCircuit"
 								/>
 							</template>
 						</DeviceCard>
@@ -689,7 +691,7 @@ import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyM
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import { createDeviceUtils } from "../components/Config/DeviceModal";
-import configModal, { openModal, type ModalResult } from "@/configModal";
+import configModal, { buildQuery, openModal, type ModalResult } from "@/configModal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
@@ -1400,6 +1402,13 @@ export default defineComponent({
 		circuitsRoot(): CircuitNode | undefined {
 			return circuitTree(store.state.circuits);
 		},
+		circuitsNoMeter(): boolean {
+			return !!this.rootCircuit && !this.rootCircuit.config.meter;
+		},
+		// yaml circuits come without id and config, they have no dialog
+		rootCircuit(): ConfigCircuit | undefined {
+			return this.circuits.find((c) => c.id !== undefined && !c.config.parent);
+		},
 		circuitLoadpoints(): CircuitLoadpoint[] {
 			return this.loadpoints
 				.filter((lp) => lp.circuit)
@@ -1717,6 +1726,15 @@ export default defineComponent({
 			await this.loadTariffs();
 			await this.loadDirty();
 			this.updateValues();
+		},
+		// both at once, closing the circuit returns to the tree
+		openRootCircuit() {
+			const stack = [{ name: "circuits" }, { name: "circuit", id: this.rootCircuit?.id }];
+			this.$router.push({
+				path: "/config",
+				query: buildQuery(stack),
+				hash: this.$route.hash,
+			});
 		},
 		openCircuitsModal() {
 			const modalName = this.circuitsYamlSource === "db" ? "circuitslegacy" : "circuits";
