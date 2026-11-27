@@ -233,9 +233,11 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 	// up and owns the phase timer, resetting it here would restart the delay every cycle.
 	// Inside the 1p/3p gap neither phase count matches the suggestion: stay below it on 1p
 	// instead of scaling up to a 3p minimum that draws unplanned power, e.g. from grid.
+	limits := lp.effectiveCurrentLimits()
+	activePhases := lp.ActivePhases()
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-	scaleUp := s.Charge > grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases()) &&
-		s.Charge >= grid.CurrentToPower(lp.effectiveMinCurrent(), 3)
+	scaleUp := s.Charge > grid.CurrentToPower(limits.maxCurrent(activePhases), activePhases) &&
+		s.Charge >= grid.CurrentToPower(limits.minCurrent(3), 3)
 	if s.Action == actionCharge && (full || scaleUp) {
 		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), max current", s.Charge)
 		return true, lp.fastCharging()
@@ -245,9 +247,9 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 
 	if s.Action == actionCharge {
 		// a limited setpoint, e.g. a minimum demand or a grid import limit
-		if current := grid.PowerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
+		if current := grid.PowerToCurrent(s.Charge, activePhases); current >= limits.minCurrent(activePhases) {
 			lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
-			return true, lp.setLimit(min(current, lp.effectiveMaxCurrent()))
+			return true, lp.setLimit(min(current, limits.maxCurrent(activePhases)))
 		}
 
 		// below what the active phases can deliver, minCharging scales down instead

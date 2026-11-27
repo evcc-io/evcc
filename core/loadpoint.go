@@ -1508,7 +1508,7 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	if lp.GetPhases() != phases {
 		// drop to min current before scaling up so the 1p current is not applied to all phases
 		if lp.enabled && phases > 1 {
-			if err := lp.setLimit(lp.effectiveMinCurrent()); err != nil {
+			if err := lp.setLimit(lp.effectiveCurrentLimits().minCurrent(phases)); err != nil {
 				return err
 			}
 		}
@@ -1580,8 +1580,10 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 		return false, nil
 	}
 
+	min3p := lp.effectiveCurrentLimits().minCurrent(3)
+
 	targetPhases := 3
-	if !lp.circuitAllowsPhases(3, lp.effectiveMinCurrent()) {
+	if !lp.circuitAllowsPhases(3, min3p) {
 		targetPhases = 1
 	}
 
@@ -1623,7 +1625,7 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 	// scale up: delayed and buffered against immediately undoing a scale down.
 	// a fixed phase configuration is not subject to load management, hence no buffer.
 	if targetPhases == 3 && phases == 1 &&
-		(lp.phasesConfigured == 3 || lp.circuitAllowsPhases(3, phaseScaleUpBuffer*lp.effectiveMinCurrent())) {
+		(lp.phasesConfigured == 3 || lp.circuitAllowsPhases(3, phaseScaleUpBuffer*min3p)) {
 		if !lp.phaseTimerElapsed(lp.GetEnableDelay(), phaseScale3p) {
 			return true, nil
 		}
@@ -1651,7 +1653,7 @@ func (lp *Loadpoint) minCharging() error {
 
 // pvScalePhases switches phases if necessary and returns number of phases switched to.
 // mayDisable indicates that insufficient surplus can stop charging via the pv disable timer.
-func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, mayDisable bool) int {
+func (lp *Loadpoint) pvScalePhases(sitePower float64, limits currentLimits, mayDisable bool) int {
 	phases := lp.GetPhases()
 
 	// observed phase state inconsistency
@@ -1680,6 +1682,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 	scalable := activePhases > 1 && lp.phasesConfigured < 3
 
 	if scalable {
+		minCurrent := limits.minCurrent(activePhases)
 		insufficient := sitePower > 0 && grid.PowerToCurrent(availablePower, activePhases) < minCurrent
 		if insufficient {
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, grid.CurrentToPower(minCurrent, activePhases), activePhases)
@@ -1689,10 +1692,11 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		// disables once the phase timer elapses. Without a disable to wait
 		// for, scaling down is the only way to reduce power (#33208).
 		// Climater keep-alive suppresses the disable timer, checked last to avoid vehicle polling.
-		useful := !mayDisable || grid.PowerToCurrent(availablePower, 1) >= minCurrent || lp.vehicleClimateActive()
+		min1p := limits.minCurrent(1)
+		useful := !mayDisable || grid.PowerToCurrent(availablePower, 1) >= min1p || lp.vehicleClimateActive()
 		disable = insufficient && !useful
 		if disable {
-			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, grid.CurrentToPower(minCurrent, 1))
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, grid.CurrentToPower(min1p, 1))
 		}
 
 		// scaling down also frees load management headroom for min power on activePhases
@@ -1723,12 +1727,15 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		waiting = true
 	}
 
+	maxPhases := lp.MaxActivePhases()
+	minCurrent := limits.minCurrent(maxPhases)
+	maxCurrent := limits.maxCurrent(1)
+
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
 		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
 	}
 
-	maxPhases := lp.MaxActivePhases()
 	target1pCurrent := grid.PowerToCurrent(availablePower, 1)
 
 	// scaling up is pointless unless load management allows min current and power on maxPhases
@@ -1785,7 +1792,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 // projectPhaseSwitch returns site power and phases after a pending scale down to 1p:
 // the loadpoint drops from its current draw, at least min power, to min current on 1p.
 // At 1p the phase timer can only be a scale up, which leaves site power as it is.
-func (lp *Loadpoint) projectPhaseSwitch(sitePower, minCurrent float64) (float64, int) {
+func (lp *Loadpoint) projectPhaseSwitch(sitePower float64, limits currentLimits) (float64, int) {
 	// a disabled charger starts on 1p unless surplus covers more, see pvEnablePhases
 	if !lp.enabled && lp.minActivePhases() == 1 {
 		return sitePower, 1
@@ -1794,7 +1801,7 @@ func (lp *Loadpoint) projectPhaseSwitch(sitePower, minCurrent float64) (float64,
 	phases := lp.ActivePhases()
 	if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() && phases > 1 {
 		// site power loses the current draw, at least min power on all phases, and gains 1p min power
-		sitePower -= max(lp.chargePower, grid.CurrentToPower(minCurrent, phases)) - grid.CurrentToPower(minCurrent, 1)
+		sitePower -= max(lp.chargePower, grid.CurrentToPower(limits.minCurrent(phases), phases)) - grid.CurrentToPower(limits.minCurrent(1), 1)
 		phases = 1
 	}
 	return sitePower, phases
@@ -1825,11 +1832,12 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 
 	// bridge the power gap between 1p max and 3p min so pvScalePhases can trigger a scale-up
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() && lp.site.GetBatteryMaxDischargePower() != nil {
+		limits := lp.effectiveCurrentLimits()
 		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases &&
-			lp.circuitAllowsPhases(maxPhases, lp.effectiveMinCurrent()) {
+			lp.circuitAllowsPhases(maxPhases, limits.minCurrent(maxPhases)) {
 			// max power actually achievable on the active phases
-			activeMaxPower := min(lp.EffectiveMaxPower(), grid.CurrentToPower(lp.effectiveMaxCurrent(), activePhases))
-			delta += max(0, grid.CurrentToPower(lp.effectiveMinCurrent(), maxPhases)-activeMaxPower)
+			activeMaxPower := min(lp.EffectiveMaxPower(), grid.CurrentToPower(limits.maxCurrent(activePhases), activePhases))
+			delta += max(0, grid.CurrentToPower(limits.minCurrent(maxPhases), maxPhases)-activeMaxPower)
 		}
 	}
 
@@ -1868,10 +1876,11 @@ func (lp *Loadpoint) batterySupported(sitePower, batteryPower float64, batteryBu
 		return false
 	}
 
-	minCurrent := lp.effectiveMinCurrent()
+	limits := lp.effectiveCurrentLimits()
 
 	// grid import while the battery discharges, net of residual power and controller tolerance
-	demand, phases := lp.projectPhaseSwitch(sitePower-batteryPower-lp.site.GetResidualPower()-lp.batteryTolerance(), minCurrent)
+	demand, phases := lp.projectPhaseSwitch(sitePower-batteryPower-lp.site.GetResidualPower()-lp.batteryTolerance(), limits)
+	minCurrent := limits.minCurrent(phases)
 	if demand > lp.pvDisableThreshold(minCurrent, batteryPower, phases) {
 		lp.log.DEBUG.Printf("battery support: %.0fW grid import", demand)
 		return false
@@ -1945,8 +1954,7 @@ func (lp *Loadpoint) pvEnableDecision(effectiveCurrent, minCurrent, sitePower, b
 // pvMaxCurrent calculates the maximum target current for smart mode
 func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
-	minCurrent := lp.effectiveMinCurrent()
-	maxCurrent := lp.effectiveMaxCurrent()
+	limits := lp.effectiveCurrentLimits()
 	alwaysCharge := lp.GetAlwaysCharge().Active()
 
 	// always charge and the battery conditions hold charging at min current, no disable can follow
@@ -1959,17 +1967,18 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	// switch phases up/down
 	var scaledTo int
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
-		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent, mayDisable)
+		scaledTo = lp.pvScalePhases(sitePower, limits, mayDisable)
 	}
 
 	// a disabled charger decides its start on the phases it switches to when enabled
-	enablePhases := lp.pvEnablePhases(sitePower, batteryPower, minCurrent, maxCurrent)
+	enablePhases := lp.pvEnablePhases(sitePower, batteryPower, limits)
 
 	// calculate target charge current from delta power and actual current
 	activePhases := lp.ActivePhases()
 	if enablePhases > 0 {
 		activePhases = min(enablePhases, lp.maxActivePhases())
 	}
+	minCurrent, maxCurrent := limits.minCurrent(activePhases), limits.maxCurrent(activePhases)
 	effectiveCurrent := lp.effectiveCurrent()
 	if scaledTo == 3 {
 		// if we did scale, spread the power measured before the switch over the new phase count
@@ -2001,15 +2010,16 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
 	if !alwaysCharge && lp.enabled && targetCurrent < minCurrent {
-		projectedSitePower, projectedPhases := lp.projectPhaseSwitch(sitePower, minCurrent)
+		projectedSitePower, projectedPhases := lp.projectPhaseSwitch(sitePower, limits)
 		// a continuous device consuming less than its min power demand keeps the
 		// remainder out of site power, hiding insufficient surplus until it ramps
 		// up (#32282). Project the shortfall towards min power into the gate.
 		if lp.chargerHasFeature(api.Continuous) {
-			projectedSitePower += max(0, grid.CurrentToPower(minCurrent, lp.minActivePhases())-lp.chargePower)
+			minPhases := lp.minActivePhases()
+			projectedSitePower += max(0, grid.CurrentToPower(limits.minCurrent(minPhases), minPhases)-lp.chargePower)
 		}
 
-		disableThreshold := lp.pvDisableThreshold(minCurrent, batteryPower, projectedPhases)
+		disableThreshold := lp.pvDisableThreshold(limits.minCurrent(projectedPhases), batteryPower, projectedPhases)
 
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at minCurrent — otherwise the "pausing soon" badge would
@@ -2108,7 +2118,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 // pvEnablePhases returns the phases a disabled charger switches to before it is enabled,
 // or 0 to keep its phases. Like scaling while charging, 3p needs its min current covered
 // and 1p capped at max current, 1p is used otherwise.
-func (lp *Loadpoint) pvEnablePhases(sitePower, batteryPower, minCurrent, maxCurrent float64) int {
+func (lp *Loadpoint) pvEnablePhases(sitePower, batteryPower float64, limits currentLimits) int {
 	if lp.enabled || !lp.hasPhaseSwitching() || lp.phasesConfigured != 0 {
 		return 0
 	}
@@ -2117,6 +2127,9 @@ func (lp *Loadpoint) pvEnablePhases(sitePower, batteryPower, minCurrent, maxCurr
 	if maxPhases <= 1 {
 		return 0
 	}
+
+	minCurrent := limits.minCurrent(maxPhases)
+	maxCurrent := limits.maxCurrent(1)
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
@@ -2780,7 +2793,7 @@ NO_DIM:
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			// climater keep-alive starts on the phases pv charging would start on
-			lp.pvEnableScalePhases(lp.pvEnablePhases(sitePower, batteryPower, lp.effectiveMinCurrent(), lp.effectiveMaxCurrent()))
+			lp.pvEnableScalePhases(lp.pvEnablePhases(sitePower, batteryPower, lp.effectiveCurrentLimits()))
 			targetCurrent = lp.effectiveMinCurrent()
 		}
 

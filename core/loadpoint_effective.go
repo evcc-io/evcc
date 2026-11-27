@@ -179,75 +179,162 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 	return lp.socBasedPlanning()
 }
 
-// effectiveMinCurrent returns the effective min current
-func (lp *Loadpoint) effectiveMinCurrent() float64 {
-	lpMin := lp.getMinCurrent()
-	var vehicleMin, chargerMin float64
+// currentLimits holds the effective min and max current per number of active phases
+type currentLimits struct {
+	min, max [3]float64
+}
+
+// limitIndex maps active phases to the limits index, unknown phases count as 3p
+func limitIndex(phases int) int {
+	return min(max(expect(phases), 1), 3) - 1
+}
+
+// minCurrent returns the effective min current for the given active phases
+func (l currentLimits) minCurrent(phases int) float64 {
+	return l.min[limitIndex(phases)]
+}
+
+// maxCurrent returns the effective max current for the given active phases
+func (l currentLimits) maxCurrent(phases int) float64 {
+	return l.max[limitIndex(phases)]
+}
+
+// uniformCurrentLimits returns limits that do not depend on the active phases
+func uniformCurrentLimits(minCurrent, maxCurrent float64) currentLimits {
+	return currentLimits{
+		min: [3]float64{minCurrent, minCurrent, minCurrent},
+		max: [3]float64{maxCurrent, maxCurrent, maxCurrent},
+	}
+}
+
+// effectiveCurrentLimits returns the effective min and max current for 1, 2 and 3 active phases
+func (lp *Loadpoint) effectiveCurrentLimits() currentLimits {
+	lpMin, lpMax := lp.getMinCurrent(), lp.getMaxCurrent()
+	var vehicleMin, vehicleMax, chargerMin, chargerMax float64
 
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMinCurrent(); ok {
 			vehicleMin = res
 		}
-	}
-
-	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
-		if res, _, err := c.GetMinMaxCurrent(); err == nil {
-			chargerMin = res
+		if res, ok := v.OnIdentified().GetMaxCurrent(); ok {
+			vehicleMax = res
 		}
 	}
 
-	// power-limited chargers (e.g. EEBus OHPCF heat pump) report their demand in
-	// W; convert to per-phase current so the PV enable gate covers it
+	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
+		if minCurrent, maxCurrent, err := c.GetMinMaxCurrent(); err == nil {
+			chargerMin, chargerMax = minCurrent, maxCurrent
+		}
+	}
+
+	// power-limited chargers (e.g. EEBus OHPCF heat pump) report their demand in W
+	var minPower, maxPower float64
 	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
-		if res, _, err := c.GetMinMaxPower(); err == nil && res > 0 {
-			chargerMin = grid.PowerToCurrent(res, lp.minActivePhases())
-			// coarse chargers truncate to full amps in setLimit, so round the
-			// demand up to keep the enable gate reachable (#31549)
-			if lp.coarseCurrent() {
-				chargerMin = math.Ceil(chargerMin)
+		if minP, maxP, err := c.GetMinMaxPower(); err == nil {
+			minPower, maxPower = minP, maxP
+		}
+	}
+
+	phaseLimiter, hasPhaseLimiter := api.Cap[api.PhaseCurrentLimiter](lp.charger)
+
+	// coarse chargers truncate to full amps in setLimit, so round derived limits up to keep
+	// the enable gate reachable and a fixed power request (min == max) consistent (#31549)
+	derived := func(current float64) float64 {
+		if lp.coarseCurrent() {
+			return math.Ceil(current)
+		}
+		return current
+	}
+
+	var res currentLimits
+	for i := range res.min {
+		phases := i + 1
+		phaseMin, phaseMax := chargerMin, chargerMax
+
+		if hasPhaseLimiter {
+			if minCurrent, maxCurrent, err := phaseLimiter.GetPhaseMinMaxCurrent(phases); err == nil {
+				if minCurrent > 0 {
+					phaseMin = max(phaseMin, derived(minCurrent))
+				}
+				if maxCurrent > 0 {
+					phaseMax = minPositive(phaseMax, derived(maxCurrent))
+				}
+			}
+		}
+
+		if minPower > 0 {
+			phaseMin = max(phaseMin, derived(grid.PowerToCurrent(minPower, phases)))
+		}
+		if maxPower > 0 {
+			phaseMax = minPositive(phaseMax, derived(grid.PowerToCurrent(maxPower, phases)))
+		}
+
+		switch {
+		case max(vehicleMin, phaseMin) == 0:
+			res.min[i] = lpMin
+		case phaseMin > 0:
+			res.min[i] = max(vehicleMin, phaseMin)
+		default:
+			res.min[i] = max(vehicleMin, lpMin)
+		}
+
+		res.max[i] = lpMax
+		for _, limit := range []float64{vehicleMax, phaseMax} {
+			if limit > 0 {
+				res.max[i] = min(res.max[i], limit)
 			}
 		}
 	}
 
+	return res
+}
+
+// minPositive returns the smaller of both values, ignoring unset (non-positive) values
+func minPositive(a, b float64) float64 {
 	switch {
-	case max(vehicleMin, chargerMin) == 0:
-		return lpMin
-	case chargerMin > 0:
-		return max(vehicleMin, chargerMin)
+	case b <= 0:
+		return a
+	case a <= 0:
+		return b
 	default:
-		return max(vehicleMin, lpMin)
+		return min(a, b)
 	}
 }
 
-// effectiveMaxCurrent returns the effective max current
+// limitPhases returns the active phases the current limits apply to without logging
+// phase mismatches. Non-switching chargers keep the maximum active phases.
+func (lp *Loadpoint) limitPhases() int {
+	if lp.hasPhaseSwitching() {
+		return min(expect(lp.phases), lp.maxActivePhases())
+	}
+	return lp.maxActivePhases()
+}
+
+// uniform reports whether the limits do not depend on the active phases
+func (l currentLimits) uniform() bool {
+	return l.min[0] == l.min[1] && l.min[1] == l.min[2] && l.max[0] == l.max[1] && l.max[1] == l.max[2]
+}
+
+// activeCurrentLimits returns the effective min and max current for the active phases
+func (lp *Loadpoint) activeCurrentLimits() (float64, float64) {
+	limits := lp.effectiveCurrentLimits()
+	if limits.uniform() {
+		return limits.min[0], limits.max[0]
+	}
+	phases := lp.limitPhases()
+	return limits.minCurrent(phases), limits.maxCurrent(phases)
+}
+
+// effectiveMinCurrent returns the effective min current for the active phases
+func (lp *Loadpoint) effectiveMinCurrent() float64 {
+	res, _ := lp.activeCurrentLimits()
+	return res
+}
+
+// effectiveMaxCurrent returns the effective max current for the active phases
 func (lp *Loadpoint) effectiveMaxCurrent() float64 {
-	maxCurrent := lp.getMaxCurrent()
-
-	if v := lp.GetVehicle(); v != nil {
-		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {
-			maxCurrent = min(maxCurrent, res)
-		}
-	}
-
-	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
-		if _, res, err := c.GetMinMaxCurrent(); err == nil && res > 0 {
-			maxCurrent = min(maxCurrent, res)
-		}
-	}
-
-	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
-		if _, res, err := c.GetMinMaxPower(); err == nil && res > 0 {
-			powerMax := grid.PowerToCurrent(res, lp.maxActivePhases())
-			// match effectiveMinCurrent's rounding so a fixed power request
-			// (min == max) doesn't yield min > max on coarse chargers (#31549)
-			if lp.coarseCurrent() {
-				powerMax = math.Ceil(powerMax)
-			}
-			maxCurrent = min(maxCurrent, powerMax)
-		}
-	}
-
-	return maxCurrent
+	_, res := lp.activeCurrentLimits()
+	return res
 }
 
 // EffectiveMinSoc returns the effective min soc (heating: min temperature)
@@ -302,7 +389,8 @@ func (lp *Loadpoint) EffectiveStepPower() float64 {
 func (lp *Loadpoint) EffectiveMinPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return grid.CurrentToPower(lp.effectiveMinCurrent(), lp.minActivePhases())
+	phases := lp.minActivePhases()
+	return grid.CurrentToPower(lp.effectiveCurrentLimits().minCurrent(phases), phases)
 }
 
 // EffectiveMaxPower returns the effective max power taking vehicle capabilities,
@@ -320,7 +408,8 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) effectiveMaxPower() float64 {
-	res := grid.CurrentToPower(lp.effectiveMaxCurrent(), lp.maxActivePhases())
+	phases := lp.maxActivePhases()
+	res := grid.CurrentToPower(lp.effectiveCurrentLimits().maxCurrent(phases), phases)
 	if lp.vehicle != nil {
 		if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
 			return min(maxPower, res)
