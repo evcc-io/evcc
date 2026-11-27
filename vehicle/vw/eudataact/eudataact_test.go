@@ -210,6 +210,19 @@ func TestSocFreshestField(t *testing.T) {
 	assert.Equal(t, 61.0, soc, "the still-updating field wins over the stale higher-priority field")
 }
 
+// TestSocIgnoresHvSoc reproduces #36645: hv_soc of a partial dataset is not the battery soc
+func TestSocIgnoresHvSoc(t *testing.T) {
+	data := merge(nil, []point{{Name: FieldSoc, Value: "100"}, {Name: "hv_soc", Value: "21"}}, 1)
+	data = merge(data, []point{{Name: "hv_soc", Value: "21"}}, 2)
+
+	soc, err := testProvider(data).Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 100.0, soc)
+
+	_, err = testProvider([]point{{Name: "hv_soc", Value: "21"}}).Soc()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
+}
+
 func TestSocBatteryStateReportField(t *testing.T) {
 	data := []point{{Key: KeyBatteryStateReportSoc, Name: "battery_state_report.soc", Value: "36"}}
 

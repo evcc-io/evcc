@@ -126,7 +126,6 @@ const (
 
 	// soc
 	FieldSoc                 = "state_of_charge"
-	FieldHvSoc               = "hv_soc"
 	FieldHvBatteryLevelValue = "battery_level_HV.value"
 	FieldEnergyCurrent       = "energy_contents.current_energy_content.physical_value" // ID.4 reports no soc, derived from energy content
 	FieldEnergyMaximal       = "energy_contents.maximal_energy_content.physical_value"
