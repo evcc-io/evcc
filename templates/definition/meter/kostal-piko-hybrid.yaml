@@ -11,6 +11,8 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: host
   - preset: battery-params
+  - name: cache
+    default: 1s
 render: |
   {{- if eq .usage "grid" }}
   type: custom
@@ -18,6 +20,7 @@ render: |
     # Grid
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886336&dxsEntries=83886848&dxsEntries=83886592&dxsEntries=67109120 # Home PV Power + Home Grid Power + Home Bat Power - PV/Bat Inverter Power
+    cache: {{ .cache }}
     #   | ----------------------------- Home PV W -------- | + | --------------------------- Home Grid W -------- | + | --------------------------- Home Bat W --------- | - | --------------------------- PV/BAT Inv W ------- |
     jq: (.dxsEntries[] | select(.dxsId==83886336) | .value ) + (.dxsEntries[] | select(.dxsId==83886848) | .value ) + (.dxsEntries[] | select(.dxsId==83886592) | .value ) - (.dxsEntries[] | select(.dxsId==67109120) | .value )
   {{- end }}
@@ -27,11 +30,13 @@ render: |
     # PV
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556736 # PV Power (all strings)
+    cache: {{ .cache }}
     #   | ----------------------------- PV W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==33556736) | .value )
   energy:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
+    cache: {{ .cache }}
     #   | ----------------------Total Yield W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==251658753) | .value )  
   {{- end }}
@@ -41,11 +46,13 @@ render: |
     # Battery
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556225&dxsEntries=33556226 # Battery Current A * Battery Voltage
+    cache: {{ .cache }}
     #   -1 * | ----------------------------- Bat A ------------ | * | ----------------------------- Bat V ------------ |
     jq: -1 * (.dxsEntries[] | select(.dxsId==33556225) | .value ) * (.dxsEntries[] | select(.dxsId==33556226) | .value )
   soc:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556229 # Battery SOC
+    cache: {{ .cache }}
     #   | ----------------------------- Bat SOC% --------- |
     jq: (.dxsEntries[] | select(.dxsId==33556229) | .value )
   {{- include "battery-params" . }}
