@@ -5,7 +5,6 @@ products:
 auth:
   type: demo
   params: [user, password, server, method, secret]
-protocols: []
 params:
   - preset: vehicle-common
   - name: user

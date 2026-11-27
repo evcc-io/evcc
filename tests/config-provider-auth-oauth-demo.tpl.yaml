@@ -7,7 +7,6 @@ products:
 auth:
   type: demo
   params: ["server", "method", "redirectUri", "secret", "scope"]
-protocols: []
 params:
   - name: usage
     choice: ["grid"]

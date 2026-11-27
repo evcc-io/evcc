@@ -38,3 +38,18 @@ protocols: [speedwire]
 `))
 	require.Error(t, err)
 }
+
+func TestProtocolsYamlOptional(t *testing.T) {
+	// templates added via --template are exempt from the protocols requirement
+	tmpl, err := fromBytes([]byte(`
+template: protocols-optional
+`), withOptionalProtocols())
+	require.NoError(t, err)
+	assert.Nil(t, tmpl.Protocols)
+
+	_, err = fromBytes([]byte(`
+template: protocols-duplicate-optional
+protocols: [http, http]
+`), withOptionalProtocols())
+	require.ErrorContains(t, err, "duplicate protocol")
+}

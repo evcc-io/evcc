@@ -7,7 +7,6 @@ products:
   - brand: ZetaNew
     description:
       generic: Product B
-protocols: []
 params:
   - name: usage
     choice: ["grid"]

@@ -4,7 +4,6 @@ group: generic
 products:
   - description:
       generic: Deprecated Meter
-protocols: []
 params:
   - name: usage
     choice: ["grid"]

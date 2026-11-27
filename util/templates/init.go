@@ -73,7 +73,7 @@ func Register(class Class, filepath string) error {
 		return err
 	}
 
-	tmpl, err := fromBytes(b)
+	tmpl, err := fromBytes(b, withOptionalProtocols())
 	if err != nil {
 		return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 	}
@@ -91,7 +91,24 @@ func register(class Class, tmpl Template) error {
 	return nil
 }
 
-func fromBytes(b []byte) (Template, error) {
+type fromBytesOpts struct{ optionalProtocols bool }
+
+type fromBytesOption func(*fromBytesOpts)
+
+// withOptionalProtocols relaxes the mandatory protocols check for templates
+// added via --template, where the metadata is irrelevant
+func withOptionalProtocols() fromBytesOption {
+	return func(o *fromBytesOpts) {
+		o.optionalProtocols = true
+	}
+}
+
+func fromBytes(b []byte, opts ...fromBytesOption) (Template, error) {
+	var o fromBytesOpts
+	for _, opt := range opts {
+		opt(&o)
+	}
+
 	// error on unknown fields
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
@@ -101,7 +118,9 @@ func fromBytes(b []byte) (Template, error) {
 		return Template{}, err
 	}
 
-	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, tmpl.Validate} {
+	validate := func() error { return tmpl.validate(o.optionalProtocols) }
+
+	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, validate} {
 		if err := f(); err != nil {
 			return tmpl, fmt.Errorf("template '%s': %w", tmpl.Template, err)
 		}

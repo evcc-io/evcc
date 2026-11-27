@@ -85,8 +85,12 @@ func (t *Template) SortRequiredParamsFirst() error {
 
 // validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
+	return t.validate(false)
+}
+
+func (t *Template) validate(optionalProtocols bool) error {
 	// an explicit empty list means no communication
-	if t.Protocols == nil && !t.Deprecated {
+	if !optionalProtocols && t.Protocols == nil && !t.Deprecated {
 		return fmt.Errorf("missing protocols, use [] for no communication or a list of: %s", strings.Join(ProtocolStrings(), ", "))
 	}
 	if len(lo.Uniq(t.Protocols)) != len(t.Protocols) {

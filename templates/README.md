@@ -75,7 +75,7 @@ products:
 
 ## `protocols`
 
-`protocols` lists how evcc communicates with the device or service, main protocol first. It is mandatory for every non-deprecated template, loading fails otherwise.
+`protocols` lists how evcc communicates with the device or service, main protocol first. It is mandatory for every non-deprecated template, loading fails otherwise. Templates added via the `--template` flag are exempt.
 
 **Possible values**:
 

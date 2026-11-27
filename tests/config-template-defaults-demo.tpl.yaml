@@ -3,7 +3,6 @@ group: generic
 products:
   - description:
       generic: Template Defaults Demo Meter
-protocols: []
 params:
   - name: usage
     choice: ["grid"]

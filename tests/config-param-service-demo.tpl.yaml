@@ -3,7 +3,6 @@ group: generic
 products:
   - description:
       generic: Service Demo Meter
-protocols: []
 params:
   - name: usage
     choice: ["grid"]

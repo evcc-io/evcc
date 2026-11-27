@@ -3,7 +3,6 @@ group: generic
 products:
   - description:
       generic: Service Modbus Test Meter
-protocols: [modbus]
 params:
   - name: usage
     choice: ["grid"]
