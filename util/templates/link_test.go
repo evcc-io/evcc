@@ -24,6 +24,10 @@ render: |
 
 	require.Equal(t, "https://example.com/generic", tmpl.Products[0].Link)
 	require.Equal(t, "https://example.com/own", tmpl.Products[1].Link)
+
+	b, err := tmpl.RenderDocumentation(tmpl.Products[1], "en")
+	require.NoError(t, err)
+	require.Contains(t, string(b), "link: https://example.com/own")
 }
 
 func TestLinkInvalid(t *testing.T) {
