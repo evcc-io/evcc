@@ -70,7 +70,7 @@ const card = `
     <DeviceCard title="Load Management" editable>
       <template #icon><CircuitsIcon /></template>
       <template #tags>
-        <CircuitTags :nodes="[root]" :loadpoints="loadpoints" />
+        <CircuitTags :nodes="[root]" :loadpoints="loadpoints" :noMeter="noMeter" />
       </template>
     </DeviceCard>
   </div>
@@ -82,6 +82,15 @@ export const Tree: StoryFn = () => ({
   components,
   setup() {
     return { root: circuitTree(circuits), loadpoints };
+  },
+  template: card,
+});
+
+// root circuit without meter
+export const NoMeter: StoryFn = () => ({
+  components,
+  setup() {
+    return { root: circuitTree(circuits), loadpoints, noMeter: true };
   },
   template: card,
 });

@@ -10,6 +10,14 @@
 				<span class="flex-grow-1 min-w-0 fw-bold text-truncate">
 					{{ node.title }}
 				</span>
+				<button
+					v-if="noMeter"
+					type="button"
+					class="btn btn-link btn-sm text-warning flex-shrink-0 p-0"
+					@click="$emit('edit')"
+				>
+					{{ $t("config.circuit.meterNone") }}
+				</button>
 			</div>
 			<div class="measurement-grid d-grid align-items-center w-100 min-w-0 small lh-sm">
 				<div
@@ -96,6 +104,7 @@ const STATE_FILL: Record<LimitState, string> = {
 
 export default {
 	name: "CircuitTags",
+	emits: ["edit"],
 	components: { SubdirectoryArrowRight },
 	mixins: [formatter],
 	props: {
@@ -111,6 +120,8 @@ export default {
 			type: Number,
 			default: 0,
 		},
+		// root circuit without meter, not passed on to children
+		noMeter: Boolean,
 	},
 	data() {
 		return { ICON_SIZE, STATE_TEXT, STATE_FILL };
