@@ -45,7 +45,7 @@
 						class="nav-link"
 						:class="{ active: activeTab === 'dynamic' }"
 						href="#"
-						@click.prevent="activeTab = 'dynamic'"
+						@click.prevent="selectTab('dynamic')"
 					>
 						{{ $t("config.hems.dynamicLimits") }}
 					</a>
@@ -55,7 +55,7 @@
 						class="nav-link"
 						:class="{ active: activeTab === 'static' }"
 						href="#"
-						@click.prevent="activeTab = 'static'"
+						@click.prevent="selectTab('static')"
 					>
 						{{ $t("config.hems.staticLimits") }} 🧪
 					</a>
@@ -86,54 +86,61 @@
 			</p>
 		</template>
 		<template v-if="experimental && activeTab === 'static'" #post-content>
-			<div data-testid="grid-export-limit">
-				<div class="form-check form-switch">
-					<input
-						id="hemsExportLimitEnabled"
-						class="form-check-input"
-						type="checkbox"
-						role="switch"
-						:checked="exportLimitEnabled"
-						:disabled="exportLimitState === 'saving'"
-						@change="toggleExportLimit"
-					/>
-					<label for="hemsExportLimitEnabled" class="form-check-label">
-						{{ $t("config.hems.exportLimit") }}
-					</label>
-					<div class="ps-2">
-						<p class="text-muted small mb-2">
-							{{ $t("config.hems.exportLimitHint") }}
-						</p>
-						<div class="collapsible-wrapper" :class="{ open: exportLimitEnabled }">
-							<div class="collapsible-content ring-space">
-								<div class="d-flex align-items-center gap-2">
-									<div class="input-group input-width">
-										<input
-											id="hemsExportLimit"
-											v-model.number="exportLimit"
-											type="number"
-											min="0"
-											:aria-label="$t('config.hems.exportLimit')"
-											aria-describedby="hemsExportLimitUnit"
-											class="form-control text-end"
-											@input="onExportLimitInput"
-											@blur="commitExportLimit"
-											@keydown.enter.prevent="commitExportLimit"
-										/>
-										<span id="hemsExportLimitUnit" class="input-group-text">
-											W
-										</span>
-									</div>
-									<SavingIndicator :state="exportLimitState" />
-								</div>
-								<div class="form-text evcc-gray mb-2">
-									{{ $t("config.hems.exportLimitDescription") }}
-								</div>
-							</div>
-						</div>
+			<StaticLimitSetting
+				id="hemsExportLimit"
+				data-testid="grid-export-limit"
+				:label="$t('config.hems.exportLimit')"
+				:hint="$t('config.hems.exportLimitHint')"
+				:description="$t('config.hems.exportLimitDescription')"
+				:value="serverExportLimit"
+				endpoint="gridexportlimit"
+			/>
+			<StaticLimitSetting
+				v-if="peakLimitAvailable"
+				id="hemsPeakLimit"
+				class="mt-4"
+				data-testid="grid-peak-limit"
+				:label="$t('config.hems.peakLimit')"
+				:hint="$t('config.hems.peakLimitHint')"
+				:description="$t('config.hems.peakLimitDescription')"
+				:value="serverPeakLimit"
+				endpoint="gridpeakbaseline"
+			>
+				<div v-if="serverPeakLimit > 0" class="my-4 d-flex flex-column gap-3">
+					<div class="fw-bold" :class="peakStatusClass">
+						{{ peakStatusTitle }}
 					</div>
+					<DayStrip :days="peakDays" />
+					<i18n-t
+						v-if="peakFirstExceeded"
+						keypath="config.hems.peakLimitExceededDetail"
+						tag="p"
+						class="mb-0 small evcc-gray"
+						scope="global"
+					>
+						<template #date>
+							<router-link :to="energyDay(peakFirstExceeded)" class="evcc-gray">{{
+								peakFirstExceededDate
+							}}</router-link>
+						</template>
+						<template #power
+							><strong>{{ peakPowerLabel }}</strong></template
+						>
+					</i18n-t>
+					<p v-if="!hasCircuit" class="mb-0 small evcc-gray">
+						{{ $t("config.hems.peakLimitCircuitHint") }}
+						<a href="#" class="evcc-gray" @click.prevent="openCircuitsModal">
+							{{ $t("config.hems.peakLimitCircuitHintLink") }}
+						</a>
+					</p>
 				</div>
-			</div>
+			</StaticLimitSetting>
+			<p v-if="!country" class="small evcc-gray mt-4 mb-0">
+				{{ $t("config.hems.countryHint") }}
+				<a href="#" class="evcc-gray" @click.prevent="openSiteModal">
+					{{ $t("config.hems.countryHintLink") }}
+				</a>
+			</p>
 		</template>
 	</DeviceModalBase>
 </template>
@@ -151,13 +158,18 @@ import api from "../../api";
 import store from "@/store";
 import { docsPrefix } from "@/i18n";
 import DownloadButton from "../Helper/DownloadButton.vue";
-import SavingIndicator, { type SavingState } from "../Helper/SavingIndicator.vue";
+import StaticLimitSetting from "./StaticLimitSetting.vue";
+import DayStrip, { type Day } from "../Helper/DayStrip.vue";
 import formatter from "../../mixins/formatter";
+import { getModal, openModal, replaceModal } from "@/configModal";
 
 // selector value for the relay variant; both variants save as type custom
 const RELAY_OPTION = "relay";
 
-let exportLimitTimer: ReturnType<typeof setTimeout> | undefined;
+type Tab = "dynamic" | "static";
+
+// countries billing the month's highest 15-min grid import
+const PEAK_LIMIT_COUNTRIES = ["AT", "BE"];
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -169,10 +181,11 @@ const initialValues = {
 
 export default defineComponent({
 	name: "HemsModal",
-	components: { DeviceModalBase, DownloadButton, SavingIndicator },
+	components: { DeviceModalBase, DownloadButton, StaticLimitSetting, DayStrip },
 	mixins: [formatter],
 	props: {
 		yamlSource: String as PropType<YamlSource>,
+		hasCircuit: Boolean,
 		id: Number as PropType<number | undefined>,
 	},
 	emits: ["changed", "close"],
@@ -181,10 +194,6 @@ export default defineComponent({
 			initialValues,
 			sessions: [] as Array<{ created: string }>,
 			changing: false,
-			exportLimit: null as number | null,
-			exportLimitEnabled: false,
-			exportLimitState: null as SavingState,
-			activeTab: "dynamic" as "dynamic" | "static",
 		};
 	},
 	computed: {
@@ -216,48 +225,84 @@ export default defineComponent({
 		serverExportLimit(): number {
 			return store.state?.gridExportLimit || 0;
 		},
-		exportLimitUnchanged(): boolean {
-			return (this.exportLimit || 0) === this.serverExportLimit;
+		activeTab(): Tab {
+			return getModal("hems")?.type === "static" ? "static" : "dynamic";
 		},
-	},
-	beforeUnmount() {
-		clearTimeout(exportLimitTimer);
+		country(): string {
+			return store.state?.country || "";
+		},
+		peakLimitAvailable(): boolean {
+			// an active limit stays editable after a country change
+			return PEAK_LIMIT_COUNTRIES.includes(this.country) || this.serverPeakLimit > 0;
+		},
+		serverPeakLimit(): number {
+			return store.state?.gridPeakBaseline || 0;
+		},
+		peakStatusTitle(): string {
+			return this.peakFirstExceeded
+				? this.$t("config.hems.peakLimitExceeded")
+				: this.$t("config.hems.peakLimitBelow");
+		},
+		peakStatusClass(): string {
+			return this.peakFirstExceeded ? "text-warning" : "text-primary";
+		},
+		peakDayPowers(): (number | null)[] {
+			return store.state?.gridPeakDays || [];
+		},
+		// day of month, 0 = not exceeded
+		peakFirstExceeded(): number {
+			return this.peakDayPowers.findIndex((power) => (power ?? 0) > this.serverPeakLimit) + 1;
+		},
+		peakDays(): Day[] {
+			const now = new Date();
+			const count = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+			return Array.from({ length: count }, (_, i): Day => {
+				const day = i + 1;
+				const date = this.monthDate(day);
+				if (day > now.getDate()) return { date, state: "none" };
+				const to = this.energyDay(day);
+				const power = this.peakDayPowers[i];
+				// no complete slot recorded, unknown rather than below the limit
+				if (power == null) return { date, state: "none", to };
+				const value = this.$t("config.hems.peakLimitDayMax", {
+					power: this.fmtW(power, this.POWER_UNIT.KW),
+				});
+				const state = power > this.serverPeakLimit ? "warning" : "ok";
+				return { date, state, value, to };
+			});
+		},
+		peakFirstExceededDate(): string {
+			const day = this.peakFirstExceeded;
+			return day ? this.fmtDayMonthShort(this.monthDate(day)) : "";
+		},
+		peakPowerLabel(): string {
+			return this.fmtW(store.state?.gridPeak || 0, this.POWER_UNIT.KW);
+		},
 	},
 	methods: {
 		onOpen() {
-			this.exportLimit = this.serverExportLimit || null;
-			this.exportLimitEnabled = this.serverExportLimit > 0;
-			this.exportLimitState = null;
-			this.activeTab = "dynamic";
 			this.loadSessions();
 		},
-		onExportLimitInput() {
-			clearTimeout(exportLimitTimer);
-			exportLimitTimer = setTimeout(this.commitExportLimit, 2000);
+		selectTab(tab: Tab) {
+			replaceModal("hems", { type: tab === "static" ? tab : undefined });
 		},
-		commitExportLimit() {
-			clearTimeout(exportLimitTimer);
-			if (this.exportLimitState === "saving" || this.exportLimitUnchanged) return;
-			this.postExportLimit(this.exportLimit || 0);
+		openSiteModal() {
+			openModal("site");
 		},
-		toggleExportLimit($event: Event) {
-			const { checked } = $event.target as HTMLInputElement;
-			this.exportLimitEnabled = checked;
-			this.exportLimitState = null;
-			if (!checked) {
-				this.exportLimit = null;
-				this.commitExportLimit();
-			}
+		openCircuitsModal() {
+			openModal("circuits");
 		},
-		async postExportLimit(value: number) {
-			this.exportLimitState = "saving";
-			try {
-				await api.post(`gridexportlimit/${value}`);
-				this.exportLimitState = "saved";
-			} catch (e) {
-				this.exportLimitState = null;
-				console.error(e);
-			}
+		monthDate(day: number): Date {
+			const now = new Date();
+			return new Date(now.getFullYear(), now.getMonth(), day);
+		},
+		energyDay(day: number) {
+			const now = new Date();
+			return {
+				path: "/energy",
+				query: { year: now.getFullYear(), month: now.getMonth() + 1, day },
+				hash: "#energy-grid",
+			};
 		},
 		downloadHref(): string {
 			const params = new URLSearchParams({ lang: this.$i18n?.locale });
@@ -327,8 +372,5 @@ export default defineComponent({
 <style scoped>
 .events-box {
 	background: var(--evcc-background);
-}
-.input-width {
-	max-width: 180px;
 }
 </style>

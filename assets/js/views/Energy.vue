@@ -137,6 +137,7 @@
 					</template>
 					<Card
 						v-if="hasGrid"
+						id="energy-grid"
 						:title="$t('energy.grid.title')"
 						edge-to-edge
 						class="box-pull-out mb-4"
