@@ -5,6 +5,7 @@ products:
       generic: Ohmpilot
 discovery:
   mac: ["0003AC"]
+protocols: [http]
 params:
   - name: usage
     choice: ["aux"]

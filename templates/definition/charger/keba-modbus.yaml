@@ -23,6 +23,7 @@ requirements:
     en: Requires firmware version 3.10.42 (C-series) bzw. 1.11 (X-series). For phase switching the Keba phase switch (KeContact S10) is also required and the switching control via Modbus must be set in the wallbox settings. For the X-series in the web menu, for the C-series via Modbus by setting the value "3" in register 5050.
 discovery:
   mac: ["0060B5", "00141D"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

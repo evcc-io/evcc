@@ -16,6 +16,7 @@ requirements:
       1p/3p-Phasenumschaltung (`phases1p3p`) funktioniert nur mit modifizierten 3-Phasen-Controllern, die die RAPI-Befehle `$G7`/`$S7` beantworten; serienmäßige OpenEVSE-Controller tun das nicht.
 discovery:
   mdns: ["_openevse._tcp"]
+protocols: [websocket, http]
 params:
   - name: host
   - name: user

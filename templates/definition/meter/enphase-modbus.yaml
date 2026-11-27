@@ -13,6 +13,7 @@ capabilities: ["curtail"]
 discovery:
   mdns: ["_enphase-envoy._tcp"]
   mac: ["001DC0"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

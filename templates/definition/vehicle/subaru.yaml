@@ -5,6 +5,8 @@ requirements:
   description:
     de: Benötigt Subaru Connected Services Account
     en: Requires Subaru Connected Services Account
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

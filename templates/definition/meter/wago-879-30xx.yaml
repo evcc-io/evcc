@@ -3,6 +3,7 @@ products:
   - brand: Wago
     description:
       generic: 879-30xx
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

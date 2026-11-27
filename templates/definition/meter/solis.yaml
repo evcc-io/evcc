@@ -3,6 +3,7 @@ products:
   - brand: Ginlong
     description:
       generic: Solis Inverter
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv"]

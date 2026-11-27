@@ -8,6 +8,7 @@ requirements:
   description:
     en: For demonstration purposes. Meter with a fixed set of values.
     de: Zu Demonstrationszwecken. Zähler mit festen Werten.
+protocols: []
 params:
   - name: usage
     choice: ["grid", "pv", "aux", "charge"]

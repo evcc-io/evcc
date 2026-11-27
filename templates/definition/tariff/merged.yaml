@@ -9,6 +9,7 @@ requirements:
     en: Uses the prices of the primary tariff and continues with the secondary tariff where they end. For example real market prices combined with a longer-term forecast.
   evcc: ["skiptest"]
 group: price
+protocols: []
 params:
   - name: primary
     type: device

@@ -16,6 +16,7 @@ capabilities: ["meter"]
 group: switchsockets
 discovery:
   hostname: ["niko*"]
+protocols: [mqtt]
 params:
   - name: host
   - name: user

@@ -5,6 +5,8 @@ products:
 group: generic
 requirements:
   evcc: ["sponsorship"]
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

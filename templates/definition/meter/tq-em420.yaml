@@ -3,6 +3,7 @@ products:
   - brand: TQ
     description:
       generic: Energy Manager EM420
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

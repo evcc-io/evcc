@@ -3,6 +3,7 @@ products:
   - description:
       generic: EVSE-WiFi
 capabilities: ["dim"]
+protocols: [http]
 params:
   - name: host
 render: |

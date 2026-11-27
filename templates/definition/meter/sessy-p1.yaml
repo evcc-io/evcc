@@ -3,6 +3,7 @@ products:
   - brand: Sessy
     description:
       generic: Sessy P1
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

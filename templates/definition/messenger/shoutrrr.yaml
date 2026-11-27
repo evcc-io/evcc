@@ -6,6 +6,8 @@ requirements:
     en: Shoutrrr sends messages to various services like Slack, Teams, Matrix, Mattermost. See [shoutrrr.nickfedor.com](https://shoutrrr.nickfedor.com/latest/usage/) for supported services.
     de: Shoutrrr sendet Nachrichten an verschiedene Dienste wie Slack, Teams, Matrix, Mattermost. Übersicht unter [shoutrrr.nickfedor.com](https://shoutrrr.nickfedor.com/latest/usage/).
 group: generic
+protocols: [http]
+cloud: true
 params:
   - name: uri
     required: true

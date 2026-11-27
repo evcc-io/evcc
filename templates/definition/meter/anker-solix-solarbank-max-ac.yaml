@@ -13,6 +13,7 @@ requirements:
     en: |
       The Modbus TCP interface must be enabled in the Anker app.
       evcc controls the backup SoC: the current SoC while holding, `minsoc` in normal operation and `maxsoc` while charging. A backup SoC set in the Anker app is overwritten.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

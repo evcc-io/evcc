@@ -10,6 +10,7 @@ caveats:
   - description:
       de: Automatische Phasenumschaltung (1P/3P) ist unzuverlässig und kann fehlschlagen.
       en: Automatic phase switching (1P/3P) is unreliable and may fail.
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

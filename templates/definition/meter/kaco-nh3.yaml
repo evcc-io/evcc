@@ -16,6 +16,7 @@ requirements:
       Configure curtailment through a separate KACO NH3 curtailer device.
       The grid meter exposed through SunSpec Model 203 provides grid power, import/export energy, and per-phase measurements.
 capabilities: ["battery-control"]
+protocols: [modbus, http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

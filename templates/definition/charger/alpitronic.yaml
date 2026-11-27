@@ -6,6 +6,7 @@ products:
 capabilities: ["iso151182", "mA", "rfid", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

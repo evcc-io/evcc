@@ -19,6 +19,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["EU", "DK", "NO", "CH", "GB", "IE", "RS", "ME", "MK", "AL"]
+protocols: [http]
+cloud: true
 params:
   - name: zone
     type: choice

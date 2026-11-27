@@ -4,6 +4,7 @@ products:
     description:
       generic: X3 Hybrid G2
 capabilities: ["battery-control"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

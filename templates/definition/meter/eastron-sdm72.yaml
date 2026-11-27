@@ -3,6 +3,7 @@ products:
   - brand: Eastron
     description:
       generic: SDM72D-M
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

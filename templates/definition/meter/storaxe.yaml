@@ -3,6 +3,7 @@ products:
   - brand: Ads-tec
     description:
       generic: StoraXe
+protocols: [modbus]
 params:
   - name: usage
     choice: ["battery"]

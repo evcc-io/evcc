@@ -5,6 +5,7 @@ products:
       en: SunSpec Inverter (curtailable)
 group: generic
 capabilities: ["curtail"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

@@ -8,6 +8,8 @@ requirements:
       Requires client credentials from the [Polestar Data Portal](https://data-portal.polestar.com/) developer account (EU Data Act). Register at the [Polestar Data Portal](https://data-portal.polestar.com/) to obtain a client ID, client secret and account ID.
     de: |
       Benötigt Client-Zugangsdaten aus dem [Polestar Data Portal](https://data-portal.polestar.com/) Entwicklerkonto (EU Data Act). Registrierung im [Polestar Data Portal](https://data-portal.polestar.com/) für Client ID, Client Secret und Account ID.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

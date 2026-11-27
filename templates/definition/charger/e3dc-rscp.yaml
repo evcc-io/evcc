@@ -17,6 +17,7 @@ requirements:
       For phase switching, "Automatic phase switching" must be disabled in E3DC dashboard.
 discovery:
   mac: ["1CAE3E3", "0C86297"]
+protocols: [other]
 params:
   - name: host
   - name: port

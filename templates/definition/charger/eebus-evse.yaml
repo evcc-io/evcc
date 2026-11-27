@@ -6,6 +6,7 @@ products:
       en: EEBUS compatible
 group: generic
 capabilities: ["mA", "meter", "dim"]
+protocols: [eebus]
 params:
   - preset: eebus
 render: |

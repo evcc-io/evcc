@@ -13,6 +13,7 @@ requirements:
       For KACO blueplanet Hybrid NH3 with AI dongle/Wi-Fi stick. Modbus TCP must be reachable at the stick's IP address (port 502, device ID 3).
       Curtailment uses the inverter's SunSpec controls to limit active power to the requested percentage.
 capabilities: ["curtail"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

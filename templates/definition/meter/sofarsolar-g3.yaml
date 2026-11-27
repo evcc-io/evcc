@@ -17,6 +17,7 @@ requirements:
     de: Zu den Details wie man den Wechselrichter verbindet siehe die Sofar Solar Installations Anleitung von [homeassistant-solax-modbus.readthedocs.io](https://homeassistant-solax-modbus.readthedocs.io/en/latest/sofar-installation/).
     en: For more details on how to establish a connection to the inverter see the Sofar Solar installation doc at [homeassistant-solax-modbus.readthedocs.io](https://homeassistant-solax-modbus.readthedocs.io/en/latest/sofar-installation/).
 capabilities: ["battery-control"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -3,6 +3,7 @@ products:
   - brand: Bernecker Engineering
     description:
       generic: MPM3PM
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

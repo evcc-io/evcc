@@ -7,6 +7,7 @@ products:
     description:
       generic: NEX AC Wallbox
 capabilities: ["mA", "1p3p", "meter", "dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

@@ -9,6 +9,8 @@ requirements:
   evcc: ["skiptest"]
 countries: ["DE"]
 group: price
+protocols: [http]
+cloud: true
 params:
   - name: email
     type: string

@@ -6,6 +6,7 @@ products:
   - brand: Siemens
     description:
       generic: 7KT1666 (MID)
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "charge"]

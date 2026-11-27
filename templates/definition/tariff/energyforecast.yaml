@@ -10,6 +10,8 @@ requirements:
 group: price
 countries:
   ["DE", "LU", "AT", "FR", "NL", "BE", "PL", "DK", "CH", "CZ", "HU", "SI", "IT", "NO", "SE"]
+protocols: [http]
+cloud: true
 params:
   - name: token
     required: true

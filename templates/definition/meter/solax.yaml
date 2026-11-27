@@ -8,6 +8,7 @@ products:
     description:
       generic: Q.HOME ESS HYB-G3
 capabilities: ["battery-control"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

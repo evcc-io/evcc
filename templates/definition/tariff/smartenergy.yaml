@@ -8,6 +8,8 @@ group: price
 countries: ["AT"]
 requirements:
   evcc: ["skiptest"]
+protocols: [http]
+cloud: true
 params:
   - preset: tariff-base
 render: |

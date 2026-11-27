@@ -26,6 +26,7 @@ requirements:
       * Server URL: `ws://<evcc-host>:8887/` (local network connection)
       * Charger ID: Leave empty (for use the serial number) or set custom value which is reused in configuration as *stationid*
       * Authorisation Key: leave empty
+protocols: [ocpp]
 params:
   - preset: ocpp
 render: |

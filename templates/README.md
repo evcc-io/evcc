@@ -73,6 +73,65 @@ products:
 
 `group` is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
+## `protocols`
+
+`protocols` lists how evcc communicates with the device or service, main protocol first. It is mandatory for every non-deprecated template, loading fails otherwise. Templates added via the `--template` flag are exempt.
+
+**Possible values**:
+
+- `modbus`: Modbus TCP, RTU, SunSpec
+- `http`: REST or other HTTP API
+- `websocket`: WebSocket API
+- `mqtt`: MQTT via broker
+- `ocpp`: OCPP, the device connects to evcc
+- `eebus`: EEBus
+- `other`: any other protocol, e.g. vendor TCP or UDP protocols (SMA Speedwire, E3/DC RSCP, Solarman), DSMR, SMTP
+
+**Rules**:
+
+- Templates without any communication (e.g. demo devices, fixed tariffs) declare an empty list: `protocols: []`. Omitting the key is an error.
+- If an integration uses several protocols, list all of them and put the one that carries the main data first.
+- A protocol wrapped in another one is tagged by the outer protocol only. Example: Modbus frames inside Solarman are `other`.
+
+**Example**:
+
+```yaml
+template: go-e-v3
+protocols: [http]
+```
+
+```yaml
+template: tinkerforge-warp-ws
+protocols: [websocket, http] # state via WebSocket, commands via HTTP
+```
+
+## `cloud`
+
+`cloud: true` marks templates where evcc opens a connection to a vendor or third-party service on the internet and does not work without it. The default configuration and typical usage count, not what is technically possible. The default is `false`.
+
+**Cloud**:
+
+- Vendor APIs: `easee`, `zaptec`, `viessmann`, most vehicles
+- Online data: dynamic tariffs, solar and CO2 forecasts
+- Vendor MQTT brokers: `cardata`, `zendure-hyper`
+- Messaging: `telegram`, `pushover`, `email`. Also `ntfy`, which defaults to the public `ntfy.sh` although it can be self-hosted
+- Local device that additionally needs the vendor cloud: `tesla-powerwall-fleet`
+
+**Not cloud**:
+
+- Devices reached in the local network, whatever the protocol
+- OCPP: the charger connects to evcc, evcc opens no outbound connection
+- Local bridges that talk to a cloud themselves: `teslamate`, `homeassistant`, `mg2mqtt`
+- Cloud account needed for setup only: `tuya` (one-time local key retrieval)
+
+**Example**:
+
+```yaml
+template: easee
+protocols: [websocket, http]
+cloud: true
+```
+
 ## `capabilities`
 
 `capabilities` provides an option to define special capabilities of the device as a list of strings.

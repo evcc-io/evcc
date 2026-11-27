@@ -3,6 +3,7 @@ products:
   - brand: Marstek
     description:
       generic: Jupiter C Plus Battery Storage
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "battery"]

@@ -34,6 +34,8 @@ requirements:
       The device requires the Backup Reserve to exceed the discharge limit by 3, lower `minsoc`
       values are raised accordingly. Without `minsoc` the battery discharges down to the device's
       own discharge limit.
+protocols: [http]
+cloud: true
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

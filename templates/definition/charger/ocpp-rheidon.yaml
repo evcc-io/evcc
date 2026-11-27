@@ -17,6 +17,7 @@ caveats:
   - description:
       de: Die Box meldet für L1–L3 immer identische Ströme. Bei einphasigem Betrieb (Schuko-Adapter) die Phasen im Ladepunkt fest auf 1 einstellen.
       en: The charger reports identical currents for L1–L3. For single-phase operation (Schuko adapter), set the loadpoint phases to 1.
+protocols: [ocpp]
 params:
   - preset: ocpp
 render: |

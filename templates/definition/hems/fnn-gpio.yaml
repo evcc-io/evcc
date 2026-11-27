@@ -2,6 +2,7 @@ template: fnn-gpio
 products:
   - description:
       generic: FNN-Steuerbox via GPIO (§ 14a EnWG, § 9 EEG)
+protocols: []
 params:
   - name: maxconsumptionpower
     type: float

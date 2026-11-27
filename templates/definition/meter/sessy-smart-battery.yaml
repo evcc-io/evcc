@@ -5,6 +5,7 @@ products:
     description:
       generic: Sessy Smart Battery
 capabilities: ["battery-control"]
+protocols: [http]
 params:
   - name: usage
     choice: ["battery"]

@@ -3,6 +3,7 @@ products:
   - brand: Hoymiles
     description:
       generic: HM & HMS Series (via AhoyDTU)
+protocols: [http]
 params:
   - name: usage
     choice: ["pv"]

@@ -12,6 +12,7 @@ products:
   - brand: Qcells
     description:
       generic: Q.VOLT P17T-X
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv"]

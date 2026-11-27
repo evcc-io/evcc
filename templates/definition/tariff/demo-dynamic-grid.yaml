@@ -9,6 +9,7 @@ requirements:
     en: For demonstration purposes. Simulates dynamic electricity prices similar to EPEX spot market with typical daily patterns.
   evcc: ["skiptest"]
 group: price
+protocols: []
 params:
   - name: min
     type: pricePerKWh

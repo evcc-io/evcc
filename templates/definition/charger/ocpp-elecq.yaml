@@ -12,6 +12,7 @@ products:
 capabilities: ["dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
+protocols: [ocpp]
 params:
   - preset: ocpp
 render: |

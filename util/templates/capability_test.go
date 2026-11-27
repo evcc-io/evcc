@@ -9,6 +9,7 @@ import (
 func TestCapabilityPushdown(t *testing.T) {
 	tmpl, err := fromBytes([]byte(`
 template: caps-demo
+protocols: []
 capabilities: ["1p3p"]
 products:
   - brand: Plain
@@ -31,6 +32,7 @@ func TestCapabilityDuplicate(t *testing.T) {
 	// product repeats a template-level capability
 	_, err := fromBytes([]byte(`
 template: caps-dup
+protocols: []
 capabilities: ["1p3p"]
 products:
   - brand: Dup

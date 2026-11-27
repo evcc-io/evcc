@@ -5,6 +5,7 @@ products:
       generic: H-Series Smart Plug
 capabilities: ["meter"]
 group: switchsockets
+protocols: [other]
 params:
   - name: host
   - preset: switchsocket

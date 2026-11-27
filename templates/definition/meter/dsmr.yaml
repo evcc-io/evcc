@@ -1,6 +1,7 @@
 template: dsmr
 products:
   - brand: DSMR
+protocols: [other]
 params:
   - name: usage
     choice: ["grid"]

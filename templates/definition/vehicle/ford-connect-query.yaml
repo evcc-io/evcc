@@ -3,6 +3,8 @@ products:
   - brand: Ford
     description:
       generic: FordConnect Query
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

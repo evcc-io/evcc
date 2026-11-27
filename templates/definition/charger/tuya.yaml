@@ -13,6 +13,7 @@ requirements:
     en: |
       Local connection via the Tuya protocol for plugs with energy monitoring (apps: "Smart Life", "Tuya").
       Device ID and local key must be retrieved once, e.g. using `tinytuya wizard`, which requires an account on the Tuya IoT platform. No cloud access is needed during operation. The device accepts only one local connection at a time, other local integrations (e.g. LocalTuya, Tuya Local) must be disabled.
+protocols: [other]
 params:
   - name: host
   - name: id

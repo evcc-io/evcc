@@ -3,6 +3,7 @@ products:
   - brand: Lovato
     description:
       generic: DMG610
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

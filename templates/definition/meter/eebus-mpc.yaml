@@ -10,6 +10,7 @@ requirements:
   description:
     de: EEBus-Verbraucher im Hausnetz mit den Use Cases MPC (Monitoring & Power Consumption) und LPC (Limitation of Power Consumption). Kompatbibel mit steuerbaren Verbrauchseinrichtungen (SteuVE) gemäß §14a EnWG.
     en: EEBus consumer in the home network using use cases MPC (Monitoring & Power Consumption) and LPC (Limitation of Power Consumption).
+protocols: [eebus]
 params:
   - name: usage
     choice: ["charge"]

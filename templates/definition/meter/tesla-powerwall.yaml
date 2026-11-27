@@ -5,6 +5,7 @@ products:
       generic: Powerwall
 discovery:
   hostname: ["1118431-*", "1232100-*", "teslapw_*"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

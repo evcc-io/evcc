@@ -8,6 +8,7 @@ requirements:
   evcc: ["sponsorship"]
 discovery:
   mdns: ["_http._tcp:lektrico*"]
+protocols: [http]
 params:
   - name: host
   - name: cache

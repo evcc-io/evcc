@@ -8,6 +8,8 @@ requirements:
     de: Benötigt einen [solcast.com](https://solcast.com/free-rooftop-solar-forecasting)-Account. Der kostenlose "Home User" Tarif ist für private Anwendungen oft ausreichend. Dieser Plan hat ein API-Limit von 10 Anfragen pro Tag.
   evcc: ["skiptest"]
 group: solar
+protocols: [http]
+cloud: true
 params:
   - name: site
     description:

@@ -7,6 +7,8 @@ requirements:
   description:
     de: API-Schlüssel unter [go.skoda.eu/api-keys](https://go.skoda.eu/api-keys) anfordern.
     en: Request an API key at [go.skoda.eu/api-keys](https://go.skoda.eu/api-keys).
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

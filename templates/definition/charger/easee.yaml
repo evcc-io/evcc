@@ -24,6 +24,8 @@ caveats:
       de: Bei mehreren Ladepunkten in einem Easee-Circuit wirkt die Phasenumschaltung auf alle Ladepunkte.
       en: With multiple chargers in one Easee circuit, phase switching affects all of them.
     link: https://github.com/evcc-io/evcc/issues/28859
+protocols: [websocket, http]
+cloud: true
 params:
   - name: user
     required: true

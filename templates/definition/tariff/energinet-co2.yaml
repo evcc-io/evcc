@@ -8,6 +8,8 @@ requirements:
   evcc: ["skiptest"]
 group: co2
 countries: ["DK"]
+protocols: [http]
+cloud: true
 params:
   - name: region
     example: dk1

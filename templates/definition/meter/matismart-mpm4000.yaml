@@ -13,6 +13,7 @@ requirements:
       Each of the four three-phase measuring circuits (X1 to X4) is configured as a separate meter, e.g. grid on X1 and charger on X2.
 
       Wiring mode and current direction are configured on the device.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge", "aux"]

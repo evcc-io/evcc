@@ -21,6 +21,7 @@ requirements:
       **Important:** In the loadpoint configuration, set `mincurrent` and `maxcurrent` to match
       your device, and configure `phases: 1` for single-phase operation.
       Example AHIR-BI-plus-1.75: `mincurrent: 1.1`, `maxcurrent: 7.6` (at 230V, 1 phase).
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

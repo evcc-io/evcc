@@ -3,6 +3,7 @@ products:
   - description:
       en: Static circuit
       de: Statischer Stromkreis
+protocols: []
 params:
   - name: maxcurrent
     help:

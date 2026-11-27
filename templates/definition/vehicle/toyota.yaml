@@ -7,6 +7,8 @@ requirements:
       Benötigt Toyota Connected Services Account.
     en: |
       Requires Toyota Connected Services Account.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

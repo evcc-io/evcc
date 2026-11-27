@@ -4,6 +4,7 @@ products:
     description:
       generic: Home
 capabilities: ["battery-control"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -12,6 +12,8 @@ products:
 capabilities: ["rfid", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
+protocols: [http]
+cloud: true
 params:
   - name: id
     help:

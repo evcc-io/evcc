@@ -28,6 +28,7 @@ caveats:
         Parallel clients (e.g. Home Assistant) accessing the Huawei solar system via Modbus proxy may cause communication errors.
 discovery:
   hostname: ["sdongle*"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

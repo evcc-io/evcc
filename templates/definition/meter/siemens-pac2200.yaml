@@ -3,6 +3,7 @@ products:
   - brand: Siemens
     description:
       generic: PAC 2200
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

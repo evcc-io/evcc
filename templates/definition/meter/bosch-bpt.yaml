@@ -7,6 +7,7 @@ products:
       generic: BPT-S 5 Hybrid
 requirements:
   evcc: ["skiptest"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

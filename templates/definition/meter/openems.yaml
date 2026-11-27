@@ -27,6 +27,7 @@ requirements:
       - FEMS App REST/JSON Write Access: [docs.fenecon.de](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
       ##### OpenEMS documentation:
       - OpenEMS Edge REST-Api Controller: [openems.github.io](https://openems.github.io/openems.io/openems/latest/edge/controller.d/io.openems.edge.controller.api.rest.html)
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

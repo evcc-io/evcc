@@ -13,6 +13,7 @@ requirements:
       Requires an active Plus license or higher and access to the local REST API.
       The device and evcc clocks must be synchronized.
       Available measurements depend on the connected meter.
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

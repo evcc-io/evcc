@@ -8,6 +8,8 @@ requirements:
     de: "[forecast.solar](https://forecast.solar) kann kostenlos verwendet werden. Kostenpflichtige Pläne können ebenfalls verwendet werden, indem ein API-Key angegeben wird."
   evcc: ["skiptest"]
 group: solar
+protocols: [http]
+cloud: true
 params:
   - preset: forecast-base
   - name: horizon

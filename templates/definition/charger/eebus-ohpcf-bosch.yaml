@@ -33,6 +33,7 @@ requirements:
     de: Erfordert das Gateway Buderus MX400 bzw. Bosch K40 RF, empfohlen mit Firmware 15.00.01 oder neuer.
     en: Requires the Buderus MX400 or Bosch K40 RF gateway, firmware 15.00.01 or newer recommended.
 capabilities: ["meter", "dim"]
+protocols: [eebus]
 params:
   - preset: eebus
   - name: reboost

@@ -16,6 +16,7 @@ requirements:
       SEMP (Smart Energy Management Protocol) kompatible Wallbox oder Verbraucher, die direkt über HTTP/XML API gesteuert werden kann.
       Konfiguriere die SEMP Basis-URL (`http://<charger-host>:8000/semp`) und die Geräte-ID der Wallbox.
       WICHTIG: Die Wallbox darf NICHT gleichzeitig im Sunny Home Manager bzw. im Sunny Portal direkt als Verbraucher registriert sein!
+protocols: [http]
 params:
   - name: uri
     description:

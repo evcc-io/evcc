@@ -3,6 +3,7 @@ products:
   - description:
       generic: vzlogger
 group: generic
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

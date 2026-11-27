@@ -24,6 +24,7 @@ requirements:
 discovery:
   mdns: ["_http._tcp:pblr-*", "_pblr._tcp"]
   hostname: ["pblr-*"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

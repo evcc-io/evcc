@@ -13,6 +13,7 @@ requirements:
       Grid metering uses the ecoMain main circuit; PV, charging, and auxiliary metering can use branch channels on the ecoMain or an ecoSub.
 
       Requires ecoMain firmware 139 or later.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge", "aux"]

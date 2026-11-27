@@ -12,6 +12,7 @@ requirements:
       Active battery control uses the dispatch registers (0x0880–0x088A). These are not stored in flash memory. No configuration in the app is required; grid charging time periods, discharge reserve and charge cut SoC are left untouched. Every dispatch command expires after 120 s unless evcc renews it. The inverter then returns to normal operation.
 discovery:
   mac: ["BC97400", "70B3D57A2"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

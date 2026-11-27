@@ -6,6 +6,7 @@ products:
   - brand: ORNO
     description:
       generic: OR-WE-526
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "charge"]

@@ -9,6 +9,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["DE"]
+protocols: [http]
+cloud: true
 params:
   - name: clientid
     example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4

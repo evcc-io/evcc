@@ -12,6 +12,7 @@ discovery:
   mdns: ["_shelly._tcp", "_http._tcp:shelly*"]
   hostname: ["shelly*"]
   mac: ["8400EC"]
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

@@ -3,6 +3,7 @@ products:
   - brand: Deye
     description:
       generic: Micro inverter (Solarman)
+protocols: [other]
 params:
   - name: usage
     choice: ["pv"]

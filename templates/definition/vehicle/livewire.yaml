@@ -17,6 +17,8 @@ requirements:
       You need to be at the motorcycle with the ignition on once.
 
       The motorcycle only reports "plugged in" once the charger is powered. Automatic vehicle detection is therefore disabled by default.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

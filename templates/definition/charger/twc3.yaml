@@ -11,6 +11,7 @@ requirements:
 discovery:
   hostname: ["teslawallconnector_*"]
   mac: ["DC44271", "98ED5C", "4CFCAA"]
+protocols: [http]
 params:
   - name: host
 render: |

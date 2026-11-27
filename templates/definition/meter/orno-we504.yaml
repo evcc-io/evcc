@@ -3,6 +3,7 @@ products:
   - brand: ORNO
     description:
       generic: OR-WE-504
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv", "charge"]

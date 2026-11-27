@@ -6,6 +6,8 @@ products:
   - brand: Nissan
     description:
       generic: Micra
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online

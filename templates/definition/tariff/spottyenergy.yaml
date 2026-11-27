@@ -6,6 +6,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["AT"]
+protocols: [http]
+cloud: true
 params:
   - name: contractid
     example: ffffffff-4444-6666-2222-aaaaaabbbbbb

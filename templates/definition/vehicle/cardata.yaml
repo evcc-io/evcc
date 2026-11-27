@@ -64,6 +64,8 @@ requirements:
       In case the vehicle detection does not work reliably, `welcomecharge` (charge on connection) should be enabled.
 
       BMW allows only one streaming connection per account. If another tool already uses it, the streaming data can optionally be read from a local MQTT broker. The tool must publish the unmodified CarData messages, e.g. [bmw-mqtt-bridge](https://github.com/dj0abr/bmw-mqtt-bridge) with its default settings. Only this tool should be allowed to publish to the topic, e.g. using broker ACLs. Login with `clientid` is still required for REST requests.
+protocols: [mqtt, http]
+cloud: true
 params:
   - preset: vehicle-common
   - name: vin

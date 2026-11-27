@@ -13,6 +13,7 @@ capabilities: ["meter"]
 group: switchsockets
 discovery:
   mac: ["74DA38"]
+protocols: [http]
 params:
   - name: host
   - name: user

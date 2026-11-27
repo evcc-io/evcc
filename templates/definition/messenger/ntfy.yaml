@@ -1,6 +1,8 @@
 template: ntfy
 products:
   - brand: Ntfy
+protocols: [http]
+cloud: true
 params:
   - name: host
     example: ntfy.sh

@@ -3,6 +3,7 @@ products:
   - brand: ADA
     description:
       generic: P1 Meter
+protocols: [http]
 params:
   - name: host
     default: okosvillanyora.local:8989

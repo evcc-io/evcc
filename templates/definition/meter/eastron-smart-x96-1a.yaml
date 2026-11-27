@@ -3,6 +3,7 @@ products:
   - brand: Eastron
     description:
       generic: SMART X96-1A
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

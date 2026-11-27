@@ -14,6 +14,7 @@ requirements:
   description:
     de: Modbus TCP muss in der Konfigurations-App mit Installateursrechten aktiviert werden. Diese Option ist in der mySigen App für Kunden nicht verfügbar.
     en: Modbus TCP must be enabled in the configuration app with installer rights. This option is not available in the mySigen app for customers.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

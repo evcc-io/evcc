@@ -12,6 +12,7 @@ requirements:
     en: |
       Enable access under Settings -> Modbus TCP on the system device and configure network/netmask accordingly.
       The power setpoint (SollwertPV) overrides the SG Ready function. Mind the response time of the heating system.
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

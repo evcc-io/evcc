@@ -4,6 +4,8 @@ products:
     description:
       generic: E-Scooter
 group: scooter
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

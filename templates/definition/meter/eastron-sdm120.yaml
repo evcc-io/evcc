@@ -3,6 +3,7 @@ products:
   - brand: Eastron
     description:
       generic: SDM120-Modbus
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "charge", "pv"]

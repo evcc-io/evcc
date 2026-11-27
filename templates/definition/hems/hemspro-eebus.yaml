@@ -3,6 +3,7 @@ products:
   - brand: Awatt Electronic
     description:
       generic: HEMS PRO (EEBus)
+protocols: [eebus]
 params:
   - preset: eebus
   - name: ski

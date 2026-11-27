@@ -9,6 +9,8 @@ requirements:
   evcc: ["skiptest"]
 group: co2
 countries: ["NL"]
+protocols: [http]
+cloud: true
 params:
   - name: apiKey
     type: string

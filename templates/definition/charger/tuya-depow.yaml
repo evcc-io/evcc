@@ -21,6 +21,7 @@ requirements:
       Local connection via the Tuya protocol. Supports devices with Tuya product id `gxrtu5vljdthtd3g` or `witok7vhhjohtr02` (app: "dé EV Charger").
       Device ID and local key must be retrieved once, e.g. using `tinytuya wizard`, which requires an account on the Tuya IoT platform. No cloud access is needed during operation. The device accepts only one local connection at a time, other local integrations (e.g. LocalTuya, Tuya Local) must be disabled.
       Charging is started and paused using the start/stop command of the charger. Schedules in the app must be disabled, since they block charging outside their time window.
+protocols: [other]
 params:
   - name: host
   - name: id

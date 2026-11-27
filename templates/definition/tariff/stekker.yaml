@@ -8,6 +8,8 @@ requirements:
   evcc: ["skiptest"]
 group: price
 countries: ["EU"]
+protocols: [http]
+cloud: true
 params:
   - name: region
     example: BE

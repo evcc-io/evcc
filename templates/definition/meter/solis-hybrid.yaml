@@ -3,6 +3,7 @@ products:
   - brand: Ginlong
     description:
       generic: Solis Hybrid Inverter (RHI series)
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

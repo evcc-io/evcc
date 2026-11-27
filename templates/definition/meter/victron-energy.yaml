@@ -11,6 +11,7 @@ capabilities: ["battery-control"]
 discovery:
   hostname: ["venus"]
   mac: ["C0619AB"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

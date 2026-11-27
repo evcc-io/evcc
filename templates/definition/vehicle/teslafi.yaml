@@ -7,6 +7,8 @@ requirements:
   description:
     en: Connect your Tesla using the TeslaFi API. TeslaFi is a Tesla data logging service that provides HTTP API access to vehicle data. Get your API key from your TeslaFi account settings.
     de: Verbinden Sie Ihr Tesla-Fahrzeug über die TeslaFi-API. TeslaFi ist ein Tesla-Datenlogger-Service, der HTTP-API-Zugriff auf Fahrzeugdaten bietet. Holen Sie sich Ihren API-Schlüssel aus den TeslaFi-Kontoeinstellungen.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-common
   - preset: vehicle-online

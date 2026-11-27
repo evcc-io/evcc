@@ -23,6 +23,7 @@ requirements:
       evcc only writes to the X1 when a battery function is enabled (grid charging, discharge lock, automatic optimizer control or an external battery mode). Otherwise the X1 keeps the mode set in the Anker app.
       The X1 does not return to self-consumption on its own: if evcc stops unexpectedly while grid charging, the X1 keeps charging until evcc sets a mode again.
       Holding is not supported and falls back to normal operation: the X1 offers no way to block discharging while still storing PV surplus.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

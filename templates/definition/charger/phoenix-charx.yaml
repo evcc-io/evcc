@@ -19,6 +19,7 @@ products:
     description:
       generic: Wall
 capabilities: ["dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

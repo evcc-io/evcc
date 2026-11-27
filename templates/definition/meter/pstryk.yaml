@@ -4,6 +4,7 @@ products:
     description:
       generic: 3-phase meter via local HTTP
 
+protocols: [http]
 params:
   - name: usage
     choice: ["grid"]

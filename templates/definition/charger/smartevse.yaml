@@ -4,6 +4,7 @@ products:
     description:
       generic: Smart EVSE
 capabilities: ["1p3p", "meter", "dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485"]

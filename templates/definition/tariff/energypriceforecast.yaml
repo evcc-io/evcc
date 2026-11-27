@@ -33,6 +33,8 @@ countries:
     "BG",
     "GB",
   ]
+protocols: [http]
+cloud: true
 params:
   - name: region
     example: DE

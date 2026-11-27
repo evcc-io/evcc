@@ -10,6 +10,7 @@ products:
       generic: Charge Pro
 requirements:
   evcc: ["sponsorship"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["tcpip"]

@@ -21,6 +21,7 @@ products:
 capabilities: ["mA", "rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
+protocols: [ocpp]
 params:
   - preset: ocpp
   - name: metervalues

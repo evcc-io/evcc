@@ -9,6 +9,7 @@ products:
   - brand: amsleser.no
     description:
       generic: Pow-P1
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

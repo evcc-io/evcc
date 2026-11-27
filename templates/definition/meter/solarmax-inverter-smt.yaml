@@ -3,6 +3,7 @@ products:
   - brand: SolarMax
     description:
       generic: SolarMax SMT
+protocols: [modbus]
 params:
   - name: usage
     choice: ["pv"]

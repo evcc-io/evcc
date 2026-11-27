@@ -9,6 +9,7 @@ import (
 func TestLinkPushdown(t *testing.T) {
 	tmpl, err := fromBytes([]byte(`
 template: link-demo
+protocols: []
 link: https://example.com/generic
 products:
   - brand: Plain
@@ -29,6 +30,7 @@ render: |
 func TestLinkInvalid(t *testing.T) {
 	_, err := fromBytes([]byte(`
 template: link-invalid
+protocols: []
 link: example.com
 products:
   - brand: Plain

@@ -12,6 +12,7 @@ requirements:
       Discovery relies on UDP broadcast, which most routers do not forward across VLANs.
 products:
   - brand: EVSE Master
+protocols: [other]
 params:
   - name: serial
     required: true

@@ -6,6 +6,7 @@ products:
   - brand: Eltako
     description:
       generic: DSZ16
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

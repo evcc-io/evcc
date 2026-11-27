@@ -20,6 +20,7 @@ requirements:
     en: |
       Uses [pypowerwall-server](https://github.com/jasonacox/pypowerwall-server) as backend. Reads come from its proxy API, battery control uses its authenticated `/control/*` routes. For battery control, `PW_CONTROL_SECRET` must be set on the server; `reserve_hold` requires pypowerwall-server v0.10.0 or later.
       Since pypowerwall-server v0.14.0 the server can optionally serve HTTPS on port 8775. Without a TLS reverse proxy or the HTTPS listener it stays plain HTTP; with `controlSecret`, prefer HTTPS or a trusted network.
+protocols: [http]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

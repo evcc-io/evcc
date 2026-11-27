@@ -8,6 +8,7 @@ requirements:
   evcc: ["sponsorship"]
 discovery:
   mac: ["00157E"]
+protocols: [modbus]
 params:
   - name: host
 render: |

@@ -6,6 +6,7 @@ products:
       generic: KeContact E10
 discovery:
   mac: ["0060B5", "00141D"]
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid"]

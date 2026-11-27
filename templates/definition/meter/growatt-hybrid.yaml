@@ -16,6 +16,7 @@ requirements:
       The modbus registers `1100, 1101, 1102` need to be set to the values `0, 5947, 0` at the same time (via "write multiple", FC 16).
       This can be done by e.g. using the [Modbus CLI](https://github.com/favalex/modbus-cli): `modbus [...] H@1100=0 H@1101=5947 H@1102=0`.
       The active battery control uses the first "Battery first" timeslot, so it cannot be used otherwise.
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

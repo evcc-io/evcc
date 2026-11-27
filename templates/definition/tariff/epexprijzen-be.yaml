@@ -9,6 +9,8 @@ requirements:
     de: Aktuelle Energiepreise in Belgien. Preise enthalten standardmäßig Energiesteuer und Anbietergebühr. Wenn 'tax' oder 'charges' konfiguriert sind, werden die enthaltenen Beträge automatisch abgezogen, um Doppelzählungen zu vermeiden.
 group: price
 countries: ["BE"]
+protocols: [http]
+cloud: true
 params:
   - name: provider
     description:

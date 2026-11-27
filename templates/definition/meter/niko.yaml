@@ -15,6 +15,7 @@ requirements:
 group: switchsockets
 discovery:
   hostname: ["niko*"]
+protocols: [mqtt]
 params:
   - name: usage
     choice: ["pv", "charge"]

@@ -10,6 +10,7 @@ requirements:
     de: Getestet mit CHINT ECH10K-TH-EU und CPS ECD500 Batteriesystem über die EMS-RS485-Schnittstelle.
     en: Tested with CHINT ECH10K-TH-EU and CPS ECD500 battery system via the EMS RS485 interface.
 
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

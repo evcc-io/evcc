@@ -8,6 +8,7 @@ products:
   - description:
       generic: EVSE DIN
 capabilities: ["dim"]
+protocols: [modbus]
 params:
   - name: modbus
     choice: ["rs485"]

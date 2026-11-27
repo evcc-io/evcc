@@ -3,6 +3,7 @@ products:
   - brand: inepro
     description:
       generic: PRO380-MOD
+protocols: [modbus]
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

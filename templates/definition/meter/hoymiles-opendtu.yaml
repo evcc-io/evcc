@@ -5,6 +5,7 @@ products:
       generic: HM & HMS Series (via OpenDTU)
 discovery:
   hostname: ["opendtu*"]
+protocols: [http]
 params:
   - name: usage
     choice: ["pv"]

@@ -4,6 +4,7 @@ products:
     description:
       generic: H-Series Smart Plug
 group: switchsockets
+protocols: [other]
 params:
   - name: usage
     choice: ["pv", "charge"]

@@ -98,6 +98,7 @@ requirements:
   evcc: ["sponsorship"]
 discovery:
   mac: ["E0AEB2", "7C70BC8"]
+protocols: [modbus, http]
 params:
   - name: modbus
     choice: ["tcpip"]

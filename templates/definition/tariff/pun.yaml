@@ -9,6 +9,8 @@ requirements:
     en: "Price data from [mercatoelettrico.org](https://www.mercatoelettrico.org/it/). Often used for feeding into the grid."
 group: price
 countries: ["IT"]
+protocols: [http]
+cloud: true
 params:
   - preset: tariff-base
   - name: zone

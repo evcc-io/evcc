@@ -17,6 +17,8 @@ requirements:
       Hinweis: Seit Kia/Hyundai im August 2026 den alten Login-Flow gesperrt haben, können externe Tools keinen *neuen* `refresh_token` mehr erzeugen — nur ein bereits vorher erzeugter funktioniert noch. Falls du noch keinen hast, nutze stattdessen das Passwort deines Kontos (nur Region Europa — Australien/Neuseeland benötigen weiterhin einen `refresh_token`).
 
       Manche Modelle (z.B. Kona) schalten bei geringen Ladeströmen (< 8A) intern auf 2 Phasen um. In den Fällen, in denen die Wallbox auch die Phasenströme misst, führt das zu unerwünschten Schwankungen der Ladeleistung. Abhilfe schafft hier, den Mindestladestrom auf 8A zu setzen.
+protocols: [http]
+cloud: true
 params:
   - preset: vehicle-base
   - preset: vehicle-online
