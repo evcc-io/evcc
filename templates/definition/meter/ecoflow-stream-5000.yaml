@@ -1,0 +1,78 @@
+template: ecoflow-stream-5000
+products:
+  - brand: EcoFlow
+    description:
+      generic: Stream 5000
+  - brand: EcoFlow
+    description:
+      generic: Stream 5000 AC
+requirements:
+  description:
+    de: |
+      Für die Nutzung des EcoFlow Stream 5000 Meters benötigen Sie:
+      - Einen gültigen Access Key von der EcoFlow Developer Console
+      - Den entsprechenden Secret Key
+      - Die Seriennummer des Hauptgerätes Ihres Stream 5000 Systems
+
+      Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
+    en: |
+      To use the EcoFlow Stream 5000 meter you need:
+      - A valid Access Key from the EcoFlow Developer Console
+      - The corresponding Secret Key
+      - The main device serial number of your Stream 5000 system
+
+      These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: accesskey
+    required: true
+    description:
+      generic: Access Key
+    help:
+      en: Access Key from EcoFlow Developer Console
+      de: Access Key aus der EcoFlow Developer Console
+  - name: secretkey
+    required: true
+    mask: true
+    description:
+      generic: Secret Key
+    help:
+      en: Secret Key from EcoFlow Developer Console
+      de: Secret Key aus der EcoFlow Developer Console
+  - name: serial
+    required: true
+    help:
+      en: Serial number of the main device in your Stream 5000 system.
+      de: Seriennummer des Hauptgeräts Ihres Stream 5000 Systems.
+  - name: region
+    choice: ["auto", "europe", "america"]
+    default: auto
+    advanced: true
+    description:
+      generic: "API Region"
+    help:
+      en: "Sets the API region manually when automatic detection fails, shown as error code 8513 in the log. Possible values: auto (default), europe or america."
+      de: "Setzt die API Region manuell, wenn die automatische Erkennung fehlschlägt, im Log als error code 8513 sichtbar. Mögliche Werte: auto (Standard), europe oder america."
+  - name: cache
+    default: 30s
+  - preset: battery-params
+render: |
+  type: ecoflow
+  accesskey: {{ .accesskey }}
+  secretkey: {{ .secretkey }}
+  serial: {{ .serial }}
+  usage: {{ .usage }}
+  cache: {{ .cache }}
+  region: {{ .region }}
+  {{- if eq .usage "grid" }}
+  power: sysEnergyStreamReport-gridPwr
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power: sysEnergyStreamReport-pvPwr
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power: sysEnergyStreamReport-bpPwr
+  soc: sysEnergyStreamReport-bpSoc
+  {{- include "battery-params" . }}
+  {{- end }}
