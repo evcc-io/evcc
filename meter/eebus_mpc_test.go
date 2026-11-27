@@ -6,6 +6,8 @@ package meter
 import (
 	"testing"
 
+	eebusapi "github.com/enbility/eebus-go/api"
+	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	mpcmocks "github.com/enbility/eebus-go/usecases/mocks"
 	spineapi "github.com/enbility/spine-go/api"
 	spinemocks "github.com/enbility/spine-go/mocks"
@@ -163,4 +165,36 @@ func TestMPCNonCoverage(t *testing.T) {
 			t.Skip("not applicable: evcc meter does not expose this MPC data point")
 		})
 	}
+}
+
+// a device may remove and re-add its entities while connected (#36631): the removal
+// drops the cached entity, so the re-added instance replaces the stale one.
+func TestMPCEntityReAdded(t *testing.T) {
+	c, uc, stale := newMPCMeter(t)
+	c.ma = &eebus.MonitoringAppliance{MaMPCInterface: uc}
+	c.connector = eebus.NewConnector()
+
+	fresh := spinemocks.NewEntityRemoteInterface(t)
+	sibling := spinemocks.NewEntityRemoteInterface(t)
+
+	listed := func(entities ...spineapi.EntityRemoteInterface) {
+		var res []eebusapi.RemoteEntityScenarios
+		for _, e := range entities {
+			res = append(res, eebusapi.RemoteEntityScenarios{Entity: e})
+		}
+		uc.EXPECT().RemoteEntitiesScenarios().Return(res).Once()
+	}
+
+	// removal of another entity keeps the cached one
+	listed(stale)
+	c.UseCaseEvent(nil, sibling, mpc.UseCaseSupportUpdate)
+	assert.Same(t, stale, c.maEntity)
+
+	listed()
+	c.UseCaseEvent(nil, stale, mpc.UseCaseSupportUpdate)
+	assert.Nil(t, c.maEntity)
+
+	listed(fresh)
+	c.UseCaseEvent(nil, fresh, mpc.UseCaseSupportUpdate)
+	assert.Same(t, fresh, c.maEntity)
 }

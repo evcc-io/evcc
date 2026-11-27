@@ -80,6 +80,7 @@ func TestOHPCF_LPC_InitialLimit(t *testing.T) {
 		}).
 		Return(new(model.MsgCounterType), nil)
 
+	lpc.EXPECT().RemoteEntitiesScenarios().Return([]eebusapi.RemoteEntityScenarios{{Entity: entity}})
 	c.UseCaseEvent(nil, entity, eglpc.UseCaseSupportUpdate)
 
 	select {

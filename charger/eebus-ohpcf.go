@@ -190,8 +190,13 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 			}
 		}
 
-	case ohpcf.UseCaseSupportUpdate,
-		ohpcf.DataUpdateRequestedPowerEstimate,
+	case ohpcf.UseCaseSupportUpdate:
+		if eebus.EntityRemoved(c.cem.OHPCF, &c.mu, &c.compressor, entity) {
+			return
+		}
+		fallthrough
+
+	case ohpcf.DataUpdateRequestedPowerEstimate,
 		ohpcf.DataUpdateRequestedPowerMax,
 		ohpcf.DataUpdateConsumptionIsStoppable,
 		ohpcf.DataUpdateConsumptionIsPausable,
@@ -202,6 +207,10 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
+		if eebus.EntityRemoved(c.ma.MaMPCInterface, &c.mu, &c.mpcEntity, entity) {
+			return
+		}
+
 		c.mu.Lock()
 		// use most specific selector
 		if c.mpcEntity == nil || len(entity.Address().Entity) < len(c.mpcEntity.Address().Entity) {
@@ -210,13 +219,23 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		c.mu.Unlock()
 
 	// Monitoring Appliance MDT provides the DHW temperature
-	case mdt.UseCaseSupportUpdate, mdt.DataUpdateTemperature:
+	case mdt.UseCaseSupportUpdate:
+		if eebus.EntityRemoved(c.ma.MaMDTInterface, &c.mu, &c.dhwEntity, entity) {
+			return
+		}
+		fallthrough
+
+	case mdt.DataUpdateTemperature:
 		c.mu.Lock()
 		c.dhwEntity = entity
 		c.mu.Unlock()
 
 	// Energy Guard LPC carries the §14a/LPC consumption limit
 	case lpc.UseCaseSupportUpdate:
+		if eebus.EntityRemoved(c.eg.EgLPCInterface, &c.mu, &c.egLpcEntity, entity) {
+			return
+		}
+
 		c.mu.Lock()
 		// use most specific selector
 		if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {

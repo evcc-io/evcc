@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	eglpp "github.com/enbility/eebus-go/usecases/eg/lpp"
@@ -286,6 +287,7 @@ func TestLPC_LPP_InitialLimit(t *testing.T) {
 			Run(captureWrite(written)).
 			Return(new(model.MsgCounterType), nil)
 
+		lpc.EXPECT().RemoteEntitiesScenarios().Return([]eebusapi.RemoteEntityScenarios{{Entity: entity}})
 		c.UseCaseEvent(nil, entity, eglpc.UseCaseSupportUpdate)
 
 		assert.Equal(t, ucapi.LoadLimit{Value: 0, IsActive: false}, awaitLimit(t, written))
@@ -303,6 +305,7 @@ func TestLPC_LPP_InitialLimit(t *testing.T) {
 			Run(captureWrite(written)).
 			Return(new(model.MsgCounterType), nil)
 
+		lpp.EXPECT().RemoteEntitiesScenarios().Return([]eebusapi.RemoteEntityScenarios{{Entity: entity}})
 		c.UseCaseEvent(nil, entity, eglpp.UseCaseSupportUpdate)
 
 		assert.Equal(t, ucapi.LoadLimit{Value: 0, IsActive: false}, awaitLimit(t, written))
@@ -322,4 +325,17 @@ func TestLPC_LPP_NonCoverage(t *testing.T) {
 			t.Skip("not applicable: covered by eebus-go or the evcc HEMS/charger, not the grid meter")
 		})
 	}
+}
+
+// a removed limit entity must not be written to any more
+func TestLimitEntityRemoved(t *testing.T) {
+	c, lpc, lpp, entity := newEGMeter(t)
+
+	lpc.EXPECT().RemoteEntitiesScenarios().Return(nil)
+	c.UseCaseEvent(nil, entity, eglpc.UseCaseSupportUpdate)
+	assert.Nil(t, c.egLpcEntity)
+
+	lpp.EXPECT().RemoteEntitiesScenarios().Return(nil)
+	c.UseCaseEvent(nil, entity, eglpp.UseCaseSupportUpdate)
+	assert.Nil(t, c.egLppEntity)
 }
