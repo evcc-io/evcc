@@ -68,7 +68,15 @@ func loginAction(body string) (string, error) {
 	if len(matches) < 2 {
 		return "", errors.New("could not find login action")
 	}
-	return html.UnescapeString(strings.ReplaceAll(matches[1], `\/`, "/")), nil
+
+	action := html.UnescapeString(strings.ReplaceAll(matches[1], `\/`, "/"))
+
+	// credentials must only go to Polestar
+	if u, err := url.Parse(action); err != nil || u.Scheme != "https" || !strings.HasSuffix(u.Hostname(), ".polestar.com") {
+		return "", errors.New("unexpected login action")
+	}
+
+	return action, nil
 }
 
 // loginError explains why the login page did not redirect back with a code

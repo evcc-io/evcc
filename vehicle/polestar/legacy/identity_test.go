@@ -14,6 +14,9 @@ func TestLoginAction(t *testing.T) {
 
 	_, err = loginAction(`url: "/as/resume"`)
 	assert.Error(t, err)
+
+	_, err = loginAction(`"loginAction": "https://auth.polestar.com.example.org/authenticate"`)
+	assert.Error(t, err)
 }
 
 func TestLoginError(t *testing.T) {
