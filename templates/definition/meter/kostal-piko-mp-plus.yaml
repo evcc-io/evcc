@@ -12,19 +12,21 @@ params:
   - name: usage
     choice: ["grid", "pv"]
   - name: host
+  - name: cache
+    default: 1s
 render: |
   type: custom
   power:
   {{- if eq .usage "pv" }}
     source: http
     uri: http://{{ .host }}/measurements.xml
-    cache: 1s
+    cache: {{ .cache }}
     jq: .root.Device.Measurements.Measurement[] | select(.attrType == "AC_Power") | if has ("attrValue") then .attrValue else "0" end | tonumber
   {{- end }}
   {{- if eq .usage "grid" }}
     source: http
     uri: http://{{ .host }}/measurements.xml
-    cache: 1s
+    cache: {{ .cache }}
     jq: .root.Device.Measurements.Measurement[] | select(.attrType == "GridPower") | if has ("attrValue") then .attrValue else "0" end | tonumber
     scale: -1
   {{- end }}
