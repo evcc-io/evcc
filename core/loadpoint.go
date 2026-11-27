@@ -1906,7 +1906,7 @@ func (lp *Loadpoint) customThresholds() bool {
 // must not cover the non-solar part of the min power, so all of it must be surplus.
 func (lp *Loadpoint) effectiveSolarShare(batteryPower float64) float64 {
 	// the optimizer plans grid use itself, the solar share setting is disabled then
-	if lp.activeSuggestion() != nil {
+	if suggestion := lp.activeSuggestion(); suggestion != nil && !lp.partialSurplusRegime(suggestion) {
 		return 1
 	}
 	share := lp.GetSolarShare()
