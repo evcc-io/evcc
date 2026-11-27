@@ -45,6 +45,7 @@ import (
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/tempsensor"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
@@ -367,55 +368,18 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 }
 
 func configureMeters(static []config.Named, names ...string) error {
-	var eg errgroup.Group
-
-	for i, cc := range static {
-		if cc.Name == "" {
-			return fmt.Errorf("cannot create meter %d: missing name", i+1)
-		}
-
-		// configure all, if no name refs are given
-		if len(names) > 0 && !slices.Contains(names, cc.Name) {
-			continue
-		}
-
-		if err := nameValid(cc.Name); err != nil {
-			log.WARN.Printf("create meter %d: %v", i+1, err)
-		}
-
-		eg.Go(func() error {
-			return staticInstance("meter", cc, meter.NewFromConfig, config.Meters())
-		})
-	}
-
-	// append devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Meter)
-	if err != nil {
-		return err
-	}
-
-	for _, conf := range configurable {
-		eg.Go(func() error {
-			cc := conf.Named()
-
-			// always skip unreferenced db devices
-			if !slices.Contains(names, cc.Name) {
-				return nil
-			}
-
-			return configurableInstance("meter", &conf, meter.NewFromConfig, config.Meters())
-		})
-	}
-
-	return eg.Wait()
+	return configureClass(templates.Meter, meter.NewFromConfig, config.Meters(), static, names...)
 }
 
-func configureCurtailers(static []config.Named, names ...string) error {
+// configureClass creates the static devices and the referenced database devices of a class
+func configureClass[T any](class templates.Class, newFromConf newFromConfFunc[T], h config.Handler[T], static []config.Named, names ...string) error {
+	typ := class.String()
+
 	var eg errgroup.Group
 
 	for i, cc := range static {
 		if cc.Name == "" {
-			return fmt.Errorf("cannot create curtailer %d: missing name", i+1)
+			return fmt.Errorf("cannot create %s %d: missing name", typ, i+1)
 		}
 
 		// configure all, if no name refs are given
@@ -424,30 +388,28 @@ func configureCurtailers(static []config.Named, names ...string) error {
 		}
 
 		if err := nameValid(cc.Name); err != nil {
-			log.WARN.Printf("create curtailer %d: %v", i+1, err)
+			log.WARN.Printf("create %s %d: %v", typ, i+1, err)
 		}
 
 		eg.Go(func() error {
-			return staticInstance("curtailer", cc, curtailer.NewFromConfig, config.Curtailers())
+			return staticInstance(typ, cc, newFromConf, h)
 		})
 	}
 
 	// append devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Curtailer)
+	configurable, err := config.ConfigurationsByClass(class)
 	if err != nil {
 		return err
 	}
 
 	for _, conf := range configurable {
 		eg.Go(func() error {
-			cc := conf.Named()
-
 			// always skip unreferenced db devices
-			if !slices.Contains(names, cc.Name) {
+			if !slices.Contains(names, conf.Named().Name) {
 				return nil
 			}
 
-			return configurableInstance("curtailer", &conf, curtailer.NewFromConfig, config.Curtailers())
+			return configurableInstance(typ, &conf, newFromConf, h)
 		})
 	}
 
@@ -1380,8 +1342,12 @@ func configureDevices(conf globalconfig.All) error {
 		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
 
-	if err := configureCurtailers(conf.Curtailers, references.curtailer...); err != nil {
+	if err := configureClass(templates.Curtailer, curtailer.NewFromConfig, config.Curtailers(), conf.Curtailers, references.curtailer...); err != nil {
 		errs = append(errs, &ClassError{ClassCurtailer, err})
+	}
+
+	if err := configureClass(templates.TempSensor, tempsensor.NewFromConfig, config.TempSensors(), conf.TempSensors, references.tempsensor...); err != nil {
+		errs = append(errs, &ClassError{ClassTempSensor, err})
 	}
 
 	return joinErrors(errs...)

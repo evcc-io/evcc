@@ -80,7 +80,7 @@
 			<FormRow
 				v-if="charger || !isNew"
 				id="loadpointParamMeter"
-				class="mb-6"
+				:class="{ 'mb-6': !chargerIsHeating }"
 				:label="$t('config.loadpoint.energyMeterLabel')"
 				:help="values.meter ? $t('config.loadpoint.energyMeterHelp') : undefined"
 				optional
@@ -101,6 +101,32 @@
 				>
 					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
 					{{ $t("config.loadpoint.addMeter") }}
+				</button>
+			</FormRow>
+			<FormRow
+				v-if="chargerIsHeating"
+				id="loadpointParamTempSensor"
+				class="mb-6"
+				:label="$t('config.loadpoint.tempSensorLabel')"
+				:help="values.tempSensor ? $t('config.loadpoint.tempSensorHelp') : undefined"
+				optional
+			>
+				<DeviceRefBox
+					v-if="values.tempSensor"
+					compact
+					:title="tempSensorTitle"
+					:error="hasDeviceError('tempsensor', values.tempSensor)"
+					@edit="editTempSensor"
+				/>
+				<button
+					v-else
+					type="button"
+					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
+					tabindex="0"
+					@click="editTempSensor"
+				>
+					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
+					{{ $t("config.loadpoint.addTempSensor") }}
 				</button>
 			</FormRow>
 
@@ -608,6 +634,7 @@ import {
 	type LoadpointType,
 	type ConfigCharger,
 	type ConfigMeter,
+	type ConfigTempSensor,
 	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
@@ -644,6 +671,7 @@ const defaultValues = {
 	charger: "",
 	circuit: "",
 	meter: "",
+	tempSensor: "",
 } as ConfigLoadpoint;
 
 export default {
@@ -666,6 +694,7 @@ export default {
 		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
+		tempSensors: { type: Array as PropType<ConfigTempSensor[]>, default: () => [] },
 		circuits: { type: Array as PropType<ConfigCircuit[]>, default: () => [] },
 		hasDeviceError: {
 			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
@@ -849,6 +878,16 @@ export default {
 				meter?.config?.template ||
 				this.$t("config.general.customOption");
 			return title;
+		},
+		tempSensorTitle() {
+			const name = this.values.tempSensor;
+			if (!name) return "";
+			const tempSensor = this.tempSensors.find((t) => t.name === name);
+			return (
+				tempSensor?.deviceProduct ||
+				tempSensor?.config?.template ||
+				this.$t("config.general.customOption")
+			);
 		},
 		isDeletable() {
 			return !this.isNew;
@@ -1072,6 +1111,7 @@ export default {
 			if (!this.values.id && !this.autoCreate) {
 				await this.cleanupDevice("charger", this.values.charger, this.chargers);
 				await this.cleanupDevice("meter", this.values.meter, this.meters);
+				await this.cleanupDevice("tempsensor", this.values.tempSensor, this.tempSensors);
 				this.$emit("dismissed");
 				this.reset();
 				return;
@@ -1118,6 +1158,15 @@ export default {
 				this.values.meter = result.name;
 			} else if (result.action === "removed") {
 				this.values.meter = "";
+			}
+		},
+		async editTempSensor() {
+			const tempSensor = this.tempSensors.find((t) => t.name === this.values.tempSensor);
+			const result = await openModal("tempsensor", { id: tempSensor?.id });
+			if (result.action === "added" && result.name) {
+				this.values.tempSensor = result.name;
+			} else if (result.action === "removed") {
+				this.values.tempSensor = "";
 			}
 		},
 		updatePhases() {

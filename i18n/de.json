@@ -524,6 +524,7 @@
         "heating": "Heizgerät hinzufügen"
       },
       "addMeter": "Zähler hinzufügen",
+      "addTempSensor": "Temperatursensor hinzufügen",
       "advancedConfig": "Erweiterte Konfiguration",
       "cancel": "Abbrechen",
       "chargerError": {
@@ -620,6 +621,8 @@
       "solarTitle": "PV-Überschussverhalten",
       "temperatureRangeHelp": "Anzeigebereich für den Temperaturbalken. Beeinflusst die Regelung nicht.",
       "temperatureRangeTitle": "Temperaturbereich",
+      "tempSensorHelp": "Externer Sensor. Ersetzt die vom Gerät gemeldete Temperatur.",
+      "tempSensorLabel": "Dedizierter Temperatursensor",
       "thresholdDisableDelayHelp": "Stoppt, wenn für {delay} nicht genug Überschuss vorhanden ist.",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
@@ -1202,6 +1205,13 @@
     "telemetry": {
       "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
       "title": "Telemetrie"
+    },
+    "tempsensor": {
+      "generic": "Generische Integrationen",
+      "specific": "Spezifische Integrationen",
+      "template": "Hersteller",
+      "titleAdd": "Temperatursensor hinzufügen",
+      "titleEdit": "Temperatursensor bearbeiten"
     },
     "validation": {
       "failed": "fehlgeschlagen",

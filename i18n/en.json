@@ -524,6 +524,7 @@
         "heating": "Add heating device"
       },
       "addMeter": "Add meter",
+      "addTempSensor": "Add temperature sensor",
       "advancedConfig": "Advanced configuration",
       "cancel": "Cancel",
       "chargerError": {
@@ -620,6 +621,8 @@
       "solarTitle": "Solar surplus behaviour",
       "temperatureRangeHelp": "Display range for the temperature bar. Does not affect control.",
       "temperatureRangeTitle": "Temperature range",
+      "tempSensorHelp": "External sensor. Replaces the temperature reported by the device.",
+      "tempSensorLabel": "Dedicated temperature sensor",
       "thresholdDisableDelayHelp": "Stops when there is not enough surplus for {delay}.",
       "thresholdDisableDelayLabel": "Disable delay",
       "thresholdDisableHelpInvalid": "Please use a positive value.",
@@ -1202,6 +1205,13 @@
     "telemetry": {
       "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
       "title": "Telemetry"
+    },
+    "tempsensor": {
+      "generic": "Generic integrations",
+      "specific": "Specific integrations",
+      "template": "Manufacturer",
+      "titleAdd": "Add Temperature Sensor",
+      "titleEdit": "Edit Temperature Sensor"
     },
     "validation": {
       "failed": "failed",
