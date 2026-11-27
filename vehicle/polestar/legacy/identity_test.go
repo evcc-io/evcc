@@ -8,7 +8,7 @@ import (
 )
 
 func TestLoginAction(t *testing.T) {
-	action, err := loginAction(`"url": "\/realms/polestar", "loginAction": "https:\/\/auth.polestar.com\/authenticate?session_code=a&amp;tab_id=b",`)
+	action, err := loginAction(`"url": "\/realms/polestar", "loginAction": "https:\/\/auth.polestar.com\/authenticate?session_code=a&tab_id=b",`)
 	require.NoError(t, err)
 	assert.Equal(t, "https://auth.polestar.com/authenticate?session_code=a&tab_id=b", action)
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -64,12 +63,12 @@ var (
 
 // loginAction returns the form target of the Keycloak login page Polestar ID redirects to
 func loginAction(body string) (string, error) {
-	matches := loginActionRe.FindStringSubmatch(body)
-	if len(matches) < 2 {
+	m := loginActionRe.FindStringSubmatch(body)
+	if m == nil {
 		return "", errors.New("could not find login action")
 	}
 
-	action := html.UnescapeString(strings.ReplaceAll(matches[1], `\/`, "/"))
+	action := strings.ReplaceAll(m[1], `\/`, "/")
 
 	// credentials must only go to Polestar
 	if u, err := url.Parse(action); err != nil || u.Scheme != "https" || !strings.HasSuffix(u.Hostname(), ".polestar.com") {
@@ -84,7 +83,7 @@ func loginError(body string) error {
 	if strings.Contains(body, "Invalid username or password") {
 		return errors.New("invalid username or password")
 	}
-	if m := pageIdRe.FindStringSubmatch(body); len(m) == 2 && m[1] != "login" {
+	if m := pageIdRe.FindStringSubmatch(body); m != nil && m[1] != "login" {
 		return fmt.Errorf("additional login step required (%s): sign in once at polestar.com, then retry", m[1])
 	}
 	return errors.New("missing authorization code")
