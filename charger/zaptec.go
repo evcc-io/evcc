@@ -384,6 +384,12 @@ func (c *Zaptec) ConnectionDuration() (time.Duration, error) {
 		return 0, err
 	}
 
+	// forget the session on real disconnect, otherwise the first identifier of the next plug-in counts as a swap
+	if mode, err := res.ObservationByID(zaptec.ChargerOperationMode).Int(); err == nil && mode == zaptec.OpModeDisconnected {
+		c.session = ""
+		c.sessionStart = time.Time{}
+	}
+
 	var session string
 	if o := res.ObservationByID(zaptec.SessionIdentifier); o != nil {
 		session = o.ValueAsString

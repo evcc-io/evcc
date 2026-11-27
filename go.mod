@@ -25,7 +25,7 @@ require (
 	github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
-	github.com/eclipse/paho.mqtt.golang v1.5.2
+	github.com/eclipse/paho.golang v0.23.0
 	github.com/enbility/eebus-go v0.7.1-0.20260720111250-363db3c5c262
 	github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
@@ -99,7 +99,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20261012103919-af19f17edbe0
 	github.com/warthog618/go-gpiocdev v0.10.0
 	github.com/xuri/excelize/v2 v2.11.1
-	gitlab.com/bboehmke/sunny v0.17.2-0.20261124173633-357c33a88aea
+	gitlab.com/bboehmke/sunny v0.17.2-0.20261125173945-8e6cafb06be9
 	go.bug.st/serial v1.8.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0
@@ -140,7 +140,7 @@ require (
 	github.com/donovanhide/eventsource v0.0.0-20210830082556-c59027999da0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
-	github.com/eclipse/paho.golang v0.23.0 // indirect
+	github.com/eclipse/paho.mqtt.golang v1.5.2 // indirect
 	github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a // indirect
 	github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6 // indirect
 	github.com/fatih/color v1.18.0 // indirect

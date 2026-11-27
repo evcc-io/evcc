@@ -1202,6 +1202,7 @@ export interface Notification {
   message: string;
   time: Date;
   level: string;
+  area?: string;
   lp: number;
   count: number;
 }

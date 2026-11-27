@@ -178,8 +178,8 @@ export default defineComponent({
 			);
 		},
 		areaOptions() {
-			return this.availableAreas
-				.slice()
+			// selected areas stay selectable even when they have no log lines yet
+			return [...new Set([...this.availableAreas, ...this.areas])]
 				.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 				.map((area) => ({ name: this.areaName(area), value: area }));
 		},

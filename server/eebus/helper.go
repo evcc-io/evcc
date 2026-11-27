@@ -5,10 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	eebusapi "github.com/enbility/eebus-go/api"
+	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -60,6 +63,25 @@ func AssertLimit(ctx context.Context, log *util.Logger, write func() error) {
 	if err := backoff.Retry(write, backoff.WithContext(bo, ctx)); err != nil && ctx.Err() == nil {
 		log.DEBUG.Printf("assert limit: %v", err)
 	}
+}
+
+// EntityRemoved reports a use case support update that removes entity, and drops the cached
+// reference: it is stale once a connected device re-adds its entities (#36631).
+func EntityRemoved(uc eebusapi.UseCaseInterface, mu sync.Locker, cached *spineapi.EntityRemoteInterface, entity spineapi.EntityRemoteInterface) bool {
+	if slices.ContainsFunc(uc.RemoteEntitiesScenarios(), func(s eebusapi.RemoteEntityScenarios) bool {
+		return s.Entity == entity
+	}) {
+		return false
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if *cached == entity {
+		*cached = nil
+	}
+
+	return true
 }
 
 func LogEntities(log *log.Logger, actor string, uc eebusapi.UseCaseInterface) {
