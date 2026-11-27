@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -406,6 +407,50 @@ func (suite *connTestSuite) TestOnMeterValuesBoundaryContextFirst() {
 	res, err := suite.conn.TotalEnergy()
 	suite.NoError(err, "TotalEnergy")
 	suite.Equal(241.010, res, "live reading must not be shadowed by the boundary snapshot")
+}
+
+func (suite *connTestSuite) TestOnMeterValuesTransactionEndVoltages() {
+	voltageSamples := func(values [3]float64, context types.ReadingContext) []types.SampledValue {
+		var samples []types.SampledValue
+		for i, phase := range []types.Phase{types.PhaseL1N, types.PhaseL2N, types.PhaseL3N} {
+			samples = append(samples, types.SampledValue{
+				Value: strconv.FormatFloat(values[i], 'f', -1, 64), Context: context,
+				Measurand: types.MeasurandVoltage, Phase: phase, Unit: types.UnitOfMeasureV,
+			})
+		}
+		return samples
+	}
+
+	for _, tc := range []struct {
+		name     string
+		context  types.ReadingContext
+		voltages [3]float64
+	}{
+		{"three phases", types.ReadingContextSamplePeriodic, [3]float64{232.33, 233.21, 233.22}},
+		{"single phase", types.ReadingContextSamplePeriodic, [3]float64{232.33, 0, 0}},
+		{"start snapshot", types.ReadingContextTransactionBegin, [3]float64{232.33, 233.21, 233.22}},
+	} {
+		suite.Run(tc.name, func() {
+			suite.meterValues(voltageSamples(tc.voltages, tc.context)...)
+			suite.clock.Add(time.Second)
+
+			samples := voltageSamples([3]float64{242.26, 118.77, 203.32}, types.ReadingContextTransactionEnd)
+			samples = append(samples, energySample("123456", types.ReadingContextTransactionEnd))
+			suite.meterValues(samples...)
+
+			u1, u2, u3, err := suite.conn.Voltages()
+			suite.Require().NoError(err)
+			suite.Equal(tc.voltages, [3]float64{u1, u2, u3})
+			energy, err := suite.conn.TotalEnergy()
+			suite.Require().NoError(err)
+			suite.Equal(123.456, energy)
+
+			suite.meterValues(voltageSamples([3]float64{}, types.ReadingContextTrigger)...)
+			u1, u2, u3, err = suite.conn.Voltages()
+			suite.Require().NoError(err)
+			suite.Equal([3]float64{}, [3]float64{u1, u2, u3})
+		})
+	}
 }
 
 // Huawei SCharger reports a zero energy register outside transactions

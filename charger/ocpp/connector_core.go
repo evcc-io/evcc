@@ -168,10 +168,12 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 
 					key := getSampleKey(sample)
 					isTotal := key == types.MeasurandEnergyActiveImportRegister
+					// Contactor shutdown voltages in end snapshots can corrupt phase detection.
+					isEndVoltage := sample.Measurand == types.MeasurandVoltage && sample.Context == types.ReadingContextTransactionEnd
 
 					// a lifetime register is never zero, some chargers (Huawei) report 0 outside transactions.
 					// A total older than the meterStart baseline must not replace it.
-					if !isZeroEnergy(sample) && (!isTotal || !meterValue.Timestamp.Time.Before(conn.energyTimestamp)) {
+					if !isEndVoltage && !isZeroEnergy(sample) && (!isTotal || !meterValue.Timestamp.Time.Before(conn.energyTimestamp)) {
 						conn.measurements[key] = sample
 						if isTotal {
 							conn.energyTimestamp = meterValue.Timestamp.Time
