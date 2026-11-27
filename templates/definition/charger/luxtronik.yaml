@@ -120,7 +120,6 @@ render: |
               address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writesingle
               encoding: uint16
-        {{ if gt $heatint 0 -}}
         - source: const
           value: 0 # 0 = Heiz.Mode Aus
           set:
@@ -130,8 +129,6 @@ render: |
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
               type: writesingle
               encoding: uint16
-        {{- end }}
-        {{ if gt $waterint 0 -}}
         - source: const
           value: 0 # 0 = WW.Mode Aus
           set:
@@ -141,7 +138,6 @@ render: |
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
               type: writesingle
               encoding: uint16
-        {{- end }}
     - case: 2 # normal
       set:
         source: sequence
@@ -155,7 +151,6 @@ render: |
               address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writesingle
               encoding: uint16
-        {{ if gt $heatint 0 -}}
         - source: const
           value: 0 # 0 = Heiz.Mode Aus
           set:
@@ -165,8 +160,6 @@ render: |
               address: 10000 # Heiz.Mode [0=Aus;1=Setpoint;2=Offset]
               type: writesingle
               encoding: uint16
-        {{- end }}
-        {{ if gt $waterint 0 -}}
         - source: const
           value: 0 # 0 = WW.Mode Aus
           set:
@@ -176,7 +169,6 @@ render: |
               address: 10005 # WW Mode [0=Aus;1=Setpoint;2=Offset]
               type: writesingle
               encoding: uint16
-        {{- end }}
     - case: 3 # boost
       set:
         source: sequence
