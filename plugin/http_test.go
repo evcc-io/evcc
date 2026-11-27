@@ -228,7 +228,8 @@ func TestRepeatedGet(t *testing.T) {
 	require.False(t, repeatedGet(spaced, t0))
 	require.False(t, repeatedGet(spaced, t0.Add(2*time.Second))) // >1s apart: no warn
 
-	// query params are part of the key, so cache-busting urls are distinct requests
-	require.False(t, repeatedGet("http://q.test/path?ts=1", t0))
-	require.False(t, repeatedGet("http://q.test/path?ts=2", t0.Add(300*time.Millisecond)))
+	// urls with query params are exempt, even when repeated
+	query := "http://q.test/api/dxs.json?dxsEntries=33556229"
+	require.False(t, repeatedGet(query, t0))
+	require.False(t, repeatedGet(query, t0.Add(300*time.Millisecond)))
 }
