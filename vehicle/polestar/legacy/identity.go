@@ -21,8 +21,8 @@ import (
 
 const (
 	OAuthURI    = "https://polestarid.eu.polestar.com"
-	ClientID    = "l3oopkc_10"
-	RedirectURI = "https://www.polestar.com/sign-in-callback"
+	ClientID    = "lp8dyrd_10" // Polestar app
+	RedirectURI = "polestar-explore://explore.polestar.com"
 )
 
 var OAuth2Config = &oauth2.Config{
@@ -33,7 +33,7 @@ var OAuth2Config = &oauth2.Config{
 		TokenURL:  OAuthURI + "/as/token.oauth2",
 		AuthStyle: oauth2.AuthStyleInParams,
 	},
-	Scopes: []string{"openid", "profile", "email"},
+	Scopes: []string{"openid", "profile", "email", "customer:attributes", "customer:attributes:write"},
 }
 
 type Identity struct {
@@ -85,6 +85,14 @@ func loginError(body string) error {
 func (v *Identity) login() (*oauth2.Token, error) {
 	v.Client.Jar, _ = cookiejar.New(nil)
 
+	// the app's redirect uri carries the code and can't be fetched
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if !strings.HasPrefix(req.URL.Scheme, "http") || len(via) >= 10 {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	}
+
 	cv := oauth2.GenerateVerifier()
 
 	uri := OAuth2Config.AuthCodeURL(lo.RandomString(16, lo.AlphanumericCharset), oauth2.S256ChallengeOption(cv))
@@ -116,14 +124,16 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	req, _ = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
 
-	// redirects lead back through Polestar ID to the redirect uri carrying the code
 	resp, err = v.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	code := resp.Request.URL.Query().Get("code")
+	var code string
+	if loc, err := resp.Location(); err == nil {
+		code = loc.Query().Get("code")
+	}
 	if code == "" {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, loginError(string(body))
