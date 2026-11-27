@@ -111,8 +111,13 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	keys := append(slices.Clone(v.socKeys), KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc)
+	keys := append(slices.Clone(v.socKeys), KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, KeyEnyaqSoc)
 	if p := lookup(data, keys...); p != nil {
+		return strconv.ParseFloat(p.Value, 64)
+	}
+
+	// hv_soc is not always the battery soc, a newer partial dataset must not override a known soc
+	if p := find(data, FieldHvSoc); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
