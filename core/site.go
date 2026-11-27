@@ -1340,6 +1340,8 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
+	slot := time.Now().Truncate(tariff.SlotDuration)
+
 	// smart cost and battery mode handling
 	consumption, err := site.tariffRates(api.TariffUsagePlanner)
 	if err != nil {
@@ -1395,8 +1397,8 @@ func (site *Site) update(lp updater) {
 
 	site.stats.Update(site)
 
-	// publish last, after all collectors have persisted the completed slot
-	site.publish(keys.HistoryUpdated, time.Now().Truncate(tariff.SlotDuration))
+	// slot from cycle start, all collectors have persisted the previous one by now
+	site.publish(keys.HistoryUpdated, slot)
 }
 
 // updatePower calculates the site power balance and updates the given loadpoint
