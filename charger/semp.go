@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
+	"github.com/evcc-io/evcc/charger/sma"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -130,13 +131,30 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 	}
 
 	// Check if device supports charged energy reporting via Parameters endpoint
-	if _, err := wb.getParameter("Measurement.ChaSess.WhIn"); err == nil {
+	if _, err := wb.getParameter(sma.ChaSessWhIn); err == nil {
 		implement.Has(wb, implement.ChargeRater(wb.chargedEnergy))
 	}
 
 	// Check if device supports status reporting via Parameters endpoint
-	if _, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt"); err == nil {
+	if _, err := wb.getParameter(sma.OperationEVehChaStt); err == nil {
 		wb.hasStatusParam = true
+	}
+
+	// Check if device reports access management and charging release via Parameters endpoint
+	_, errAccess := wb.getParameter(sma.ChrgChrgLok)
+	_, errRelease := wb.getParameter(sma.ChrgChrgApv)
+	if errAccess == nil && errRelease == nil {
+		implement.Has(wb, implement.StatusReasoner(wb.statusReason))
+	}
+
+	// disconnecting after full charge ends the session on the charger side
+	if v, err := wb.smaCode(sma.ChrgStpWhenFl); err == nil && v == sma.Yes {
+		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
+	}
+
+	// SEMP control requires operation with a grid connection point meter
+	if v, err := wb.smaCode(sma.ChrgUseEnergyMeter); err == nil && v == sma.No {
+		log.WARN.Println(`"Operation with grid connection point meter" must be set to "Yes"`)
 	}
 
 	// initialize enabled state from the actual device status, not from the cached
@@ -246,21 +264,12 @@ func (wb *SEMP) calcPower(enabled bool, current float64, phases int) int {
 // Status implements the api.Charger interface
 func (wb *SEMP) Status() (api.ChargeStatus, error) {
 	if wb.hasStatusParam {
-		value, err := wb.getParameter("Measurement.Operation.EVeh.ChaStt")
+		status, err := wb.smaStatus()
 		if err != nil {
 			return api.StatusNone, err
 		}
 
-		switch value {
-		case "200111": // "nicht verbunden"
-			return api.StatusA, nil
-		case "200112": // "verbunden"
-			return api.StatusB, nil
-		case "200113": // "Ladevorgang aktiv"
-			return api.StatusC, nil
-		default:
-			return api.StatusNone, fmt.Errorf("unknown status value: %s", value)
-		}
+		return sma.ChargeStatus(status)
 	}
 
 	status, err := wb.getDeviceStatus()
@@ -286,6 +295,36 @@ func (wb *SEMP) Status() (api.ChargeStatus, error) {
 
 	// Everything else (ready, waiting, etc.) -> Status B
 	return api.StatusB, nil
+}
+
+// statusReason implements the api.StatusReasoner interface
+func (wb *SEMP) statusReason() (api.Reason, error) {
+	access, err := wb.smaCode(sma.ChrgChrgLok)
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	release, err := wb.smaCode(sma.ChrgChrgApv)
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	return sma.StatusReason(access, release), nil
+}
+
+// smaStatus returns the SMA charging status from the parameters endpoint
+func (wb *SEMP) smaStatus() (sma.Code, error) {
+	return wb.smaCode(sma.OperationEVehChaStt)
+}
+
+// smaCode reads an SMA enum value from the parameters endpoint
+func (wb *SEMP) smaCode(channel string) (sma.Code, error) {
+	value, err := wb.getParameter(channel)
+	if err != nil {
+		return 0, err
+	}
+
+	return sma.ParseCode(value)
 }
 
 // Enabled implements the api.Charger interface
@@ -356,7 +395,7 @@ func (wb *SEMP) CurrentPower() (float64, error) {
 
 // chargedEnergy implements the api.ChargeRater interface (via decorator)
 func (wb *SEMP) chargedEnergy() (float64, error) {
-	value, err := wb.getParameter("Measurement.ChaSess.WhIn")
+	value, err := wb.getParameter(sma.ChaSessWhIn)
 	if err != nil {
 		return 0, err
 	}
