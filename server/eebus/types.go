@@ -14,6 +14,21 @@ const (
 	Model     string = "HEMS"
 )
 
+// identity stated via SHIP and SPINE: white label products state their own ([SRIP-220/10], [SRIP-220/13], [SRIP-220/14])
+type identity struct {
+	vendor, brand, model, serial string
+}
+
+func deviceIdentity(shipID string) identity {
+	brand := util.Getenv("EEBUS_BRAND", BrandName)
+	return identity{
+		vendor: util.Getenv("EEBUS_VENDOR", brand),
+		brand:  brand,
+		model:  util.Getenv("EEBUS_MODEL", Model),
+		serial: util.Getenv("EEBUS_SERIAL", shipID),
+	}
+}
+
 // used as common name in cert generation
 var DeviceCode = util.Getenv("EEBUS_DEVICE_CODE", "EVCC_HEMS_01")
 
