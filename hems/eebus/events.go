@@ -189,11 +189,21 @@ func (c *EEBus) consumptionWriteApprovalRequired() {
 			continue
 		}
 
-		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
-
 		c.mux.Lock()
-		c.setConsumptionLimitData(limit)
+		accept := c.acceptsLimitWrite()
+		if accept {
+			c.controlled = true
+			c.setConsumptionLimitData(limit)
+		}
 		c.mux.Unlock()
+
+		if !accept {
+			c.log.DEBUG.Println("CS LPC: denying limit without preceding heartbeat:", msg)
+			c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, false, "no preceding heartbeat")
+			continue
+		}
+
+		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
 	}
 }
 
@@ -205,10 +215,21 @@ func (c *EEBus) productionWriteApprovalRequired() {
 			continue
 		}
 
-		c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, true, "")
 		c.mux.Lock()
-		c.setProductionLimitData(limit)
+		accept := c.acceptsLimitWrite()
+		if accept {
+			c.controlled = true
+			c.setProductionLimitData(limit)
+		}
 		c.mux.Unlock()
+
+		if !accept {
+			c.log.DEBUG.Println("CS LPP: denying limit without preceding heartbeat:", msg)
+			c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, false, "no preceding heartbeat")
+			continue
+		}
+
+		c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, true, "")
 	}
 }
 
@@ -307,4 +328,5 @@ func (c *EEBus) updateHeartbeat() {
 	defer c.mux.Unlock()
 
 	c.heartbeat.Set(struct{}{})
+	c.heartbeatAt = time.Now()
 }
