@@ -116,6 +116,7 @@ type Site struct {
 	siteState
 
 	batteryMaxDischargePower *float64                   // Max discharge power of all battery meters
+	batteryChargeStopPower   float64                    // Battery charge power when load management last stopped grid charging
 	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
@@ -1359,17 +1360,14 @@ func (site *Site) update(lp updater) {
 	site.updateCircuits()
 	site.applyHemsLimits()
 
-	if state, err := site.updateMeters(); err != nil {
+	state, err := site.updateMeters()
+	if err != nil {
 		site.log.ERROR.Println(err)
+	} else if sponsor.IsAuthorized() && optimizerEnabled() {
+		site.reapplySuggestions(time.Now())
 	} else {
-		if sponsor.IsAuthorized() && optimizerEnabled() {
-			site.reapplySuggestions(time.Now())
-		} else {
-			// don't resurrect the pre-disable solve on re-enable
-			site.setLastOptimizerSolve(nil)
-		}
-
-		site.updatePower(lp, state, totalChargePower, consumption, feedin)
+		// don't resurrect the pre-disable solve on re-enable
+		site.setLastOptimizerSolve(nil)
 	}
 
 	// smart grid charging
@@ -1390,7 +1388,15 @@ func (site *Site) update(lp updater) {
 	}
 	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
 
-	site.updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
+	// the battery has priority: the circuit does not reserve its grant, so a loadpoint updated
+	// in the cycle grid charging starts would be offered the same headroom
+	if site.updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate) {
+		lp = nil
+	}
+
+	if err == nil {
+		site.updatePower(lp, state, totalChargePower, consumption, feedin)
+	}
 
 	// re-evaluate against the updated loadpoint state
 	site.publishSuggestions()

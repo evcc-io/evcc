@@ -594,6 +594,130 @@ func TestBatteryDischargeHemsCurtailed(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestBatteryGridChargeCircuit guards that grid charging respects the root circuit's limits: no start
+// without headroom for the expected charge power, stop once over limit (discussion #25326, issue #36457).
+func TestBatteryGridChargeCircuit(t *testing.T) {
+	for _, tc := range []struct {
+		name         string
+		mode         api.BatteryMode // current site mode
+		chargeLimit  float64         // battery charge power limit, 0 = unknown
+		stopPower    float64         // charge power at last load management stop
+		validated    float64         // circuit headroom granted for the start request
+		circuitPower float64         // circuit power while charging (limit 10 kW)
+		expect       api.BatteryMode
+		expectApply  bool
+		meterless    bool    // circuit power sums loadpoints only
+		maxCurrent   float64 // circuit current limit, 0 = none
+		current      float64 // circuit current
+	}{
+		{"start with headroom", api.BatteryNormal, 5000, 0, 5000, 0, api.BatteryCharge, true, false, 0, 0},
+		{"start without headroom", api.BatteryNormal, 5000, 0, 3000, 0, api.BatteryHoldDischarge, true, false, 0, 0},
+		{"start with unknown power", api.BatteryNormal, 0, 0, 0, 0, api.BatteryCharge, true, false, 0, 0},
+		{"restart after stop needs headroom", api.BatteryHoldDischarge, 0, 4000, 2000, 0, api.BatteryHoldDischarge, true, false, 0, 0},
+		{"no restart with unknown power when over power", api.BatteryHoldDischarge, 0, 0, 0, 12000, api.BatteryHoldDischarge, true, false, 0, 0},
+		{"stop when over power", api.BatteryCharge, 0, 0, 0, 12000, api.BatteryHoldDischarge, true, false, 0, 0},
+		{"keep charging within limit", api.BatteryCharge, 0, 0, 0, 8000, api.BatteryCharge, false, false, 0, 0},
+		{"keep charging over power without meter", api.BatteryCharge, 0, 0, 0, 12000, api.BatteryCharge, false, true, 0, 0},
+		{"start with current headroom", api.BatteryNormal, 5800, 0, 5800, 0, api.BatteryCharge, true, false, 34, 20},
+		{"start without current headroom", api.BatteryNormal, 5800, 0, 5800, 0, api.BatteryHoldDischarge, true, false, 34, 32},
+		{"stop when over current", api.BatteryCharge, 0, 0, 0, 8000, api.BatteryHoldDischarge, true, false, 34, 40},
+		{"keep charging over current without meter", api.BatteryCharge, 0, 0, 0, 8000, api.BatteryCharge, false, true, 34, 40},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			batCon := batteryControllerMock(ctrl)
+			var bat api.Meter = &struct {
+				api.Meter
+				api.BatteryController
+			}{BatteryController: batCon}
+			if tc.chargeLimit > 0 {
+				bat = &struct {
+					api.Meter
+					api.BatteryController
+					api.BatteryPowerLimiter
+				}{BatteryController: batCon, BatteryPowerLimiter: &mockBatteryPowerLimiter{charge: tc.chargeLimit}}
+			}
+
+			circuit := api.NewMockCircuit(ctrl)
+			circuit.EXPECT().GetMaxPower().Return(10000.0).AnyTimes()
+			circuit.EXPECT().GetChargePower().Return(tc.circuitPower).AnyTimes()
+			circuit.EXPECT().HasMeter().Return(!tc.meterless).AnyTimes()
+			circuit.EXPECT().GetMaxCurrent().Return(tc.maxCurrent).AnyTimes()
+			circuit.EXPECT().GetMaxPhaseCurrent().Return(tc.current).AnyTimes()
+			circuit.EXPECT().ValidateCurrent(0.0, gomock.Any()).DoAndReturn(func(_, new float64) float64 {
+				if tc.maxCurrent == 0 {
+					return new
+				}
+				return min(new, max(0, tc.maxCurrent-tc.current))
+			}).AnyTimes()
+			if power := max(tc.chargeLimit, tc.stopPower); power > 0 {
+				circuit.EXPECT().ValidatePower(0.0, power).Return(tc.validated).AnyTimes()
+			}
+
+			site := &Site{
+				log:                    util.NewLogger("foo"),
+				batteryMeters:          []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+				circuit:                circuit,
+				batteryMode:            tc.mode,
+				batteryChargeStopPower: tc.stopPower,
+				siteState:              siteState{battery: types.BatteryState{Power: -4000}},
+			}
+
+			if tc.expectApply {
+				batCon.EXPECT().SetBatteryMode(tc.expect).Times(1)
+			}
+
+			started := site.updateBatteryMode(true, false, api.Rate{})
+
+			assert.Equal(t, tc.expect, site.GetBatteryMode())
+			assert.Equal(t, tc.mode != api.BatteryCharge && tc.expect == api.BatteryCharge, started, "charging started")
+			if tc.mode == api.BatteryCharge && tc.expect == api.BatteryHoldDischarge {
+				assert.Equal(t, 4000.0, site.batteryChargeStopPower, "stop power")
+			}
+
+			ctrl.Finish()
+		})
+	}
+}
+
+// TestBatteryGridChargeStopPower guards that the charge power of the last load management stop survives a stop
+// of an idle battery and is forgotten once grid charging is no longer requested.
+func TestBatteryGridChargeStopPower(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	batCon := batteryControllerMock(ctrl)
+	batCon.EXPECT().SetBatteryMode(gomock.Any()).AnyTimes()
+
+	circuit := api.NewMockCircuit(ctrl)
+	circuit.EXPECT().HasMeter().Return(true).AnyTimes()
+	circuit.EXPECT().GetMaxPower().Return(10000.0).AnyTimes()
+	circuit.EXPECT().GetChargePower().Return(12000.0).AnyTimes()
+	circuit.EXPECT().GetMaxCurrent().Return(0.0).AnyTimes()
+	circuit.EXPECT().GetMaxPhaseCurrent().Return(0.0).AnyTimes()
+
+	site := &Site{
+		log: util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+			api.Meter
+			api.BatteryController
+		}{BatteryController: batCon}))},
+		circuit:                circuit,
+		batteryMode:            api.BatteryCharge,
+		batteryChargeStopPower: 3000,
+	}
+
+	// idle battery: stop keeps the previous charge power
+	site.updateBatteryMode(true, false, api.Rate{})
+	assert.Equal(t, api.BatteryHoldDischarge, site.GetBatteryMode())
+	assert.Equal(t, 3000.0, site.batteryChargeStopPower)
+
+	// grid charging no longer requested
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+	assert.Zero(t, site.batteryChargeStopPower)
+}
+
 // TestBatteryGridDischargeEvFastCharging ensures grid discharge is held back while an EV
 // is fast charging, regardless of the (opt-in, off by default) batteryDischargeControl
 // toggle - forcing the battery to sell while an EV needs a fast charge is a materially

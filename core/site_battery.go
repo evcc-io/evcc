@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 )
 
 func batteryModeModified(mode api.BatteryMode) bool {
@@ -61,8 +62,15 @@ func (site *Site) fromTo(requested, m api.BatteryMode) bool {
 	return requested == m || requested == api.BatteryUnknown && site.batteryMode == m
 }
 
-func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) {
+// updateBatteryMode applies the required battery mode and reports whether load managed grid charging started
+func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) bool {
+	previous := site.batteryMode
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
+
+	// grid charging no longer requested, forget the last load management stop
+	if !site.fromTo(batteryMode, api.BatteryCharge) {
+		site.batteryChargeStopPower = 0
+	}
 
 	// put battery into holddischarge mode when charging is active and HEMS dimmed
 	if dimmed := hems.Dimmed(site.hems); site.fromTo(batteryMode, api.BatteryCharge) && dimmed != nil && *dimmed {
@@ -76,6 +84,11 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 		batteryMode = api.BatteryNormal
 	}
 
+	// load management: don't start grid charging without headroom, stop it when the circuit is over limit
+	if site.fromTo(batteryMode, api.BatteryCharge) && site.batteryChargeExceedsCircuit() {
+		batteryMode = api.BatteryHoldDischarge
+	}
+
 	// NOTE: applyBatteryMode is always called when charge or discharge mode is active to
 	// validate max soc / min soc reserve
 	if modeChanged := batteryMode != api.BatteryUnknown; modeChanged || site.batteryMode == api.BatteryCharge || site.batteryMode == api.BatteryDischarge {
@@ -87,6 +100,8 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 			site.log.ERROR.Println("battery mode:", err)
 		}
 	}
+
+	return site.circuit != nil && previous != api.BatteryCharge && site.batteryMode == api.BatteryCharge
 }
 
 // requiredBatteryMode determines required battery mode based on grid charge/discharge and rate
@@ -196,6 +211,78 @@ func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
 	}
 
 	return api.BatteryUnknown, false
+}
+
+// batteryChargeExceedsCircuit reports whether grid charging exceeds the root circuit's limits: starting needs
+// headroom for the batteries' charge limits (or the charge power at the last stop), charging stops when over limit
+func (site *Site) batteryChargeExceedsCircuit() bool {
+	if site.circuit == nil {
+		return false
+	}
+
+	// a meterless circuit sums loadpoints only, stopping the battery would not reduce its load
+	if site.circuit.HasMeter() {
+		maxPower, power := site.circuit.GetMaxPower(), site.circuit.GetChargePower()
+		maxCurrent, current := site.circuit.GetMaxCurrent(), site.circuit.GetMaxPhaseCurrent()
+		if maxPower > 0 && power > maxPower || maxCurrent > 0 && current > maxCurrent {
+			// restarting needs headroom for at least this power (charging is negative), keep the last one when idle
+			if charge := -site.state().battery.Power; site.batteryMode == api.BatteryCharge && charge > 0 {
+				site.batteryChargeStopPower = charge
+			}
+			site.log.DEBUG.Printf("battery mode: circuit over limit (%.0fW/%.0fW, %.3gA/%.3gA), no charging, stopped at %.0fW", power, maxPower, current, maxCurrent, site.batteryChargeStopPower)
+			return true
+		}
+	}
+
+	if site.batteryMode == api.BatteryCharge {
+		return false
+	}
+
+	power := site.batteryMaxChargePower()
+	if power == 0 {
+		power = site.batteryChargeStopPower
+	}
+	if power == 0 {
+		return false
+	}
+
+	if available := site.circuit.ValidatePower(0, power); available < power {
+		site.log.DEBUG.Printf("battery mode: circuit headroom %.0fW < %.0fW, don't start charging", available, power)
+		return true
+	}
+
+	// shortcut: assumes three-phase battery charging like the optimizer's import limit, upgrade when battery phases are known
+	current := grid.PowerToCurrent(power, 3)
+	if available := site.circuit.ValidateCurrent(0, current); available < current {
+		site.log.DEBUG.Printf("battery mode: circuit headroom %.3gA < %.3gA, don't start charging", available, current)
+		return true
+	}
+
+	return false
+}
+
+// batteryMaxChargePower returns the summed charge power limit of the controllable batteries, 0 if any is unknown
+func (site *Site) batteryMaxChargePower() float64 {
+	var res float64
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+		if !api.HasCap[api.BatteryController](meter) {
+			continue
+		}
+
+		bpl, ok := api.Cap[api.BatteryPowerLimiter](meter)
+		if !ok {
+			return 0
+		}
+
+		charge, _, err := bpl.GetPowerLimits()
+		if err != nil {
+			return 0
+		}
+		res += charge
+	}
+
+	return res
 }
 
 // batterySocLimitReached reports whether the battery has reached the soc bound
