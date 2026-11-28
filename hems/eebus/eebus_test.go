@@ -6,12 +6,14 @@ import (
 	"time"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/eebus-go/usecases/mocks"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,15 +34,22 @@ type stubSite struct {
 func (s *stubSite) GetGridPower() float64 { return s.gridPower }
 
 // newTestEEBus builds a minimally-wired EEBus suitable for exercising run().
-// The CS interfaces are nil — the failsafe-exit path under test does not call
-// them — and smartgrid persistence is backed by an in-memory SQLite database.
+// The CS interfaces are mocks that only accept stating limits as deactivated
+// (publishLimitStates), and smartgrid persistence is backed by an in-memory
+// SQLite database.
 func newTestEEBus(t *testing.T) *EEBus {
 	t.Helper()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
+	lpc := mocks.NewCsLPCInterface(t)
+	lpc.EXPECT().SetConsumptionLimit(mock.Anything).Return(nil).Maybe()
+	lpp := mocks.NewCsLPPInterface(t)
+	lpp.EXPECT().SetProductionLimit(mock.Anything).Return(nil).Maybe()
+
 	failsafeProduction := testFailsafeProduction
 	return &EEBus{
+		cs:                       &eebus.ControllableSystem{CsLPCInterface: lpc, CsLPPInterface: lpp},
 		ctx:                      t.Context(),
 		log:                      util.NewLogger("test"),
 		interval:                 time.Millisecond,
