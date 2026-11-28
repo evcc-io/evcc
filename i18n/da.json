@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Bruger den eksisterende elnetsmåler i installationen.",
       "meterSelectionHelpNoMeter": "Summen af alle ladepunkter bruges.",
       "meterSelectionLabel": "Vælg måler",
+      "meterSelectionWarningNoMeter": "Husets forbrug er ikke inkluderet, så grænserne kan overskrides. Det anbefales kraftigt at bruge en måler til hovedkredsløbet.",
       "parentCircuit": "Overordnet kredsløb",
       "template": "Kredsløb",
       "titleAdd": "Tilføj kredsløb",
@@ -1300,6 +1301,7 @@
       "overview": "Overblik",
       "pv": "Produktion",
       "title": "Energiflow",
+      "totalConsumption": "Samlet forbrug",
       "usage": "Forbrugsfordeling,",
       "withdrawal": "Aftager"
     },

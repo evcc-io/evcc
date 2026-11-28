@@ -144,11 +144,13 @@
       "template": "Producător",
       "titleAdd": {
         "charging": "Adăugați încărcător",
-        "heating": "Adăugați încălzitor"
+        "heating": "Adăugați încălzitor",
+        "switch": "Adăugați priză comutabilă"
       },
       "titleEdit": {
         "charging": "Editare încărcător",
-        "heating": "Editare încălzitor"
+        "heating": "Editare încălzitor",
+        "switch": "Editați priza comutabilă"
       },
       "type": {
         "custom": {
@@ -177,6 +179,7 @@
       "meterSelectionHelpGridMeter": "Folosește contorul de rețea existent al instalației dvs.",
       "meterSelectionHelpNoMeter": "Se folosește suma tuturor punctelor de încărcare.",
       "meterSelectionLabel": "Selectare contor",
+      "meterSelectionWarningNoMeter": "Consumul casei nu este inclus, deci limitele pot fi depășite. Pentru circuitul rădăcină se recomandă insistent un contor.",
       "parentCircuit": "Circuit părinte",
       "titleAdd": "Adăugați circuit",
       "titleEdit": "Editați circuitul",
@@ -185,10 +188,19 @@
     "circuits": {
       "addMainCircuit": "Circuit principal nou",
       "addSubCircuit": "Adăugați subcircuit",
+      "assignHere": "Atribuiți aici",
+      "assignmentFailed": "Atribuirea nu a putut fi salvată. Încercați din nou.",
       "description": "Asigură că suma tuturor punctelor de încărcare conectate la un circuit nu depășește limitele de putere și curent configurate. Circuitele pot fi imbricate pentru a forma o ierarhie.",
+      "dragHint": "Trageți peste un circuit sau atingeți pentru a selecta.",
+      "dropAssign": "Eliberați pentru a atribui",
+      "dropRemove": "Eliberați aici pentru a elimina din circuit.",
       "legacyWarning": "Este disponibilă o nouă configurare a circuitelor! Eliminați și salvați configurația aici pentru a folosi noul proces ghidat.",
       "meterDedicated": "Contor",
       "meterGrid": "Rețea",
+      "moveHere": "Mutați aici",
+      "notAssigned": "Neatribuit",
+      "selectAssign": "Atingeți un circuit pentru a atribui {title}.",
+      "selectMove": "Atingeți un circuit pentru a muta {title} sau grupul pentru a elimina.",
       "title": "Gestionarea încărcării",
       "usableMeters": "Referințe utile privind contoarele"
     },
@@ -227,6 +239,15 @@
       "title": "Limitare producție",
       "titleAdd": "Adăugați dispozitiv de limitare",
       "titleEdit": "Editați dispozitivul de limitare"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Adăugați stație de încărcare",
+        "meter": "Adăugați contor",
+        "switch": "Adăugați priză comutabilă",
+        "tariff": "Adăugați tarif"
+      },
+      "noNesting": "Imbricarea este limitată la un nivel. Alegeți altă opțiune."
     },
     "deviceValue": {
       "activeClients": "Clienți activi",
@@ -306,8 +327,14 @@
           "returnEnergy": "Descărcat"
         },
         "consumer": {
+          "chargeStatusB": "în așteptare",
+          "chargeStatusC": "încălzire",
           "energy": "Consumat",
           "returnEnergy": "Produs"
+        },
+        "continuous": {
+          "dimmed": "Redus",
+          "enabled": "Boost activ"
         },
         "grid": {
           "energy": "Importat",
@@ -329,6 +356,7 @@
       "auxMeter": "Consumator inteligent",
       "batteryStorage": "Stocarea bateriei",
       "consumer": "Consumator",
+      "extMeter": "Contor suplimentar",
       "solarSystem": "Sistemul solar"
     },
     "editor": {
@@ -388,6 +416,7 @@
       "change": "Modifică",
       "clear": "Clar",
       "close": "Închide",
+      "configured": "Configurat",
       "confirmDisable": "Dezactivați acest dispozitiv? Va fi ignorat după următoarea repornire.",
       "confirmEnable": "Activați din nou acest dispozitiv?",
       "confirmSave": "Există modificări nesalvate. Salvați acum?",
@@ -400,6 +429,8 @@
       "disable": "Dezactivează",
       "disabled": "dezactivat",
       "dismiss": "Închide",
+      "dismissAll": "Ignorați tot",
+      "dismissed": "Ignorat",
       "docsLink": "Consultați documentația.",
       "dragHandle": "Mâner de tragere",
       "dragItem": "Draggable: {title}",
@@ -529,6 +560,27 @@
       "defaultModeKeep": "păstrează neschimbat",
       "defaultModeLabel": "Mod implicit",
       "delete": "Șterge",
+      "demandPredictor": {
+        "daily": {
+          "description": "Media ultimelor zile. Pentru dispozitive cu același tipar în fiecare zi.",
+          "label": "Medie zilnică"
+        },
+        "defaultGroup": "Implicit dispozitiv",
+        "description": "Cum prezice optimizatorul necesarul pe baza consumului anterior.",
+        "label": "Profil",
+        "noTempTariff": "Necesită o prognoză de temperatură.",
+        "noTempTariffLink": "Adăugați prognoză",
+        "profilesGroup": "Profiluri",
+        "temperature": {
+          "description": "Consumul anterior la temperaturi exterioare similare. Pentru încălzirea spațiilor, de exemplu pompe de căldură.",
+          "label": "Temperatură"
+        },
+        "title": "Prognoză de necesar",
+        "weekday": {
+          "description": "Media aceleiași zile din săptămână. Pentru dispozitive cu program săptămânal, precum boilere sau încălzitoare de piscină.",
+          "label": "Zi din săptămână"
+        }
+      },
       "electricalSubtitle": "Dacă aveți dubii, adresați-vă electricianului dumneavoastră.",
       "electricalTitle": "Electric",
       "energyMeterHelp": "Contor suplimentar dacă încărcătorul nu are unul integrat.",
@@ -928,6 +980,7 @@
       "noClients": "Încă nu există clienți. Nimeni nu se poate conecta încă.",
       "password": "Parolă",
       "passwordOnce": "Această parolă este afișată o singură dată. Scanați codul QR sau copiați-o acum. Nu o veți mai putea vedea.",
+      "print": "Tipărire / PDF",
       "privacy": "Prin activarea acestei funcții, sunteți de acord cu {0}.",
       "privacyLink": "politica de confidențialitate",
       "qrInstall": "Instalați aplicația evcc pentru {ios} sau {android}.",
@@ -1120,6 +1173,7 @@
       "template": "Furnizor",
       "title": "Tarife si prognoze",
       "titleChoice": "Ce vrei să adaugi?",
+      "titleSub": "Subtarif",
       "type": {
         "co2": "Intensitate CO₂",
         "feedIn": "Preț export in rețea",
@@ -1179,7 +1233,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Încărcare",
       "charged": "Încărcat",
+      "discharge": "Descărcare",
       "discharged": "Descărcat"
     },
     "consumers": {
@@ -1198,12 +1254,32 @@
         "energy": "încărcat",
         "returnEnergy": "descărcat"
       },
+      "consumer": {
+        "energy": "Consumat"
+      },
+      "grid": {
+        "energy": "Importat",
+        "returnEnergy": "Exportat"
+      },
+      "heating": {
+        "energy": "Consumat"
+      },
+      "loadpoint": {
+        "energy": "Încărcat"
+      },
       "meter": {
         "energy": "Energie",
         "returnEnergy": "Energie (invers)"
+      },
+      "pv": {
+        "energy": "Produs"
       }
     },
-    "empty": "Nu există date energetice pentru acest interval de timp.",
+    "empty": {
+      "description": "Nu există date energetice pentru această perioadă.",
+      "descriptionCurrent": "Încă nu există date energetice. Valorile apar după înregistrarea primelor măsurători.",
+      "showCurrent": "Perioada curentă"
+    },
     "flow": {
       "battery": "Baterie",
       "batteryCharge": "Încărcare baterie",
@@ -1216,6 +1292,7 @@
       "overview": "Prezentare generală",
       "pv": "Producție",
       "title": "Flux de energie",
+      "totalConsumption": "Consum total",
       "usage": "Utilizare",
       "withdrawal": "Extragere"
     },
@@ -1251,6 +1328,7 @@
     },
     "socTemp": {
       "charged": "încărcat",
+      "power": "Putere",
       "soc": "încărcare",
       "temperature": "temperatură",
       "used": "folosit"
@@ -1270,12 +1348,14 @@
       "co2Saved": "CO₂ economisit",
       "co2SavedTooltip": "Comparativ cu preluarea din rețea a celor {energy} consumați.",
       "configure": "Configurați acum",
+      "fromGrid": "{value} din rețea",
       "noCo2": "Nu există date CO₂.",
       "noPrice": "Nu există date de preț.",
       "savings": "Economii",
       "savingsTooltip": "Comparativ cu cumpărarea din rețea a celor {energy} consumați.",
       "versus": "{value} față de {reference}"
     },
+    "summary": "Rezumat",
     "title": "Energie"
   },
   "footer": {
@@ -1386,6 +1466,7 @@
     "price": {
       "average": "Media",
       "constant": "Preț",
+      "estimate": "estimare",
       "lowestHour": "Cea mai ieftină oră",
       "range": "Gama"
     },
@@ -1417,6 +1498,7 @@
     "cancel": "Anulează",
     "download": "Descărcare",
     "error": "Eroare",
+    "loading": "Se încarcă",
     "none": "nimic",
     "note": "Notă:",
     "warning": "Avertisment"
@@ -1584,7 +1666,8 @@
       "repeatingPlans": "Planuri repetitive",
       "selectAll": "Selectați tot",
       "strategy": {
-        "label": "Strategie"
+        "label": "Strategie",
+        "optimizerHint": "{optimizer} nu ține încă cont de setarea de optimizare și alege întotdeauna cele mai ieftine intervale. Limitați controlul automat la „Baterie casă” dacă este nevoie."
       },
       "time": "Timp",
       "title": "Plan",
@@ -1610,6 +1693,7 @@
       "forecast": "Prognoză",
       "forecastTooltip": "prognoză: producția solară rămasă astăzi",
       "gridImport": "Folosirea rețelei",
+      "heaters": "Încălzitor | Încălzitoare",
       "homePower": "Consum",
       "loadpoints": "Încarcator| Încarcator | {count} încarcatoare",
       "loadpointsLimit": "{limit} limită",
@@ -1638,18 +1722,21 @@
       "avgPrice": "⌀ Pret",
       "charged": "Încărcat",
       "co2": "⌀ CO₂",
+      "consumed": "Consumat",
       "duration": "Durata",
       "emission": "Emisie",
       "fallbackName": "Punct de încărcare",
       "finished": "Ora de finalizare",
       "last24hEnergy": "Ultimele 24h",
       "last7dEnergy": "Ultimele 7 zile",
+      "last7dShort": "7z",
       "phasesMismatch": "Mai multe faze active decât cele configurate. Verificați configurația fazelor.",
       "power": "Putere",
       "price": "Σ Pret",
       "remaining": "Ramas",
       "remoteDisabledHard": "{source}: dezactivat",
       "remoteDisabledSoft": "{source}: incarcarea solar-adaptiva e oprita",
+      "session": "Sesiune",
       "solar": "Solar",
       "todayEnergy": "Astăzi"
     },
@@ -1867,6 +1954,7 @@
       "dismiss": "Închideți",
       "legacyTariffs": "Se folosește configurația veche a tarifelor.",
       "progress": "{done} din {total} finalizate",
+      "suggestions": "1 sugestie | {count} sugestii",
       "title": "Finalizați configurarea"
     },
     "control": {

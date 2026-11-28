@@ -179,8 +179,9 @@
       "meterNone": "Geen meter",
       "meterSelectionHelpDedicatedMeter": "Voeg een bestaande meter toe aan dit circuit.",
       "meterSelectionHelpGridMeter": "Gebruikt de bestaande netmeter van uw installatie.",
-      "meterSelectionHelpNoMeter": "De som van alle laadpunten wordt gebruikt.",
+      "meterSelectionHelpNoMeter": "Zonder een meter, wordt de belasting berekend aan de hand van de som van alle laadpunten, verwarmers and onderliggende circuits.",
       "meterSelectionLabel": "Meterselectie",
+      "meterSelectionWarningNoMeter": "Het verbruik van de woning is niet inbegrepen, waardoor de limieten kunnen worden overschreden. Het is sterk aanbevolen om een meter te gebruiken voor het hoofdcircuit.",
       "parentCircuit": "Bovenliggend circuit",
       "template": "Circuit",
       "titleAdd": "Circuit toevoegen",
@@ -683,7 +684,7 @@
       "welcomeBannerTitle": "Start met het configureren van uw systeem!"
     },
     "mcp": {
-      "description": "onthult een Model Context Protocol server, zodat AI assistenten zoals Claude de toestand van jouw systeem kunnen uitlezen en het laadproces controleren.",
+      "description": "Stelt een Model Context Protocol server beschikbaar, zodat AI assistenten zoals Claude de toestand van jouw systeem kunnen uitlezen en het laadproces beheren.",
       "exampleLabel": "voorbeeld: Claude CLI",
       "restartHint": "beschikbaar na herstart.",
       "title": "MCP server",
@@ -909,25 +910,25 @@
       "usernameHelp": "Voor HTTP Basic Auth richting de upstream server."
     },
     "optimizer": {
-      "automatic": "Automatische aansturing",
+      "automatic": "Automatisch beheer",
       "automaticLevel": {
         "battery": {
           "description": "Beheert alleen de thuisbatterij.",
           "label": "Thuisbatterij",
-          "status": "{automatic} controleert de thuisbatterij."
+          "status": "{automatic} beheert de thuisbatterij."
         },
         "full": {
-          "description": "Controleert de thuisbatterij, start en stopt het laden van de wagen in slimme modus, vervangt prijs en CO₂ limieten en neemt de planningen over. Ongewijzigd: uit en snelle modus, verwarmingstoestellen, schakelbare stopcontacten, voertuigen met ongekende capaciteit.",
+          "description": "Beheert de thuisbatterij, start en stopt het laden van de wagen in slimme modus, vervangt prijs- en CO₂-limieten en neemt de planningen over. Ongewijzigd: uit en snelle modus, verwarmingstoestellen, schakelbare stopcontacten, voertuigen met ongekende capaciteit.",
           "label": "Thuisbatterij & laadpunten",
-          "status": "{automatic} controleert de thuisbatterij en laadpunten."
+          "status": "{automatic} beheert de thuisbatterij en laadpunten."
         },
         "off": {
-          "description": "De optimizer stelt alleen voor. Er wordt niets gecontroleerd.",
+          "description": "De optimizer stelt alleen voor. Er wordt niets beheerd.",
           "status": "{automatic} staat uit. De optimizer stelt alleen voor."
         }
       },
-      "controlled": "Uitgeschakeld door automatische controle. De {optimizer} beslist.",
-      "controls": "Controles",
+      "controlled": "Uitgeschakeld door automatisch beheer. De {optimizer} beslist.",
+      "controls": "Beheert",
       "description": "Gebruikt zonne-energieprognoses, energieprijzen en je verbruikspatronen om de batterij en het opladen te plannen. Gegevens worden naar de evcc-optimalisatiedienst gestuurd.",
       "enable": "Activeer optimizer",
       "info": "Voor nieuwe installaties kan het tot 24 uur duren alvorens evcc voldoende data verzameld heeft.",
@@ -1239,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Lading",
       "charged": "Geladen",
+      "discharge": "Ontlading",
       "discharged": "Ontladen"
     },
     "consumers": {
@@ -1286,9 +1289,9 @@
       }
     },
     "empty": {
-      "description": "Geen energiedata voor deze periode.",
-      "descriptionCurrent": "Nog geen energie data. Waarden verschijnen zodra de eerste metingen zijn opgeslagen.",
-      "showCurrent": "Bekijk huidige periode"
+      "description": "Geen energiegegevens voor deze periode.",
+      "descriptionCurrent": "Nog geen energiegegevens. Waarden verschijnen zodra de eerste metingen zijn opgeslagen.",
+      "showCurrent": "Toon huidige periode"
     },
     "flow": {
       "battery": "Batterij",
@@ -1302,6 +1305,7 @@
       "overview": "Overzicht",
       "pv": "Productie",
       "title": "Energiestroom",
+      "totalConsumption": "Totaalverbruik",
       "usage": "Verbruik",
       "withdrawal": "Afname"
     },
@@ -1370,7 +1374,7 @@
       "savingsTooltip": "Vergeleken met het inkopen van de verbruikte {energy} van het net.",
       "versus": "{value} vs. {reference}"
     },
-    "summary": "Samenvatting",
+    "summary": "Overzicht",
     "title": "Energie"
   },
   "footer": {
@@ -1931,7 +1935,7 @@
       "feedinPriorityPausing": "Zonne opladen gepauzeerd om terugleveren te maximaliseren.",
       "finished": "Beëindigd.",
       "minCharge": "Minimaal opladen naar {soc}.",
-      "optimizerControlledTooltip": "Automatische controle. De optimizer start en stopt het opladen.",
+      "optimizerControlledTooltip": "Automatisch beheer. De optimizer start en stopt het opladen.",
       "pvDisable": "Onvoldoende PV overschot. Laden wordt binnenkort gepauzeerd.",
       "pvEnable": "Voldoende PV overschot beschikbaar. Laden wordt binnenkort gestart.",
       "scale1p": "Wordt gereduceerd naar laden op 1 fase.",
@@ -1976,6 +1980,7 @@
       "dismiss": "Afwijzen",
       "legacyTariffs": "Er wordt een verouderde tariefconfiguratie gebruikt.",
       "progress": "{done} uit {total} voltooid",
+      "suggestions": "1 suggestie | {count} suggesties",
       "title": "Jouw configuratie"
     },
     "control": {

@@ -77,5 +77,6 @@
     "vehicleLimit": "voertuiglimiet",
     "vehicleRange": "actieradius",
     "withdrawal": "afname",
-    "consumed": "verbruikt"
+    "consumed": "verbruikt",
+    "totalConsumption": "totaalverbruik"
 }

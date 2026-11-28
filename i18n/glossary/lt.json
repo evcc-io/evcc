@@ -77,5 +77,6 @@
     "vehicleLimit": "automobilyje nustatytas limitas",
     "vehicleRange": "nuvažiuojamas atstumas",
     "withdrawal": "paėmimas",
-    "consumed": "suvartota"
+    "consumed": "suvartota",
+    "totalConsumption": "bendras suvartojimas"
 }

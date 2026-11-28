@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Benotzt de bestoenden Zieler vun Ärer Installatioun.",
       "meterSelectionHelpNoMeter": "D'Zomm vun allen Opluedpunkte gëtt benotzt.",
       "meterSelectionLabel": "Zielerauswal",
+      "meterSelectionWarningNoMeter": "De Stroumverbrauch vum Haus ass net abegraff, dofir kënnen d'Grenze iwwerschratt ginn. Et gëtt staark recommandéiert, en Zieler fir de Root-Stroumkrees ze benotzen.",
       "parentCircuit": "Iwwergeuerdnete Stroumkrees",
       "template": "Stroumkrees",
       "titleAdd": "Füügt ee Stroumkreess derbäi",
@@ -257,7 +258,7 @@
       "amount": "Unzahl",
       "asleep": "schléift",
       "broker": "Broker",
-      "bucket": "Bucket",
+      "bucket": "Bucket / Datebank",
       "capacity": "Capacitéit",
       "chargeStatus": "Status",
       "chargeStatusA": "net verbonnen",
@@ -326,7 +327,7 @@
           "returnEnergy": "Gelueden"
         },
         "charge": {
-          "energy": "Gelueden",
+          "energy": "Opgelueden",
           "returnEnergy": "Entlueden"
         },
         "consumer": {
@@ -421,6 +422,7 @@
       "change": "Änneren",
       "clear": "Läschen",
       "close": "Zoumaachen",
+      "configured": "Konfiguréiert",
       "confirmDisable": "Dëst Gerät deaktivéieren? Et gëtt nom nächsten Neistart ignoréiert.",
       "confirmEnable": "Dëst Gerät erëm aktivéieren?",
       "confirmSave": "Et ginn net gespäichert Ännerungen. Elo späicheren?",
@@ -433,6 +435,8 @@
       "disable": "Desaktivéieren",
       "disabled": "desaktivéiert",
       "dismiss": "Ignoréieren",
+      "dismissAll": "Alles ignoréieren",
+      "dismissed": "Ignoréiert",
       "docsLink": "D'Dokumentatioun kucken.",
       "dragHandle": "Verréckelen",
       "dragItem": "Verréckelbar: {title}",
@@ -508,7 +512,7 @@
     "influx": {
       "description": "Schreift Lueddaten an aner Moossen an InfluxDB. Benotzt Grafana oder aner Tools fir d'Donnéeën ze visualiséieren.",
       "descriptionToken": "Kuckt d'InfluxDB Dokumentatioun fir ze léieren wéi een eng erstellt. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Datebank",
       "labelCheckInsecure": "Onsécher Verbindungen erlaben",
       "labelDatabase": "Datebank",
       "labelInsecure": "Zertifikatiwwerpréiwung",
@@ -519,7 +523,7 @@
       "labelUser": "Numm vum Benotzer",
       "title": "InfluxDB",
       "v1Support": "Brauchs du Ënnerstëtzung fir InfluxDB 1.x?",
-      "v2Support": "Zréck op InfluxDB 2.x"
+      "v2Support": "Zréck op InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -982,7 +986,8 @@
       "manualLogin": "Oder mellt Iech manuell op {url} an Ärem Browser mat dësen Zougangsdaten un:",
       "noClients": "Nach keng Clienten. Nach ka sech kee verbannen.",
       "password": "Passwuert",
-      "passwordOnce": "Dëst Passwuert gëtt nëmmen eemol ugewisen. Scannt de QR-Code oder kopéiert en elo. E gëtt net nach eng Kéier ugewisen.",
+      "passwordOnce": "Dëst Passwuert gëtt nëmmen eemol ugewisen. Scannt de QR-Code, dréckt oder kopéiert en elo. E gëtt net nach eng Kéier ugewisen.",
+      "print": "Drécken / PDF",
       "privacy": "Mat der Aktivatioun vun dëser Funktioun, akzeptéiers du eis {0}.",
       "privacyLink": "Dateschutzerklärung",
       "qrInstall": "Installéiert d'evcc-App fir {ios} oder {android}.",
@@ -1235,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Ladung",
       "charged": "Opgelueden",
+      "discharge": "Entladung",
       "discharged": "Entlueden"
     },
     "consumers": {
@@ -1258,19 +1265,35 @@
     },
     "direction": {
       "battery": {
-        "energy": "gelueden",
-        "returnEnergy": "entlueden"
+        "energy": "Gelueden",
+        "returnEnergy": "Entlueden"
+      },
+      "consumer": {
+        "energy": "Verbraucht"
       },
       "grid": {
-        "energy": "importéiert",
-        "returnEnergy": "agespeist"
+        "energy": "Importéiert",
+        "returnEnergy": "Agespeist"
+      },
+      "heating": {
+        "energy": "Verbraucht"
+      },
+      "loadpoint": {
+        "energy": "Gelueden"
       },
       "meter": {
         "energy": "Energie",
         "returnEnergy": "Energie (ëmgedréint)"
+      },
+      "pv": {
+        "energy": "Produzéiert"
       }
     },
-    "empty": "Fir dësen Zäitraum sinn keng Energiedate verfügbar.",
+    "empty": {
+      "description": "Keng Energiedaten fir dës Period.",
+      "descriptionCurrent": "Nach keng Energiedaten. Wäerter erschéngen soubal déi éischt Miessunge gemaach goufen.",
+      "showCurrent": "Aktuell Period weisen"
+    },
     "flow": {
       "battery": "Batterie",
       "batteryCharge": "Batterieladung",
@@ -1283,6 +1306,7 @@
       "overview": "Iwwersiicht",
       "pv": "Produktioun",
       "title": "Energiefloss",
+      "totalConsumption": "Gesamtverbrauch",
       "usage": "Benotzung",
       "withdrawal": "Ofzéien"
     },
@@ -1309,7 +1333,7 @@
     },
     "production": {
       "above": "{value} driwwer",
-      "accuracy": "Genauegkeet vun der Prognose",
+      "accuracy": "Genauegkeet",
       "below": "{value} drënner",
       "deviation": "Ofwäichung",
       "expectedTomorrow": "muer erwaart",
@@ -1321,6 +1345,7 @@
     },
     "socTemp": {
       "charged": "opgelueden",
+      "power": "Leeschtung",
       "soc": "Opgelueden",
       "temperature": "Temperatur",
       "used": "verbraucht"
@@ -1343,12 +1368,14 @@
       "co2Saved": "CO₂ gespuert",
       "co2SavedTooltip": "Am Verglach mam Ofzéie vun der verbrauchter {energy} aus dem Netz.",
       "configure": "Elo konfiguréieren",
+      "fromGrid": "{value} vum Netz",
       "noCo2": "Keng CO₂-Daten.",
       "noPrice": "Keng Präisdaten.",
       "savings": "Erspuernisser",
       "savingsTooltip": "Am Verglach mam Akaf vun der verbrauchter {energy} aus dem Stroumnetz.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Zesummefaassung",
     "title": "Energie"
   },
   "footer": {
@@ -1460,6 +1487,7 @@
     "price": {
       "average": "Duerchschnitt",
       "constant": "Präis",
+      "estimate": "Schätzung",
       "lowestHour": "Bëllegst Stonn",
       "range": "Beräich"
     },
@@ -1491,6 +1519,7 @@
     "cancel": "Ofbriechen",
     "download": "Eroflueden",
     "error": "Feeler",
+    "loading": "Luet",
     "none": "keng",
     "note": "Bemierkung:",
     "warning": "Warnung"
@@ -1659,7 +1688,8 @@
       "repeatingPlans": "Widderhuelend Planifikatiounen",
       "selectAll": "All auswielen",
       "strategy": {
-        "label": "Strategie"
+        "label": "Strategie",
+        "optimizerHint": "Den {optimizer} berücksichtegt d'Optimiséierungsastellung nach net a wielt ëmmer déi bëllegst Plazen. Limitéiert d'automatesch Kontroll op \"Heembatterie\", wann Dir et braucht."
       },
       "time": "Zäit",
       "title": "Planifikatioun",
@@ -1685,8 +1715,9 @@
       "forecast": "Viraussoen",
       "forecastTooltip": "Prognose: Rescht Solarproduktioun fir haut",
       "gridImport": "Import vum Netz",
+      "heaters": "Heizung | Heizungen",
       "homePower": "Verbrauch",
-      "loadpoints": "Wallbox | Wallbox | {count} Wallboxen",
+      "loadpoints": "Wallbox | Wallboxen",
       "loadpointsLimit": "{limit} Limitt",
       "noEnergy": "Keng Moossdaten",
       "pv": "Solaranlag",
@@ -1713,18 +1744,22 @@
       "avgPrice": "⌀ Präis",
       "charged": "Opgelueden",
       "co2": "⌀ CO₂",
+      "consumed": "Verbraucht",
       "duration": "Dauer",
       "emission": "Emissiounen",
       "fallbackName": "Luedstatioun",
       "finished": "Fäerdeg um",
       "last24hEnergy": "Lescht 24h",
+      "last24hShort": "24h",
       "last7dEnergy": "Lescht 7 Deeg",
+      "last7dShort": "7d",
       "phasesMismatch": "Méi Phasen aktiv wéi konfiguréiert. Iwwerpréift d'Phasekonfiguratioun.",
       "power": "Leeschtung",
       "price": "Käschten",
       "remaining": "Reschtzäit",
       "remoteDisabledHard": "{source}: Deaktivéiert",
       "remoteDisabledSoft": "{source}: Adaptatiivt PV-Lueden deaktivéiert",
+      "session": "Sessioun",
       "solar": "Sonn",
       "todayEnergy": "Haut"
     },
@@ -1862,7 +1897,7 @@
       "temp": "Temperatur.",
       "tempLimit": "Temp. Limitt",
       "unknown": "Gaascht Gefier",
-      "vehicleSoc": "Gelueden"
+      "vehicleSoc": "Opgelueden"
     },
     "vehicleSettings": {
       "connectedTo": "verbonne mat {0}",
@@ -1945,7 +1980,8 @@
       "dismiss": "Ausblennen",
       "legacyTariffs": "Aal Tarifconfiguratioun gëtt benotzt.",
       "progress": "{done} vun {total} fäerdeg",
-      "title": "Stell däi Setup fäerdeg an"
+      "suggestions": "1 Virschlag | {count} Virschléi",
+      "title": "Stell deng Konfiguratioun fäerdeg an"
     },
     "control": {
       "description": "Fänk mat dengem éischten un. Aner kënnen duerno op der Konfiguratiounssäit derbäi gefüügt ginn.",

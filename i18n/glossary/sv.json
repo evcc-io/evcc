@@ -77,5 +77,6 @@
     "vehicleLimit": "fordonsgräns",
     "vehicleRange": "räckvidd",
     "withdrawal": "uttag",
-    "consumed": "förbrukat"
+    "consumed": "förbrukat",
+    "totalConsumption": "total förbrukning"
 }

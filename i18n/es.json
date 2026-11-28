@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Utiliza el contador de red existente de tu instalación.",
       "meterSelectionHelpNoMeter": "Se usa la suma de todos los puntos de carga.",
       "meterSelectionLabel": "Selección de contador",
+      "meterSelectionWarningNoMeter": "No se incluye el consumo de la vivienda, por lo que los límites pueden superarse. Se recomienda encarecidamente usar un contador en el circuito raíz.",
       "parentCircuit": "Circuito superior",
       "template": "Circuito",
       "titleAdd": "Añadir circuito",
@@ -190,10 +191,20 @@
     "circuits": {
       "addMainCircuit": "Añadir circuito principal",
       "addSubCircuit": "Añadir circuito subordinado",
+      "assignHere": "Asignar aquí",
+      "assignmentFailed": "No se pudo guardar la asignación. Inténtalo de nuevo.",
       "description": "Asegura que la suma de todos los puntos de carga conectados a un circuito no exceda la potencia configurada y los límites de corriente. Los circuitos pueden ser anidados para construir una jerarquía.",
+      "destination": "Circuito {title}",
+      "dragHint": "Arrastra a un circuito o toca para seleccionar.",
+      "dropAssign": "Suelta para asignar",
+      "dropRemove": "Suelta aquí para quitarlo de su circuito.",
       "legacyWarning": "¡Hay una nueva configuración de circuitos disponible! Elimina aquí tu configuración actual y guarda para usar el nuevo proceso guiado.",
       "meterDedicated": "Contador",
       "meterGrid": "Red eléctrica",
+      "moveHere": "Mover aquí",
+      "notAssigned": "Sin asignar",
+      "selectAssign": "Toca un circuito para asignar {title}.",
+      "selectMove": "Toca un circuito para mover {title}, o el grupo para quitarlo.",
       "title": "Gestión de carga",
       "usableMeters": "Referencias de contadores utilizables"
     },
@@ -239,7 +250,8 @@
         "meter": "Añadir contador",
         "switch": "Añadir toma conmutable",
         "tariff": "Añadir tarifa"
-      }
+      },
+      "noNesting": "El anidamiento está limitado a un nivel. Elige otra opción."
     },
     "deviceValue": {
       "activeClients": "Clientes activos",
@@ -319,12 +331,16 @@
           "returnEnergy": "Descargado"
         },
         "consumer": {
+          "chargeStatusB": "en espera",
+          "chargeStatusC": "calentando",
           "energy": "Consumido",
           "returnEnergy": "Producido"
         },
         "continuous": {
           "chargeStatusB": "normal",
-          "chargeStatusC": "boost"
+          "chargeStatusC": "boost",
+          "dimmed": "Reducido",
+          "enabled": "Potenciado"
         },
         "grid": {
           "energy": "Importado",
@@ -346,6 +362,7 @@
       "auxMeter": "Consumidor inteligente",
       "batteryStorage": "Almacenamiento en baterías",
       "consumer": "Consumidor",
+      "extMeter": "Contador adicional",
       "solarSystem": "Sistema solar"
     },
     "editor": {
@@ -405,6 +422,7 @@
       "change": "Cambiar",
       "clear": "Claro",
       "close": "Cerrar",
+      "configured": "Configurado",
       "confirmDisable": "¿Deshabilitar este dispositivo? Se ignorará después del próximo reinicio.",
       "confirmEnable": "¿Volver a habilitar este dispositivo?",
       "confirmSave": "Hay cambios sin guardar. ¿Guardar ahora?",
@@ -417,6 +435,8 @@
       "disable": "Deshabilitar",
       "disabled": "deshabilitado",
       "dismiss": "Descartar",
+      "dismissAll": "Descartar todo",
+      "dismissed": "Descartado",
       "docsLink": "Ver documentación.",
       "dragHandle": "Asa de arrastre",
       "dragItem": "Arrastrable: {title}",
@@ -547,10 +567,24 @@
       "defaultModeLabel": "Modo predeterminado",
       "delete": "Eliminar",
       "demandPredictor": {
+        "daily": {
+          "description": "Media de los últimos días. Para dispositivos con el mismo patrón cada día.",
+          "label": "Media diaria"
+        },
+        "defaultGroup": "Predeterminado del dispositivo",
+        "description": "Cómo predice el optimizador la demanda a partir del consumo pasado.",
         "label": "Perfil",
+        "noTempTariff": "Requiere una previsión de temperatura.",
+        "noTempTariffLink": "Añadir previsión",
         "profilesGroup": "Perfiles",
         "temperature": {
+          "description": "Consumo pasado con temperaturas exteriores similares. Para calefacción de espacios, como las bombas de calor.",
           "label": "Temperatura"
+        },
+        "title": "Previsión de demanda",
+        "weekday": {
+          "description": "Media del mismo día de la semana. Para dispositivos con horario semanal, como calentadores de agua o de piscina.",
+          "label": "Día de la semana"
         }
       },
       "electricalSubtitle": "En caso de duda, consulta a tu electricista.",
@@ -953,6 +987,7 @@
       "noClients": "Todavía no hay clientes. Nadie puede conectarse aún.",
       "password": "Contraseña",
       "passwordOnce": "Esta contraseña solo se muestra una vez. Escanea el código QR o cópiala ahora. No podrás volver a verla.",
+      "print": "Imprimir / PDF",
       "privacy": "Al habilitar esta función, aceptas nuestra {0}.",
       "privacyLink": "política de privacidad",
       "qrInstall": "Instala la app de evcc para {ios} o {android}.",
@@ -1145,6 +1180,7 @@
       "template": "Proveedor",
       "title": "Tarifas y previsiones",
       "titleChoice": "¿Qué quieres añadir?",
+      "titleSub": "Subtarifa",
       "type": {
         "co2": "Intensidad de CO₂",
         "feedIn": "Precio de vertido a la red",
@@ -1204,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Carga",
       "charged": "Cargado",
+      "discharge": "Descarga",
       "discharged": "Descargado"
     },
     "consumers": {
@@ -1225,16 +1263,32 @@
         "energy": "cargado",
         "returnEnergy": "descargado"
       },
+      "consumer": {
+        "energy": "Consumido"
+      },
       "grid": {
         "energy": "Importación",
         "returnEnergy": "Exportación"
       },
+      "heating": {
+        "energy": "Consumido"
+      },
+      "loadpoint": {
+        "energy": "Cargado"
+      },
       "meter": {
         "energy": "Energía",
         "returnEnergy": "Energía (inversa)"
+      },
+      "pv": {
+        "energy": "Producido"
       }
     },
-    "empty": "No hay datos de energía para este periodo.",
+    "empty": {
+      "description": "No hay datos de energía para este período.",
+      "descriptionCurrent": "Aún no hay datos de energía. Los valores aparecen cuando se registran las primeras mediciones.",
+      "showCurrent": "Ver período actual"
+    },
     "flow": {
       "battery": "Batería",
       "batteryCharge": "Carga de batería",
@@ -1247,6 +1301,7 @@
       "overview": "Vista general",
       "pv": "Producción",
       "title": "Flujo de energía",
+      "totalConsumption": "Consumo total",
       "usage": "Uso",
       "withdrawal": "Retiro"
     },
@@ -1284,6 +1339,7 @@
     },
     "socTemp": {
       "charged": "cargado",
+      "power": "Potencia",
       "soc": "carga",
       "temperature": "temperatura",
       "used": "usado"
@@ -1306,12 +1362,14 @@
       "co2Saved": "CO₂ ahorrado",
       "co2SavedTooltip": "En comparación con obtener de la red los {energy} consumidos.",
       "configure": "Configurar ahora",
+      "fromGrid": "{value} de la red",
       "noCo2": "Sin datos de CO₂.",
       "noPrice": "Sin datos de precio.",
       "savings": "Ahorros",
       "savingsTooltip": "En comparación con comprar a la red los {energy} consumidos.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Resumen",
     "title": "Energía"
   },
   "footer": {
@@ -1423,6 +1481,7 @@
     "price": {
       "average": "Promedio",
       "constant": "Precio",
+      "estimate": "estimación",
       "lowestHour": "La hora más barata",
       "range": "Rango"
     },
@@ -1454,6 +1513,7 @@
     "cancel": "Cancelar",
     "download": "Descargar",
     "error": "Error",
+    "loading": "Cargando",
     "none": "ninguno",
     "note": "Nota:",
     "warning": "Advertencia"
@@ -1621,7 +1681,8 @@
       "repeatingPlans": "Planes recurrentes",
       "selectAll": "Seleccionar todo",
       "strategy": {
-        "label": "Estrategia"
+        "label": "Estrategia",
+        "optimizerHint": "El {optimizer} aún no tiene en cuenta el ajuste de optimización y siempre elige las franjas más baratas. Limita el control automático a «Batería doméstica» si lo necesitas."
       },
       "time": "Tiempo",
       "title": "Plan",
@@ -1647,6 +1708,7 @@
       "forecast": "Previsión",
       "forecastTooltip": "Previsión: producción solar restante para hoy",
       "gridImport": "Consumo de red",
+      "heaters": "Calefactor | Calefactores",
       "homePower": "Consumo",
       "loadpoints": "Punto de carga | Punto de carga | {count} puntos de carga",
       "loadpointsLimit": "{limit} límite",
@@ -1704,18 +1766,22 @@
       "avgPrice": "Precio ⌀",
       "charged": "Cargado",
       "co2": "CO₂ ⌀",
+      "consumed": "Consumido",
       "duration": "Duración",
       "emission": "Emisión",
       "fallbackName": "Punto de carga",
       "finished": "Hora de finalización",
       "last24hEnergy": "Últimas 24 horas",
+      "last24hShort": "24 h",
       "last7dEnergy": "Últimos 7 días",
+      "last7dShort": "7 d",
       "phasesMismatch": "Hay más fases activas de las configuradas. Revisa la configuración de fases.",
       "power": "Potencia",
       "price": "Coste",
       "remaining": "Tiempo restante",
       "remoteDisabledHard": "{source}: desactivado",
       "remoteDisabledSoft": "{source}: Carga adaptativa desactivada",
+      "session": "Sesión",
       "solar": "Solar",
       "todayEnergy": "Hoy"
     },
@@ -1935,6 +2001,7 @@
       "dismiss": "Descartar",
       "legacyTariffs": "Se usa la configuración de tarifas antigua.",
       "progress": "{done} de {total} completados",
+      "suggestions": "1 sugerencia | {count} sugerencias",
       "title": "Completa tu configuración"
     },
     "control": {
