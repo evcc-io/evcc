@@ -1,0 +1,684 @@
+package charger
+
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+import (
+	"context"
+	"encoding/binary"
+	"fmt"
+	"math"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
+	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
+)
+
+// SmaModbus charger implementation for the SMA eCharger (Modbus profile SW 2.7)
+type SmaModbus struct {
+	implement.Caps
+	log        *util.Logger
+	conn       *modbus.Connection
+	mu         sync.Mutex
+	setpoint   *uint32 // last written WSptMin and WSptMax
+	updated    time.Time
+	refresh    time.Duration
+	enabled    bool
+	power      float64
+	phases     int
+	current    float64
+	minCurrent float64
+	maxCurrent float64
+	minPower   float64
+	maxPower   float64
+}
+
+const (
+	// input registers
+	smaModbusRegMainModel   = 30051 // UINT32
+	smaModbusRegModel       = 30053 // UINT32
+	smaModbusRegVendor      = 30055 // UINT32
+	smaModbusRegPkgRev      = 30059 // UINT32
+	smaModbusRegSerial      = 35549 // STRING
+	smaModbusRegSwRev       = 35565 // STRING
+	smaModbusRegHealth      = 35465 // ENUM32
+	smaModbusRegEvent       = 30213 // UINT32
+	smaModbusRegLimitSrc    = 35547 // UINT32
+	smaModbusRegMaxPowerRtg = 33019 // INT32 W
+	smaModbusRegPowers      = 30777 // INT32 W L1-L3
+	smaModbusRegVoltages    = 30783 // UINT32 0.01 V L1-L3
+	smaModbusRegCurrents    = 30977 // INT32 0.001 A L1-L3
+	smaModbusRegSession     = 35453 // UINT64 Wh
+	smaModbusRegPower       = 35457 // INT32 W
+	smaModbusRegEnergy      = 35459 // UINT64 Wh
+	smaModbusRegStatus      = 35463 // ENUM32
+
+	// holding registers
+	smaModbusRegMaxCurrent = 40480 // UINT32 0.001 A
+	smaModbusRegMinCurrent = 41473 // UINT32 0.1 A
+	smaModbusRegMode       = 41471 // ENUM32
+	smaModbusRegRelease    = 41475 // ENUM32
+	smaModbusRegChargeLock = 41477 // ENUM32, access management: free charging mode or app/RFID release
+	smaModbusRegStpWhenFl  = 41485 // UINT32, disconnect after full charge
+	smaModbusRegWSptMax    = 41431 // INT32 W, active power setpoint upper bound
+	smaModbusRegWSptMin    = 41433 // INT32 W, active power setpoint lower bound
+	smaModbusRegTmsOutPrc  = 41525 // UINT32 0.01 s, active power control timeout
+	smaModbusRegMaxPower   = 44383 // INT32 W, configured maximum power WMaxIn, must not be used for control
+	smaModbusRegMinPower   = 44387 // INT32 W
+
+	smaModbusYes          = 1129
+	smaModbusChargeLockOn = smaModbusYes
+	smaModbusReleased     = 5172
+
+	smaModbusNaN32 = 0x80000000
+
+	// the charger selects 3p from about 4350 W and 1p below without hysteresis, setpoints keep a margin
+	smaModbusPhaseThreshold = 4350 // W
+	smaModbusMinPower3p     = 4500 // W
+	smaModbusMaxPower1p     = 4300 // W
+
+	// setpoint refresh if the control timeout is unknown
+	smaModbusRefresh = 30 * time.Second
+)
+
+func init() {
+	registry.AddCtx("sma-modbus", NewSmaModbusFromConfig)
+}
+
+// NewSmaModbusFromConfig creates a SMA eCharger from generic config
+func NewSmaModbusFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+	cc := modbus.Settings{
+		ID: 3,
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	return NewSmaModbus(ctx, cc)
+}
+
+// NewSmaModbus creates SMA eCharger charger
+func NewSmaModbus(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
+	log := util.NewLogger("sma-modbus")
+	conn.Logger(log.TRACE)
+
+	wb := &SmaModbus{
+		Caps:    implement.New(),
+		log:     log,
+		conn:    conn,
+		phases:  3,
+		refresh: smaModbusRefresh,
+	}
+
+	if enabled, err := wb.Enabled(); err == nil {
+		wb.enabled = enabled
+	}
+
+	// setpoints are limited to the configured power range
+	if v, err := wb.readHolding32(smaModbusRegMinCurrent); err == nil {
+		wb.minCurrent = smaModbusUint32(v) / 10
+	}
+	if v, err := wb.readHolding32(smaModbusRegMaxCurrent); err == nil {
+		wb.maxCurrent = smaModbusUint32(v) / 1e3
+	}
+	if v, err := wb.readHolding32(smaModbusRegMinPower); err == nil {
+		wb.minPower = smaModbusInt32(v)
+	}
+	if v, err := wb.readHolding32(smaModbusRegMaxPower); err == nil {
+		wb.maxPower = smaModbusInt32(v)
+	}
+
+	if wb.phaseSwitching() {
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+
+		// the charger may already run a 1p setpoint after a restart
+		if v, err := wb.readHolding32(smaModbusRegWSptMin); err == nil && v != 0 && v != smaModbusNaN32 {
+			wb.power = math.Abs(smaModbusInt32(v))
+			wb.phases = smaModbusPhases(wb.power)
+		}
+	} else {
+		wb.phases = 1
+	}
+
+	// disconnecting after full charge ends the session on the charger side
+	if v, err := wb.readHolding32(smaModbusRegStpWhenFl); err == nil && v == smaModbusYes {
+		log.WARN.Println(`"Disconnect after full charge" must be set to "No"`)
+	}
+
+	// setpoints fall back after the control timeout
+	if v, err := wb.readHolding32(smaModbusRegTmsOutPrc); err == nil {
+		if timeout := time.Duration(smaModbusUint32(v)*10) * time.Millisecond; timeout > 0 {
+			wb.refresh = max(timeout/2, time.Second)
+		}
+	}
+
+	go wb.watchdog(ctx)
+
+	return wb, nil
+}
+
+// watchdog rewrites the setpoint before the charger falls back after the control timeout
+func (wb *SmaModbus) watchdog(ctx context.Context) {
+	for {
+		wb.mu.Lock()
+		wait := wb.refresh
+		if wb.setpoint != nil {
+			wait -= time.Since(wb.updated)
+		}
+		wb.mu.Unlock()
+
+		select {
+		case <-time.After(wait):
+		case <-ctx.Done():
+			return
+		}
+
+		wb.mu.Lock()
+		if wb.setpoint != nil && time.Since(wb.updated) >= wb.refresh {
+			if err := wb.writeSetpoint(*wb.setpoint); err != nil {
+				wb.log.ERROR.Println("watchdog:", err)
+			}
+			wb.updated = time.Now()
+		}
+		wb.mu.Unlock()
+	}
+}
+
+// writeSetpoint writes WSptMax and WSptMin to the same value, making the setpoint exact in all charging modes
+func (wb *SmaModbus) writeSetpoint(val uint32) error {
+	b := binary.BigEndian.AppendUint32(binary.BigEndian.AppendUint32(nil, val), val)
+	_, err := wb.conn.WriteMultipleRegisters(smaModbusRegWSptMax, 4, b)
+	return err
+}
+
+// applySetpoint writes the setpoint, zero while disabled
+func (wb *SmaModbus) applySetpoint() error {
+	var val uint32
+	if wb.enabled {
+		// consumption is negative
+		val = uint32(int32(-math.Ceil(wb.power)))
+	}
+
+	if err := wb.writeSetpoint(val); err != nil {
+		return err
+	}
+
+	wb.setpoint = &val
+	wb.updated = time.Now()
+
+	return nil
+}
+
+// read32 reads count consecutive 32 bit input registers
+func (wb *SmaModbus) read32(reg uint16, count int) ([]uint32, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, uint16(2*count))
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]uint32, count)
+	for i := range res {
+		res[i] = binary.BigEndian.Uint32(b[4*i:])
+	}
+
+	return res, nil
+}
+
+// smaModbusInt32 converts a signed 32 bit value, treating NaN as zero
+func smaModbusInt32(u uint32) float64 {
+	if u == smaModbusNaN32 {
+		return 0
+	}
+	return float64(int32(u))
+}
+
+// Status implements the api.Charger interface
+func (wb *SmaModbus) Status() (api.ChargeStatus, error) {
+	v, err := wb.read32(smaModbusRegStatus, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	switch s := v[0]; s {
+	case 200111: // not connected
+		return api.StatusA, nil
+	case 200112, 200114, 5169: // sleeping, charge target reached, locked
+		return api.StatusB, nil
+	case 200113: // charging
+		return api.StatusC, nil
+	default: // 200106 warning, 200115 error
+		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+	}
+}
+
+var _ api.StatusReasoner = (*SmaModbus)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *SmaModbus) StatusReason() (api.Reason, error) {
+	lock, err := wb.readHolding32(smaModbusRegChargeLock)
+	if err != nil || lock != smaModbusChargeLockOn {
+		return api.ReasonUnknown, err
+	}
+
+	release, err := wb.readHolding32(smaModbusRegRelease)
+	if err != nil || release == smaModbusReleased {
+		return api.ReasonUnknown, err
+	}
+
+	return api.ReasonWaitingForAuthorization, nil
+}
+
+// Enabled implements the api.Charger interface
+func (wb *SmaModbus) Enabled() (bool, error) {
+	v, err := wb.readHolding32(smaModbusRegWSptMin)
+	if err != nil {
+		return false, err
+	}
+
+	// NaN means no setpoint, the charger is not limited
+	return v != 0, nil
+}
+
+// Enable implements the api.Charger interface
+func (wb *SmaModbus) Enable(enable bool) error {
+	power := wb.power
+	if enable && power == 0 {
+		power = wb.calcPower(wb.minCurrent, wb.phases)
+	}
+
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	enabled := wb.enabled
+	wb.enabled = enable
+	wb.power = power
+
+	if err := wb.applySetpoint(); err != nil {
+		wb.enabled = enabled
+		return err
+	}
+
+	return nil
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *SmaModbus) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*SmaModbus)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *SmaModbus) MaxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.1f", current)
+	}
+
+	if err := wb.setPower(current, wb.phases); err != nil {
+		return err
+	}
+
+	wb.current = current
+
+	return nil
+}
+
+// setPower stores the power limit and writes it while enabled, the charger selects 1p or 3p internally based on it
+func (wb *SmaModbus) setPower(current float64, phases int) error {
+	power := wb.calcPower(current, phases)
+
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	prev := wb.power
+	wb.power = power
+
+	if !wb.enabled {
+		return nil
+	}
+
+	if err := wb.applySetpoint(); err != nil {
+		wb.power = prev
+		return err
+	}
+
+	return nil
+}
+
+// calcPower converts current and phases to the charging power within the charger limits
+func (wb *SmaModbus) calcPower(current float64, phases int) float64 {
+	// the charger derives the phase current from the setpoint and pauses below its minimum current
+	current = max(current, wb.minCurrent)
+
+	power := grid.CurrentToPower(current, phases) * wb.voltageFactor(phases)
+
+	if phases > 1 {
+		power = max(power, smaModbusMinPower3p)
+	} else {
+		power = min(power, smaModbusMaxPower1p)
+	}
+
+	// limits are reported as negative consumption values
+	if minPower := math.Abs(wb.minPower); minPower > 0 {
+		power = max(power, minPower)
+	}
+	if maxPower := math.Abs(wb.maxPower); maxPower > 0 {
+		power = min(power, maxPower)
+	}
+
+	return power
+}
+
+// voltageFactor scales from nominal to measured voltage since the charger derives the phase current from the latter
+func (wb *SmaModbus) voltageFactor(phases int) float64 {
+	u1, u2, u3, err := wb.Voltages()
+	if err != nil {
+		return 1
+	}
+
+	us := []float64{u1}
+	if phases > 1 {
+		us = append(us, u2, u3)
+	}
+
+	// equal phase currents draw the sum of the phase voltages, hence the mean of the measured ones
+	var sum float64
+	var n int
+	for _, u := range us {
+		if u > 0 {
+			sum += u
+			n++
+		}
+	}
+	if n == 0 {
+		return 1
+	}
+
+	return sum / float64(n) / grid.Voltage
+}
+
+// phaseSwitching reports whether the charger reaches 3p, it selects 1p below the threshold power
+func (wb *SmaModbus) phaseSwitching() bool {
+	if maxPower := math.Abs(wb.maxPower); maxPower > 0 && maxPower < smaModbusPhaseThreshold {
+		wb.log.DEBUG.Printf("max power %.0fW below 3p threshold, charging 1p only", maxPower)
+		return false
+	}
+
+	// single phase devices are rated for the max current on one phase
+	if v, err := wb.read32(smaModbusRegMaxPowerRtg, 1); err == nil && wb.maxCurrent > 0 {
+		if rated := math.Abs(smaModbusInt32(v[0])); rated > 0 && math.Round(rated/(wb.maxCurrent*grid.Voltage)) == 1 {
+			wb.log.DEBUG.Println("single phase device")
+			return false
+		}
+	}
+
+	return true
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *SmaModbus) phases1p3p(phases int) error {
+	// loadpoint may not rewrite an unchanged current, hence apply the new phases immediately
+	if wb.current > 0 {
+		if err := wb.setPower(wb.current, phases); err != nil {
+			return err
+		}
+	}
+
+	wb.phases = phases
+
+	return nil
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *SmaModbus) getPhases() (int, error) {
+	v, err := wb.readHolding32(smaModbusRegWSptMin)
+	if err != nil {
+		return 0, err
+	}
+
+	var power float64
+	switch v {
+	case smaModbusNaN32: // not limited, the charger uses its configured maximum
+		power = wb.maxPower
+	case 0: // disabled, phases follow the stored setpoint on enable
+		wb.mu.Lock()
+		power = wb.power
+		wb.mu.Unlock()
+	default:
+		power = smaModbusInt32(v)
+	}
+
+	if power == 0 {
+		return 0, nil
+	}
+
+	return smaModbusPhases(math.Abs(power)), nil
+}
+
+// smaModbusPhases returns the phases the charger selects for the setpoint power
+func smaModbusPhases(power float64) int {
+	if power >= smaModbusPhaseThreshold {
+		return 3
+	}
+	return 1
+}
+
+var _ api.PowerLimiter = (*SmaModbus)(nil)
+
+// GetMinMaxPower implements the api.PowerLimiter interface
+func (wb *SmaModbus) GetMinMaxPower() (float64, float64, error) {
+	if wb.minPower == 0 || wb.maxPower == 0 {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	// limits are reported as negative consumption values
+	return math.Abs(wb.minPower), math.Abs(wb.maxPower), nil
+}
+
+var _ api.Meter = (*SmaModbus)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *SmaModbus) CurrentPower() (float64, error) {
+	v, err := wb.read32(smaModbusRegPower, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return smaModbusInt32(v[0]), nil
+}
+
+// energy reads a 64 bit Wh counter in kWh, treating NaN as zero
+func (wb *SmaModbus) energy(reg uint16) (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, 4)
+	if err != nil {
+		return 0, err
+	}
+
+	u := binary.BigEndian.Uint64(b)
+	if u == math.MaxUint64 {
+		return 0, nil
+	}
+
+	return float64(u) / 1e3, nil
+}
+
+var _ api.MeterEnergy = (*SmaModbus)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *SmaModbus) TotalEnergy() (float64, error) {
+	return wb.energy(smaModbusRegEnergy)
+}
+
+var _ api.ChargeRater = (*SmaModbus)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *SmaModbus) ChargedEnergy() (float64, error) {
+	return wb.energy(smaModbusRegSession)
+}
+
+// phaseValues reads three 32 bit phase values; abs since grid measurements may be signed from the grid perspective
+func (wb *SmaModbus) phaseValues(reg uint16, scale float64, signed bool) (float64, float64, float64, error) {
+	v, err := wb.read32(reg, 3)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i, u := range v {
+		if signed {
+			res[i] = math.Abs(smaModbusInt32(u)) * scale
+		} else if u != math.MaxUint32 {
+			res[i] = float64(u) * scale
+		}
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhasePowers = (*SmaModbus)(nil)
+
+// Powers implements the api.PhasePowers interface
+func (wb *SmaModbus) Powers() (float64, float64, float64, error) {
+	return wb.phaseValues(smaModbusRegPowers, 1, true)
+}
+
+var _ api.PhaseCurrents = (*SmaModbus)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *SmaModbus) Currents() (float64, float64, float64, error) {
+	return wb.phaseValues(smaModbusRegCurrents, 0.001, true)
+}
+
+var _ api.PhaseVoltages = (*SmaModbus)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *SmaModbus) Voltages() (float64, float64, float64, error) {
+	return wb.phaseValues(smaModbusRegVoltages, 0.01, false)
+}
+
+// readString reads a UTF-8 string input register of count 16 bit words
+func (wb *SmaModbus) readString(reg uint16, count uint16) (string, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, count)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(strings.TrimRight(string(b), "\x00")), nil
+}
+
+// readHolding32 reads a 32 bit holding register
+func (wb *SmaModbus) readHolding32(reg uint16) (uint32, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return binary.BigEndian.Uint32(b), nil
+}
+
+// smaModbusUint32 converts an unsigned 32 bit value, treating NaN as zero
+func smaModbusUint32(u uint32) float64 {
+	if u == math.MaxUint32 {
+		return 0
+	}
+	return float64(u)
+}
+
+var _ api.CurrentLimiter = (*SmaModbus)(nil)
+
+// GetMinMaxCurrent implements the api.CurrentLimiter interface
+func (wb *SmaModbus) GetMinMaxCurrent() (float64, float64, error) {
+	if wb.minCurrent == 0 || wb.maxCurrent == 0 {
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	return wb.minCurrent, wb.maxCurrent, nil
+}
+
+var _ api.Diagnosis = (*SmaModbus)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *SmaModbus) Diagnose() {
+	for _, r := range []struct {
+		name string
+		reg  uint16
+	}{
+		{"Main model", smaModbusRegMainModel},
+		{"Model", smaModbusRegModel},
+		{"Vendor", smaModbusRegVendor},
+		{"Package revision", smaModbusRegPkgRev},
+		{"Status", smaModbusRegStatus},
+		{"Health", smaModbusRegHealth},
+		{"Event", smaModbusRegEvent},
+		{"Power limit source", smaModbusRegLimitSrc},
+		{"Rated max power", smaModbusRegMaxPowerRtg},
+	} {
+		if v, err := wb.read32(r.reg, 1); err == nil {
+			fmt.Printf("\t%s:\t%d\n", r.name, v[0])
+		}
+	}
+
+	for _, r := range []struct {
+		name string
+		reg  uint16
+	}{
+		{"Serial", smaModbusRegSerial},
+		{"Software", smaModbusRegSwRev},
+	} {
+		if s, err := wb.readString(r.reg, 16); err == nil {
+			fmt.Printf("\t%s:\t%s\n", r.name, s)
+		}
+	}
+
+	for _, r := range []struct {
+		name string
+		reg  uint16
+	}{
+		{"Mode", smaModbusRegMode},
+		{"Release", smaModbusRegRelease},
+		{"Charge lock", smaModbusRegChargeLock},
+		{"Disconnect after full charge", smaModbusRegStpWhenFl},
+		{"Setpoint max", smaModbusRegWSptMax},
+		{"Setpoint min", smaModbusRegWSptMin},
+		{"Control TmsOutPrc", smaModbusRegTmsOutPrc},
+		{"Max power", smaModbusRegMaxPower},
+		{"Min power", smaModbusRegMinPower},
+		{"Rated max current", smaModbusRegMaxCurrent},
+		{"Min current", smaModbusRegMinCurrent},
+	} {
+		if b, err := wb.conn.ReadHoldingRegisters(r.reg, 2); err == nil {
+			fmt.Printf("\t%s:\t%d\n", r.name, int32(binary.BigEndian.Uint32(b)))
+		}
+	}
+}
