@@ -4683,6 +4683,13 @@
               "type": "number"
             }
           },
+          "voltages": {
+            "description": "Voltage per phase in V.",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
           "soc": {
             "description": "Charge level in %.",
             "type": "number"
@@ -4838,6 +4845,13 @@
           },
           "currents": {
             "description": "Current per phase in A.",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "voltages": {
+            "description": "Voltage per phase in V.",
             "type": "array",
             "items": {
               "type": "number"

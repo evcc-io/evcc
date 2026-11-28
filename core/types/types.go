@@ -16,6 +16,7 @@ type Measurement struct {
 	ReturnEnergy  *float64    `json:"returnEnergy,omitempty"`
 	Powers        []float64   `json:"powers,omitempty"`
 	Currents      []float64   `json:"currents,omitempty"`
+	Voltages      []float64   `json:"voltages,omitempty"`
 	ExcessDCPower float64     `json:"excessdcpower,omitempty"`
 	Capacity      *float64    `json:"capacity,omitempty"`
 	Soc           *float64    `json:"soc,omitempty"`
