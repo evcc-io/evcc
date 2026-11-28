@@ -1,7 +1,7 @@
 {
     "autarky": {
         "description": "Share of total consumption covered without the grid.",
-        "other": "autarky"
+        "other": "self-sufficiency"
     },
     "authorization": {
         "description": "Releasing a charging point for charging, e.g. by RFID or app.",
@@ -292,7 +292,7 @@
         "other": "surcharge"
     },
     "totalConsumption": {
-        "description": "Consumption plus charging and heating controlled by evcc. Basis for autarky and savings.",
+        "description": "Consumption plus charging and heating controlled by evcc. Basis for self-sufficiency and savings.",
         "other": "total consumption"
     },
     "usage": {

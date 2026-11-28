@@ -111,7 +111,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	keys := append(slices.Clone(v.socKeys), KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyEnyaqSoc)
+	keys := append(slices.Clone(v.socKeys), KeyBatteryStateReportSoc, FieldHvBatteryLevelValue, FieldSoc, KeyEnyaqSoc)
 	if p := lookup(data, keys...); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}

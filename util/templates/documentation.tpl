@@ -64,6 +64,9 @@ product:
 {{- if .ProductGroup }}
   group: {{ .ProductGroup }}
 {{- end }}
+{{- if .Link }}
+link: {{ .Link }}
+{{- end }}
 {{- if .Capabilities }}
 capabilities: ["{{ join "\", \"" .Capabilities }}"]
 {{- end }}

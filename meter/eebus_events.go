@@ -41,16 +41,27 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 
 	switch event {
 	// Monitoring Appliance
-	case mpc.UseCaseSupportUpdate, mgcp.UseCaseSupportUpdate:
-		c.maUseCaseSupportUpdate(entity)
+	case mpc.UseCaseSupportUpdate:
+		if !eebus.EntityRemoved(c.ma.MaMPCInterface, &c.mu, &c.maEntity, entity) {
+			c.maUseCaseSupportUpdate(entity)
+		}
+
+	case mgcp.UseCaseSupportUpdate:
+		if !eebus.EntityRemoved(c.ma.MaMGCPInterface, &c.mu, &c.maEntity, entity) {
+			c.maUseCaseSupportUpdate(entity)
+		}
 
 	// Energy Guard - LPC
 	case lpc.UseCaseSupportUpdate:
-		c.egLpcUseCaseSupportUpdate(entity)
+		if !eebus.EntityRemoved(c.eg.EgLPCInterface, &c.mu, &c.egLpcEntity, entity) {
+			c.egLpcUseCaseSupportUpdate(entity)
+		}
 
 	// Energy Guard - LPP
 	case lpp.UseCaseSupportUpdate:
-		c.egLppUseCaseSupportUpdate(entity)
+		if !eebus.EntityRemoved(c.eg.EgLPPInterface, &c.mu, &c.egLppEntity, entity) {
+			c.egLppUseCaseSupportUpdate(entity)
+		}
 	}
 }
 

@@ -12,6 +12,8 @@ params:
   - name: usage
     choice: ["grid", "pv"]
   - name: host
+  - name: cache
+    default: 1s
 render: |
   {{- if eq .usage "grid" }}
   # Grid
@@ -19,6 +21,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886336&dxsEntries=83886848&dxsEntries=83886592&dxsEntries=67109120 # Home PV Power + Home Grid Power + Home Bat Power - PV/Bat Inverter Power
+    cache: {{ .cache }}
     #   | ----------------------------- Home PV W -------- | + | --------------------------- Home Grid W -------- | + | --------------------------- Home Bat W --------- | - | --------------------------- PV/BAT Inv W ------- |
     jq: (.dxsEntries[] | select(.dxsId==83886336) | .value ) + (.dxsEntries[] | select(.dxsId==83886848) | .value ) + (.dxsEntries[] | select(.dxsId==83886592) | .value ) - (.dxsEntries[] | select(.dxsId==67109120) | .value )
   {{- end }}
@@ -28,11 +31,13 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # total AC output
+    cache: {{ .cache }}
     #   | ---------------------------- PAC W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==67109120) | .value )
   energy:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
+    cache: {{ .cache }}
     #   | --------------------- Total Yield W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==251658753) | .value )
   {{- end }}

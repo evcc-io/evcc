@@ -16,7 +16,8 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
@@ -815,19 +816,23 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 
 	log := util.NewLogger("mqtt")
 
-	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, conf.CaCert, conf.ClientCert, conf.ClientKey, func(options *paho.ClientOptions) {
+	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, conf.CaCert, conf.ClientCert, conf.ClientKey, func(cfg *autopaho.ClientConfig) {
 		if !runAsService || conf.Topic == "" {
 			return
 		}
 
 		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
-		options.SetWill(topic, "offline", 1, true)
+		cfg.WillMessage = &paho.WillMessage{Topic: topic, Payload: []byte("offline"), QoS: 1, Retain: true}
 
-		oc := options.OnConnect
-		options.SetOnConnectHandler(func(client paho.Client) {
-			oc(client)                                   // original handler
-			_ = client.Publish(topic, 1, true, "online") // alive - not logged
-		})
+		up := cfg.OnConnectionUp
+		cfg.OnConnectionUp = func(cm *autopaho.ConnectionManager, ack *paho.Connack) {
+			up(cm, ack) // original handler
+
+			// alive - not logged, async as the handler must not block
+			go func() {
+				_, _ = cm.Publish(context.Background(), &paho.Publish{Topic: topic, QoS: 1, Retain: true, Payload: []byte("online")})
+			}()
+		}
 	})
 	if err != nil {
 		return fmt.Errorf("failed configuring mqtt: %w", err)

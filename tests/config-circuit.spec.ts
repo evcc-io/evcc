@@ -620,6 +620,32 @@ test.describe("circuit test result", async () => {
 });
 
 test.describe("circuit grid meter", async () => {
+  test("no meter link on card", async ({ page }) => {
+    await start(CONFIG_FAST, CONFIG_CIRCUIT_TREE);
+    await page.goto("/#/config");
+
+    const card = page.getByTestId("circuits");
+    const circuitsModal = page.getByTestId("circuits-modal");
+    const circuitModal = page.getByTestId("circuit-modal");
+    const meterSelection = circuitModal.getByLabel("Meter Selection");
+    const noMeter = card.getByRole("button", { name: "No meter" });
+
+    await expect(card).toContainText("Home");
+    await expect(noMeter).not.toBeVisible();
+
+    await card.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByText("Home", { exact: true }).click();
+    await expectModalVisible(circuitModal);
+    await meterSelection.selectOption({ label: "No meter" });
+    await closeCircuitModals(circuitModal, circuitsModal, "Save");
+
+    await noMeter.click();
+    await expectModalVisible(circuitModal);
+    await expect(meterSelection).toHaveValue("none");
+    await closeCircuitModals(circuitModal, circuitsModal, "Close");
+  });
+
   test("option availability, sub circuit, ref cleaned on delete", async ({ page }) => {
     await start(CONFIG_FAST);
     await page.goto("/#/config");
@@ -663,6 +689,11 @@ test.describe("circuit grid meter", async () => {
       "Grid meter",
       "Dedicated meter",
     ]);
+    await expect(meterSelection).toHaveValue("grid");
+    await meterSelection.selectOption({ label: "No meter" });
+    await expect(circuitModal.getByTestId("circuit-meter-selection")).toContainText(
+      "Using a meter is highly recommended for the root circuit."
+    );
     await meterSelection.selectOption({ label: "Grid meter" });
     await expect(circuitModal.getByTestId("circuit-meter-selection")).toContainText(
       "Uses the existing grid meter"

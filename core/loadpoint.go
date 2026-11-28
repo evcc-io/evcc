@@ -2209,6 +2209,24 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	return power
 }
 
+// updateChargeEnergy feeds the energy collector, preferring meter totals
+func (lp *Loadpoint) updateChargeEnergy() {
+	var importTotal *float64
+	if api.HasCap[api.MeterEnergy](lp.chargeMeter) {
+		if f := lp.chargeMeterTotal(); f > 0 {
+			lp.publish(keys.ChargeTotalImport, f)
+			importTotal = &f
+		}
+	}
+
+	if lp.chargeEnergy != nil {
+		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
+		if v := lp.GetSoc(); v > 0 {
+			lp.chargeEnergy.SetSocTemp(v, lp.chargerHasFeature(api.Heating))
+		}
+	}
+}
+
 // phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
 func (lp *Loadpoint) phasesFromChargeCurrents() {
 	if lp.chargeCurrents == nil {
@@ -2326,22 +2344,6 @@ func (lp *Loadpoint) publishChargeProgress() {
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
-
-	// update energy, prefer totals
-	var importTotal *float64
-	if api.HasCap[api.MeterEnergy](lp.chargeMeter) {
-		if f := lp.chargeMeterTotal(); f > 0 {
-			lp.publish(keys.ChargeTotalImport, f)
-			importTotal = &f
-		}
-	}
-
-	if lp.chargeEnergy != nil {
-		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
-		if v := lp.GetSoc(); v > 0 {
-			lp.chargeEnergy.SetSocTemp(v, lp.chargerHasFeature(api.Heating))
-		}
-	}
 
 	lp.publishEnergyStats()
 }

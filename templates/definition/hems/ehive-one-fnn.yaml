@@ -81,12 +81,14 @@ params:
     help:
       en: Older or invalid samples are rejected. Must be longer than the acquisition interval of the ioManager.
       de: Ältere oder ungültige Messwerte werden verworfen. Muss länger als das Erfassungsintervall des ioManagers sein.
+  - name: cache
+    default: 1s
 render: |
   {{- define "ehive-input" }}
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/fnn
     timeout: 2s
-    cache: 1s
+    cache: {{ .cache }}
     jq: >-
       if .version != 1 or .valid != true or
         (.age_ms | type) != "number" or .age_ms < 0 or .age_ms > {{ mulf 1000 (durationSeconds .maxage) }} or
@@ -111,11 +113,11 @@ render: |
   {{- end }}
   {{- if ne $d1 "unused" }}
   {{ $d1 }}:
-  {{- template "ehive-input" (dict "host" .host "port" .port "input" "di1" "activelow" .di1activelow "maxage" .maxage) }}
+  {{- template "ehive-input" (dict "host" .host "port" .port "input" "di1" "activelow" .di1activelow "maxage" .maxage "cache" .cache) }}
   {{- end }}
   {{- if ne $d2 "unused" }}
   {{ $d2 }}:
-  {{- template "ehive-input" (dict "host" .host "port" .port "input" "di2" "activelow" .di2activelow "maxage" .maxage) }}
+  {{- template "ehive-input" (dict "host" .host "port" .port "input" "di2" "activelow" .di2activelow "maxage" .maxage "cache" .cache) }}
   {{- end }}
   {{- if and $curtail (ne $d1 "w3") (ne $d2 "w3") }}
   w3:

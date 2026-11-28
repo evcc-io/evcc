@@ -6,27 +6,18 @@ import (
 	"testing"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	pluginmqtt "github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 )
 
-type mockMessage struct {
-	mqtt.Message
-	payload []byte
-}
-
-func (m mockMessage) Topic() string   { return "test" }
-func (m mockMessage) Payload() []byte { return m.payload }
-
-func message(t *testing.T, vin string) mockMessage {
+func message(t *testing.T, vin string) []byte {
 	t.Helper()
 
 	b, err := json.Marshal(StreamingMessage{Vin: vin})
 	require.NoError(t, err)
 
-	return mockMessage{payload: b}
+	return b
 }
 
 func recv(t *testing.T, ch <-chan StreamingMessage) StreamingMessage {
@@ -48,7 +39,7 @@ func TestMqttMultiSubscribe(t *testing.T) {
 	ch1 := conn.Subscribe("wba12345")
 	ch2 := conn.Subscribe("WBA12345")
 
-	conn.handler(nil, message(t, "WBA12345"))
+	conn.handler("test", message(t, "WBA12345"))
 
 	for _, ch := range []<-chan StreamingMessage{ch1, ch2} {
 		require.Equal(t, "WBA12345", recv(t, ch).Vin)
@@ -56,7 +47,7 @@ func TestMqttMultiSubscribe(t *testing.T) {
 
 	// unsubscribing one subscriber must not steal the other's channel
 	conn.Unsubscribe("WBA12345", ch1)
-	conn.handler(nil, message(t, "WBA12345"))
+	conn.handler("test", message(t, "WBA12345"))
 
 	_, ok := <-ch1
 	require.False(t, ok, "ch1 not closed")
@@ -114,7 +105,7 @@ func TestMqttUnboundedQueue(t *testing.T) {
 
 	// handler must not block on a receiver that is not reading
 	for range 100 {
-		conn.handler(nil, message(t, "WBA12345"))
+		conn.handler("test", message(t, "WBA12345"))
 	}
 
 	// queue is drained before the channel is closed

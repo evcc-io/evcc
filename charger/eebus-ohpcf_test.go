@@ -3,8 +3,12 @@ package charger
 import (
 	"testing"
 
+	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
+	"github.com/enbility/eebus-go/usecases/ma/mpc"
+	ucmocks "github.com/enbility/eebus-go/usecases/mocks"
+	spineapi "github.com/enbility/spine-go/api"
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -94,4 +98,60 @@ func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
 	got, ok := c.connectedCompressor()
 	require.True(t, ok)
 	assert.Equal(t, entity, got)
+}
+
+// a device may remove and re-add its entities while connected (#36631): the removal
+// drops the cached entity, so the re-added instance replaces the stale one.
+func TestOHPCFEntityReAdded(t *testing.T) {
+	uc := ucmocks.NewMaMPCInterface(t)
+	c := &EEBusOHPCF{ma: &eebus.MonitoringAppliance{MaMPCInterface: uc}}
+
+	stale := spinemocks.NewEntityRemoteInterface(t)
+	fresh := spinemocks.NewEntityRemoteInterface(t)
+	sibling := spinemocks.NewEntityRemoteInterface(t)
+
+	listed := func(entities ...spineapi.EntityRemoteInterface) {
+		var res []eebusapi.RemoteEntityScenarios
+		for _, e := range entities {
+			res = append(res, eebusapi.RemoteEntityScenarios{Entity: e})
+		}
+		uc.EXPECT().RemoteEntitiesScenarios().Return(res).Once()
+	}
+
+	listed(stale)
+	c.UseCaseEvent(nil, stale, mpc.UseCaseSupportUpdate)
+	assert.Same(t, stale, c.mpcEntity)
+
+	// removal of another entity keeps the cached one
+	listed(stale)
+	c.UseCaseEvent(nil, sibling, mpc.UseCaseSupportUpdate)
+	assert.Same(t, stale, c.mpcEntity)
+
+	listed()
+	c.UseCaseEvent(nil, stale, mpc.UseCaseSupportUpdate)
+	assert.Nil(t, c.mpcEntity)
+
+	listed(fresh)
+	c.UseCaseEvent(nil, fresh, mpc.UseCaseSupportUpdate)
+	assert.Same(t, fresh, c.mpcEntity)
+}
+
+// ohpcfRemoved is an OHPCF use case that lists no remote entity
+type ohpcfRemoved struct{ ucapi.CemOHPCFInterface }
+
+func (ohpcfRemoved) RemoteEntitiesScenarios() []eebusapi.RemoteEntityScenarios { return nil }
+
+// a removed compressor must not be mistaken for a connected one
+func TestOHPCFCompressorRemoved(t *testing.T) {
+	entity := spinemocks.NewEntityRemoteInterface(t)
+	c := &EEBusOHPCF{
+		cem:        &eebus.CustomerEnergyManagement{OHPCF: ohpcfRemoved{}},
+		connector:  eebus.NewConnector(),
+		compressor: entity,
+	}
+
+	c.UseCaseEvent(nil, entity, ohpcf.UseCaseSupportUpdate)
+
+	_, ok := c.connectedCompressor()
+	assert.False(t, ok)
 }

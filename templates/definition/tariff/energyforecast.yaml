@@ -3,28 +3,33 @@ link: https://www.energyforecast.de
 products:
   - brand: Energy Forecast
 requirements:
+  description:
+    de: Aufschlag und Steuer, die hier nicht gesetzt sind, werden aus dem Profil auf energyforecast.de übernommen. Wer nur einen Aufschlag setzt, sollte auch die Steuer setzen, da der Aufschlag sonst unversteuert bleibt.
+    en: Charges and tax not set here are taken from your energyforecast.de profile. When setting a charge, also set the tax, otherwise the charge is not taxed.
   evcc: ["skiptest"]
 group: price
-countries: ["DE", "LU", "AT", "FR", "NL", "BE", "PL", "DK"]
+countries:
+  ["DE", "LU", "AT", "FR", "NL", "BE", "PL", "DK", "CH", "CZ", "HU", "SI", "IT", "NO", "SE"]
 params:
   - name: token
     required: true
   - name: domain
     type: choice
-    choice: [DE-LU, AT, FR, NL, BE, PL, DK1, DK2]
+    choice: [DE-LU, AT, FR, NL, BE, PL, DK1, DK2, CH, CZ, HU, SI, IT-North, NO2, SE4]
   - preset: tariff-base
   - preset: tariff-features
 render: |
   type: custom
   {{ include "base" . }}
   {{ include "features" . }}
+  # values set in evcc are applied locally and zeroed in the API, unset values come from the energyforecast.de profile
   forecast:
     source: http
-    uri: https://www.energyforecast.de/api/v1/predictions/next_96_hours?resolution=QUARTER_HOURLY&fixed_cost_cent=0&vat=0&token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}
+    uri: https://www.energyforecast.de/api/v2/forecast?token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}{{ if or (ne (toString .charges) "") .chargesZones .formula }}&fixed_cost_cent=0{{ end }}{{ if or (ne (toString .tax) "") .formula }}&vat=0{{ end }}
     jq: |
-      map({
-        "start": .start | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "end":   .end   | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "value": .price,
+      .data | map({
+        "start": .start,
+        "end": .end,
+        "value": (.total_ct_kwh / 100),
         "estimate": (.price_origin == "forecast")
       }) | tostring

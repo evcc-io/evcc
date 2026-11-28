@@ -82,6 +82,10 @@ func NewFnn(site site.API, maxDimPower, productionNominalMax float64, w3G, s1G, 
 		return nil, errors.New("cannot have w4 without power limit")
 	}
 
+	if (s1G != nil || s2G != nil) && productionNominalMax <= 0 {
+		return nil, errors.New("cannot have s1 or s2 without productionnominalmax")
+	}
+
 	c := &Fnn{
 		log:                  util.NewLogger("fnn"),
 		site:                 site,
