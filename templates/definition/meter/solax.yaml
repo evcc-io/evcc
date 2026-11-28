@@ -170,8 +170,7 @@ render: |
   {{- if eq $power 0 }}{{ $power = 30000 }}{{ end }}
   batterymode:
     source: watchdog
-    timeout: 5m # re-write at timeout/2, inverter leaves the mode after 600s
-    reset: 1 # reset watchdog on normal
+    timeout: 5m # re-write at timeout/2, inverter leaves the mode after 600s; normal is refreshed too since writes during inverter idle are not applied
     set:
       source: switch
       switch:
