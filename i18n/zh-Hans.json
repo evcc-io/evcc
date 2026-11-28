@@ -146,11 +146,13 @@
       "template": "制造商",
       "titleAdd": {
         "charging": "添加充电桩",
-        "heating": "添加加热器"
+        "heating": "添加加热器",
+        "switch": "添加可切换插座"
       },
       "titleEdit": {
         "charging": "编辑充电桩",
-        "heating": "编辑加热设备"
+        "heating": "编辑加热设备",
+        "switch": "编辑可切换插座"
       },
       "type": {
         "custom": {
@@ -179,6 +181,7 @@
       "meterSelectionHelpGridMeter": "使用您安装中现有的电网计量表。",
       "meterSelectionHelpNoMeter": "使用所有充电点的总和。",
       "meterSelectionLabel": "计量表选择",
+      "meterSelectionWarningNoMeter": "未包含住宅耗电，因此可能超出限制。强烈建议为根电路使用计量表。",
       "parentCircuit": "上级电路",
       "template": "电路",
       "titleAdd": "添加电路",
@@ -188,10 +191,20 @@
     "circuits": {
       "addMainCircuit": "添加主电路",
       "addSubCircuit": "添加子电路",
+      "assignHere": "分配到此处",
+      "assignmentFailed": "无法保存分配。请重试。",
       "description": "确保连接到同一电路的所有充电点的总和不超过配置的功率和电流限制。电路可以嵌套以构建层级结构。",
+      "destination": "电路 {title}",
+      "dragHint": "拖到电路上，或点按选择。",
+      "dropAssign": "拖放以分配",
+      "dropRemove": "拖放到此处以从电路中移除。",
       "legacyWarning": "新的电路配置可用！在此移除并保存您的配置，以使用新的引导流程。",
       "meterDedicated": "计量表",
       "meterGrid": "电网",
+      "moveHere": "移动到此处",
+      "notAssigned": "未分配",
+      "selectAssign": "点按电路以分配 {title}。",
+      "selectMove": "点按电路以移动 {title}，或点按池以将其移除。",
       "title": "负载管理",
       "usableMeters": "可用的计量表引用"
     },
@@ -224,6 +237,15 @@
       "title": "限发",
       "titleAdd": "添加限发设备",
       "titleEdit": "编辑限发设备"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "添加充电桩",
+        "meter": "添加计量表",
+        "switch": "添加可切换插座",
+        "tariff": "添加费率"
+      },
+      "noNesting": "嵌套仅限一层。请选择其他选项。"
     },
     "deviceValue": {
       "activeClients": "活跃客户端",
@@ -303,8 +325,16 @@
           "returnEnergy": "放电"
         },
         "consumer": {
+          "chargeStatusB": "待机",
+          "chargeStatusC": "加热中",
           "energy": "耗电",
           "returnEnergy": "发电"
+        },
+        "continuous": {
+          "chargeStatusB": "正常",
+          "chargeStatusC": "增强",
+          "dimmed": "已降功率",
+          "enabled": "已增强"
         },
         "grid": {
           "energy": "购电",
@@ -326,6 +356,7 @@
       "auxMeter": "智能耗电设备",
       "batteryStorage": "储能电池",
       "consumer": "耗电设备",
+      "extMeter": "额外计量表",
       "solarSystem": "太阳能系统"
     },
     "editor": {
@@ -383,6 +414,7 @@
       "change": "更改",
       "clear": "清除",
       "close": "关闭",
+      "configured": "已配置",
       "confirmDisable": "停用此设备？下次重启后将忽略该设备。",
       "confirmEnable": "重新启用此设备？",
       "confirmSave": "有未保存的更改。是否立即保存？",
@@ -395,6 +427,8 @@
       "disable": "停用",
       "disabled": "已停用",
       "dismiss": "忽略",
+      "dismissAll": "全部忽略",
+      "dismissed": "已忽略",
       "docsLink": "查看文档。",
       "dragHandle": "拖动手柄",
       "dragItem": "可拖动：{title}",
@@ -524,6 +558,27 @@
       "defaultModeKeep": "保持不变",
       "defaultModeLabel": "默认模式",
       "delete": "删除",
+      "demandPredictor": {
+        "daily": {
+          "description": "近几天的平均值。适用于每天用电模式相同的设备。",
+          "label": "每日平均"
+        },
+        "defaultGroup": "设备默认",
+        "description": "优化器如何根据过往耗电量预测需求。",
+        "label": "曲线",
+        "noTempTariff": "需要气温预测。",
+        "noTempTariffLink": "添加预测",
+        "profilesGroup": "曲线",
+        "temperature": {
+          "description": "相似室外温度下的过往耗电量。适用于热泵等室内供暖设备。",
+          "label": "温度"
+        },
+        "title": "需求预测",
+        "weekday": {
+          "description": "同一星期几的平均值。适用于按周计划运行的设备，如热水器或泳池加热器。",
+          "label": "星期几"
+        }
+      },
       "electricalSubtitle": "如有疑问，请咨询电工。",
       "electricalTitle": "电气",
       "energyMeterHelp": "如果充电桩没有内置计量表，则需额外添加。",
@@ -924,6 +979,7 @@
       "noClients": "暂无客户端。目前无人可以连接。",
       "password": "密码",
       "passwordOnce": "此密码仅显示一次。请立即扫描二维码或复制。之后将无法再次查看。",
+      "print": "打印 / PDF",
       "privacy": "启用此功能即表示您同意我们的{0}。",
       "privacyLink": "隐私政策",
       "qrInstall": "安装适用于 {ios} 或 {android} 的 evcc 应用。",
@@ -1113,6 +1169,7 @@
       "template": "提供商",
       "title": "费率与预测",
       "titleChoice": "您想添加什么？",
+      "titleSub": "子费率",
       "type": {
         "co2": "CO₂ 强度",
         "feedIn": "上网电价",
@@ -1172,7 +1229,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "充电",
       "charged": "已充电",
+      "discharge": "放电",
       "discharged": "已放电"
     },
     "consumers": {
@@ -1193,16 +1252,32 @@
         "energy": "充电",
         "returnEnergy": "放电"
       },
+      "consumer": {
+        "energy": "已耗电量"
+      },
       "grid": {
         "energy": "购电",
         "returnEnergy": "上网"
       },
+      "heating": {
+        "energy": "已耗电量"
+      },
+      "loadpoint": {
+        "energy": "已充电量"
+      },
       "meter": {
         "energy": "电能",
         "returnEnergy": "电能（反向）"
+      },
+      "pv": {
+        "energy": "已发电量"
       }
     },
-    "empty": "此时间范围内无电能数据。",
+    "empty": {
+      "description": "此时段无能耗数据。",
+      "descriptionCurrent": "暂无能耗数据。记录首次测量后将显示数值。",
+      "showCurrent": "显示当前时段"
+    },
     "flow": {
       "battery": "电池",
       "batteryCharge": "电池充电",
@@ -1215,6 +1290,7 @@
       "overview": "概览",
       "pv": "发电",
       "title": "能量流",
+      "totalConsumption": "总耗电量",
       "usage": "用电",
       "withdrawal": "取用"
     },
@@ -1252,6 +1328,7 @@
     },
     "socTemp": {
       "charged": "已充电",
+      "power": "功率",
       "soc": "电量",
       "temperature": "温度",
       "used": "已使用"
@@ -1274,12 +1351,14 @@
       "co2Saved": "CO₂ 减排",
       "co2SavedTooltip": "与从电网获取所消耗的 {energy} 相比。",
       "configure": "立即配置",
+      "fromGrid": "来自电网 {value}",
       "noCo2": "无 CO₂ 数据。",
       "noPrice": "无价格数据。",
       "savings": "节省",
       "savingsTooltip": "与从电网购买所消耗的 {energy} 相比。",
       "versus": "{value} 对比 {reference}"
     },
+    "summary": "摘要",
     "title": "能源"
   },
   "footer": {
@@ -1391,6 +1470,7 @@
     "price": {
       "average": "平均值",
       "constant": "价格",
+      "estimate": "估算",
       "lowestHour": "最便宜时段",
       "range": "范围"
     },
@@ -1422,6 +1502,7 @@
     "cancel": "取消",
     "download": "下载",
     "error": "错误",
+    "loading": "加载中",
     "none": "无",
     "note": "注意：",
     "warning": "警告"
@@ -1589,7 +1670,8 @@
       "repeatingPlans": "重复计划",
       "selectAll": "全选",
       "strategy": {
-        "label": "策略"
+        "label": "策略",
+        "optimizerHint": "{optimizer}尚未考虑优化设置，始终选择最便宜的时段。如需此设置，请将自动控制限制为“住宅电池”。"
       },
       "time": "时间",
       "title": "计划",
@@ -1615,6 +1697,7 @@
       "forecast": "预测",
       "forecastTooltip": "预测：今日剩余太阳能发电量",
       "gridImport": "电网用电",
+      "heaters": "加热器|加热器",
       "homePower": "住宅耗电",
       "loadpoints": "充电点 | {count} 个充电点 | {count} 个充电点",
       "loadpointsLimit": "{limit} 上限",
@@ -1643,18 +1726,22 @@
       "avgPrice": "⌀ 电价",
       "charged": "已充电量",
       "co2": "⌀ CO₂",
+      "consumed": "已耗电量",
       "duration": "时长",
       "emission": "排放",
       "fallbackName": "充电点",
       "finished": "结束时间",
       "last24hEnergy": "过去 24 小时",
+      "last24hShort": "24 小时",
       "last7dEnergy": "过去 7 天",
+      "last7dShort": "7 天",
       "phasesMismatch": "激活的相数多于配置。请检查相数配置。",
       "power": "功率",
       "price": "成本",
       "remaining": "剩余时间",
       "remoteDisabledHard": "{source}：已关闭",
       "remoteDisabledSoft": "{source}：已关闭自适应太阳能充电",
+      "session": "会话",
       "solar": "太阳能",
       "todayEnergy": "今天"
     },
@@ -1874,6 +1961,7 @@
       "dismiss": "忽略",
       "legacyTariffs": "正在使用旧版电价配置。",
       "progress": "已完成 {done}/{total}",
+      "suggestions": "1 条建议|{count} 条建议",
       "title": "完成设置"
     },
     "control": {

@@ -144,11 +144,13 @@
       "template": "Gyártó",
       "titleAdd": {
         "charging": "Töltő Hozzáadása",
-        "heating": "Fűtőberendezés hozzáadása"
+        "heating": "Fűtőberendezés hozzáadása",
+        "switch": "Kapcsolható dugalj hozzáadása"
       },
       "titleEdit": {
         "charging": "Töltő Szerkesztése",
-        "heating": "Fűtőberendezés szerkesztése"
+        "heating": "Fűtőberendezés szerkesztése",
+        "switch": "Kapcsolható dugalj szerkesztése"
       },
       "type": {
         "custom": {
@@ -177,6 +179,7 @@
       "meterSelectionHelpGridMeter": "A rendszered meglévő hálózati mérőjét használja.",
       "meterSelectionHelpNoMeter": "Az összes töltőpont összege kerül felhasználásra.",
       "meterSelectionLabel": "Mérő kiválasztása",
+      "meterSelectionWarningNoMeter": "A ház fogyasztása nincs beleszámolva, ezért a korlátok túlléphetők. A gyökéráramkörhöz erősen ajánlott mérőt használni.",
       "parentCircuit": "Szülő áramkör",
       "template": "Áramkör",
       "titleAdd": "Áramkör hozzáadása",
@@ -186,10 +189,20 @@
     "circuits": {
       "addMainCircuit": "Fő áramkör hozzáadása",
       "addSubCircuit": "Alárendelt áramkör hozzáadása",
+      "assignHere": "Hozzárendelés ide",
+      "assignmentFailed": "A hozzárendelés mentése sikertelen. Próbáld újra.",
       "description": "Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez.",
+      "destination": "{title} áramkör",
+      "dragHint": "Húzd egy áramkörre, vagy koppints a kiválasztáshoz.",
+      "dropAssign": "Ejtsd ide a hozzárendeléshez",
+      "dropRemove": "Ejtsd ide, hogy eltávolítsd az áramköréből.",
       "legacyWarning": "Új áramkör konfiguráció érhető el! Távolítsd el és mentsd el itt a konfigurációdat az új, vezetett folyamat használatához.",
       "meterDedicated": "Mérő",
       "meterGrid": "Hálózat",
+      "moveHere": "Áthelyezés ide",
+      "notAssigned": "Nincs hozzárendelve",
+      "selectAssign": "Koppints egy áramkörre a(z) {title} hozzárendeléséhez.",
+      "selectMove": "Koppints egy áramkörre a(z) {title} áthelyezéséhez, vagy a készletre az eltávolításhoz.",
       "title": "Terhelés Menedzsment",
       "usableMeters": "Használható mérőreferenciák"
     },
@@ -222,6 +235,15 @@
       "title": "Lekorlátozás",
       "titleAdd": "Lekorlátozó eszköz hozzáadása",
       "titleEdit": "Lekorlátozó eszköz szerkesztése"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Töltő hozzáadása",
+        "meter": "Mérő hozzáadása",
+        "switch": "Kapcsolható dugalj hozzáadása",
+        "tariff": "Tarifa hozzáadása"
+      },
+      "noNesting": "A beágyazás egy szintre korlátozott. Válassz másik lehetőséget."
     },
     "deviceValue": {
       "activeClients": "Aktív kliensek",
@@ -301,8 +323,16 @@
           "returnEnergy": "Kisütve"
         },
         "consumer": {
+          "chargeStatusB": "készenlét",
+          "chargeStatusC": "fűtés",
           "energy": "Fogyasztott",
           "returnEnergy": "Termelt"
+        },
+        "continuous": {
+          "chargeStatusB": "normál",
+          "chargeStatusC": "rásegítés",
+          "dimmed": "Csökkentve",
+          "enabled": "Rásegítve"
         },
         "grid": {
           "energy": "Importált",
@@ -324,6 +354,7 @@
       "auxMeter": "Okos fogyasztó",
       "batteryStorage": "Akkumulátoros tároló",
       "consumer": "Fogyasztó",
+      "extMeter": "További mérő",
       "solarSystem": "Naperőmű"
     },
     "editor": {
@@ -381,6 +412,7 @@
       "change": "Módosítás",
       "clear": "Tiszta",
       "close": "Bezárás",
+      "configured": "Konfigurálva",
       "confirmDisable": "Letiltod ezt az eszközt? A következő újraindítás után figyelmen kívül lesz hagyva.",
       "confirmEnable": "Újra engedélyezed ezt az eszközt?",
       "confirmSave": "Vannak nem mentett módosítások. Mented most?",
@@ -393,6 +425,8 @@
       "disable": "Letiltás",
       "disabled": "letiltva",
       "dismiss": "Elvetés",
+      "dismissAll": "Összes elvetése",
+      "dismissed": "Elvetve",
       "docsLink": "Lásd a dokumentációt.",
       "dragHandle": "Húzógomb",
       "dragItem": "Húzható: {title}",
@@ -522,6 +556,27 @@
       "defaultModeKeep": "változatlan",
       "defaultModeLabel": "Alapértelmezett mód",
       "delete": "Törlés",
+      "demandPredictor": {
+        "daily": {
+          "description": "Az elmúlt napok átlaga. Minden nap azonos mintát követő eszközökhöz.",
+          "label": "Napi átlag"
+        },
+        "defaultGroup": "Eszköz alapértelmezése",
+        "description": "Hogyan becsüli az optimalizáló a keresletet a korábbi fogyasztásból.",
+        "label": "Profil",
+        "noTempTariff": "Hőmérséklet-előrejelzés szükséges.",
+        "noTempTariffLink": "Előrejelzés hozzáadása",
+        "profilesGroup": "Profilok",
+        "temperature": {
+          "description": "Korábbi fogyasztás hasonló külső hőmérsékleten. Helyiségfűtéshez, például hőszivattyúkhoz.",
+          "label": "Hőmérséklet"
+        },
+        "title": "Kereslet-előrejelzés",
+        "weekday": {
+          "description": "Ugyanazon hétköznap átlaga. Heti ütemezésű eszközökhöz, például vízmelegítőkhöz vagy medencefűtőkhöz.",
+          "label": "Hétköznap"
+        }
+      },
       "electricalSubtitle": "Ha kétséged van, kérdezd meg a villanyszerelődet.",
       "electricalTitle": "Elektromos",
       "energyMeterHelp": "További fogyasztásmérő, ha a töltő nem rendelkezik egy integrálttal.",
@@ -922,6 +977,7 @@
       "noClients": "Még nincsenek kliensek. Még senki sem tud csatlakozni.",
       "password": "Jelszó",
       "passwordOnce": "Ez a jelszó csak egyszer jelenik meg. Olvasd be a QR-kódot vagy másold ki most. Később nem fogod tudni újra megnézni.",
+      "print": "Nyomtatás / PDF",
       "privacy": "A funkció engedélyezésével elfogadod az {0}.",
       "privacyLink": "adatvédelmi irányelveinket",
       "qrInstall": "Telepítsd az evcc alkalmazást {ios} vagy {android} rendszerre.",
@@ -1114,6 +1170,7 @@
       "template": "Szolgáltató",
       "title": "Tarifák és előrejelzések",
       "titleChoice": "Mit szeretnél hozzáadni?",
+      "titleSub": "Altarifa",
       "type": {
         "co2": "CO₂-intenzitás",
         "feedIn": "Hálózati export ár",
@@ -1173,7 +1230,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Töltés",
       "charged": "Töltve",
+      "discharge": "Kisütés",
       "discharged": "Kisütve"
     },
     "consumers": {
@@ -1194,16 +1253,32 @@
         "energy": "töltve",
         "returnEnergy": "kisütve"
       },
+      "consumer": {
+        "energy": "Fogyasztva"
+      },
       "grid": {
         "energy": "Vételezés",
         "returnEnergy": "Betáplálás"
       },
+      "heating": {
+        "energy": "Fogyasztva"
+      },
+      "loadpoint": {
+        "energy": "Töltve"
+      },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (visszirány)"
+      },
+      "pv": {
+        "energy": "Termelve"
       }
     },
-    "empty": "Nincs elérhető energiaadat ehhez az időszakhoz.",
+    "empty": {
+      "description": "Ebben az időszakban nincs energiaadat.",
+      "descriptionCurrent": "Még nincs energiaadat. Az értékek az első mérések rögzítése után jelennek meg.",
+      "showCurrent": "Aktuális időszak"
+    },
     "flow": {
       "battery": "Akkumulátor",
       "batteryCharge": "Akkumulátor töltés",
@@ -1216,6 +1291,7 @@
       "overview": "Áttekintés",
       "pv": "Termelés",
       "title": "Energiaáramlás",
+      "totalConsumption": "Teljes fogyasztás",
       "usage": "Felhasználás",
       "withdrawal": "Elvétel"
     },
@@ -1253,6 +1329,7 @@
     },
     "socTemp": {
       "charged": "töltve",
+      "power": "Teljesítmény",
       "soc": "töltöttség",
       "temperature": "hőmérséklet",
       "used": "felhasználva"
@@ -1275,11 +1352,13 @@
       "co2Saved": "CO₂ megtakarítva",
       "co2SavedTooltip": "Ahhoz képest, mintha a fogyasztott {energy} energiát a hálózatból vételeznéd.",
       "configure": "Beállítás most",
+      "fromGrid": "{value} a hálózatból",
       "noCo2": "Nincs CO₂ adat.",
       "noPrice": "Nincs áradat.",
       "savings": "Megtakarítás",
       "savingsTooltip": "Ahhoz képest, mintha a fogyasztott {energy} energiát a hálózatból vásárolnád."
     },
+    "summary": "Összegzés",
     "title": "Energia"
   },
   "footer": {
@@ -1391,6 +1470,7 @@
     "price": {
       "average": "Átlag",
       "constant": "Ár",
+      "estimate": "becslés",
       "lowestHour": "Legolcsóbb óra",
       "range": "Tartomány"
     },
@@ -1422,6 +1502,7 @@
     "cancel": "Mégse",
     "download": "Letöltés",
     "error": "Hiba",
+    "loading": "Betöltés",
     "none": "nincs",
     "note": "Megjegyzés:",
     "warning": "Figyelmeztetés"
@@ -1615,6 +1696,7 @@
       "forecast": "Előrejelzés",
       "forecastTooltip": "előrejelzés: ma fennmaradó napenergia-termelés",
       "gridImport": "Hálózatból import",
+      "heaters": "Fűtő | Fűtők",
       "homePower": "Fogyasztás",
       "loadpoints": "Töltő| Töltő | {count} töltő",
       "loadpointsLimit": "{limit} limit",
@@ -1643,18 +1725,22 @@
       "avgPrice": "⌀ Ár",
       "charged": "Töltve",
       "co2": "⌀ CO₂",
+      "consumed": "Fogyasztva",
       "duration": "Időtartam",
       "emission": "Emisszió",
       "fallbackName": "Töltőpont",
       "finished": "Befejezési idő",
       "last24hEnergy": "Utolsó 24 óra",
+      "last24hShort": "24ó",
       "last7dEnergy": "Utolsó 7 nap",
+      "last7dShort": "7n",
       "phasesMismatch": "Több fázis aktív, mint amennyi konfigurálva van. Ellenőrizd a fázis konfigurációt.",
       "power": "Teljesítmény",
       "price": "Költség",
       "remaining": "Hátralévő",
       "remoteDisabledHard": "{source}: kikapcsolva",
       "remoteDisabledSoft": "{source}: kikapcsolva, adaptív napelemes töltés",
+      "session": "Munkamenet",
       "solar": "Nap",
       "todayEnergy": "Ma"
     },
@@ -1874,6 +1960,7 @@
       "dismiss": "Bezárás",
       "legacyTariffs": "Régi tarifakonfiguráció van használatban.",
       "progress": "{done} / {total} kész",
+      "suggestions": "1 javaslat | {count} javaslat",
       "title": "Fejezd be a beállítást"
     },
     "control": {

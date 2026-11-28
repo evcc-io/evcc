@@ -179,8 +179,9 @@
       "meterNone": "Nav skaitītāja",
       "meterSelectionHelpDedicatedMeter": "Pievienojiet esošu skaitītāju šai ķēdei zemāk.",
       "meterSelectionHelpGridMeter": "Izmanto jūsu iekārtas esošo tīkla skaitītāju.",
-      "meterSelectionHelpNoMeter": "Tiek izmantota visu uzlādes punktu summa.",
+      "meterSelectionHelpNoMeter": "Bez skaitītāja slodze tiek aprēķināta kā visu piešķirto uzlādes punktu, sildītāju un apakšķēžu summa.",
       "meterSelectionLabel": "Skaitītāja izvēle",
+      "meterSelectionWarningNoMeter": "Mājas patēriņš netiek iekļauts, tāpēc ierobežojumus var pārsniegt. Saknes ķēdei ļoti ieteicams izmantot skaitītāju.",
       "parentCircuit": "Galvenā ķēde",
       "template": "Ķēde",
       "titleAdd": "Pievienot ķēdi",
@@ -1305,6 +1306,7 @@
       "overview": "Pārskats",
       "pv": "Ražošana",
       "title": "Enerģijas plūsma",
+      "totalConsumption": "Kopējais patēriņš",
       "usage": "Lietojums",
       "withdrawal": "Ņemšana no tīkla"
     },
@@ -1362,7 +1364,7 @@
       "total": "Kopā"
     },
     "stat": {
-      "autarky": "Autarkija",
+      "autarky": "Pašpietiekamība",
       "co2Saved": "Ietaupītais CO₂",
       "co2SavedTooltip": "Salīdzinot ar patērētās {energy} iegūšanu no tīkla.",
       "configure": "Konfigurēt tagad",

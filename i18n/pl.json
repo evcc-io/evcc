@@ -145,11 +145,13 @@
       "template": "Producent",
       "titleAdd": {
         "charging": "Dodaj ładowarkę",
-        "heating": "Dodaj podgrzewacz"
+        "heating": "Dodaj podgrzewacz",
+        "switch": "Dodaj gniazdko przełączalne"
       },
       "titleEdit": {
         "charging": "Edytuj ładowarkę",
-        "heating": "Edytuj podgrzewacz"
+        "heating": "Edytuj podgrzewacz",
+        "switch": "Edytuj gniazdko przełączalne"
       },
       "type": {
         "custom": {
@@ -178,6 +180,7 @@
       "meterSelectionHelpGridMeter": "Używa istniejącego licznika sieciowego Twojej instalacji.",
       "meterSelectionHelpNoMeter": "Używana jest suma wszystkich punktów ładowania.",
       "meterSelectionLabel": "Wybór licznika",
+      "meterSelectionWarningNoMeter": "Zużycie domu nie jest uwzględnione, więc limity mogą zostać przekroczone. Dla obwodu głównego zdecydowanie zalecane jest użycie licznika.",
       "parentCircuit": "Obwód nadrzędny",
       "template": "Obwód",
       "titleAdd": "Dodaj obwód",
@@ -187,10 +190,20 @@
     "circuits": {
       "addMainCircuit": "Dodaj obwód główny",
       "addSubCircuit": "Dodaj obwód podrzędny",
+      "assignHere": "Przypisz tutaj",
+      "assignmentFailed": "Nie udało się zapisać przypisania. Spróbuj ponownie.",
       "description": "Zapewnia, że suma wszystkich punktów odbioru energii podłączonych do obwodu nie przekracza skonfigurowanych limitów mocy i prądu. Obwody można zagnieżdżać, aby zbudować hierarchię.",
+      "destination": "Obwód {title}",
+      "dragHint": "Przeciągnij na obwód lub dotknij, aby wybrać.",
+      "dropAssign": "Upuść, aby przypisać",
+      "dropRemove": "Upuść tutaj, aby usunąć z obwodu.",
       "legacyWarning": "Dostępna jest nowa konfiguracja obwodów! Usuń i zapisz swoją konfigurację tutaj, aby skorzystać z nowego procesu.",
       "meterDedicated": "Licznik",
       "meterGrid": "Sieć",
+      "moveHere": "Przenieś tutaj",
+      "notAssigned": "Nieprzypisany",
+      "selectAssign": "Dotknij obwodu, aby przypisać {title}.",
+      "selectMove": "Dotknij obwodu, aby przenieść {title}, lub puli, aby usunąć.",
       "title": "Zarządzanie obciążeniem",
       "usableMeters": "Użyteczne odniesienia licznikowe"
     },
@@ -229,6 +242,15 @@
       "title": "Ograniczanie produkcji",
       "titleAdd": "Dodaj urządzenie ograniczające produkcję",
       "titleEdit": "Edytuj urządzenie ograniczające produkcję"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Dodaj ładowarkę",
+        "meter": "Dodaj licznik",
+        "switch": "Dodaj gniazdko przełączalne",
+        "tariff": "Dodaj taryfę"
+      },
+      "noNesting": "Zagnieżdżanie jest ograniczone do jednego poziomu. Wybierz inną opcję."
     },
     "deviceValue": {
       "activeClients": "Aktywni klienci",
@@ -308,8 +330,16 @@
           "returnEnergy": "Rozładowano"
         },
         "consumer": {
+          "chargeStatusB": "oczekuje",
+          "chargeStatusC": "grzeje",
           "energy": "Zużyto",
           "returnEnergy": "Wyprodukowano"
+        },
+        "continuous": {
+          "chargeStatusB": "normalnie",
+          "chargeStatusC": "turbo",
+          "dimmed": "Przyciemniony",
+          "enabled": "Wzmocniony"
         },
         "grid": {
           "energy": "Zaimportowano",
@@ -331,6 +361,7 @@
       "auxMeter": "Inteligentne urządzenie konsumujące",
       "batteryStorage": "Magazynowanie energii",
       "consumer": "Konsumenci",
+      "extMeter": "Dodatkowy licznik",
       "solarSystem": "System PV"
     },
     "editor": {
@@ -390,6 +421,7 @@
       "change": "Zmień",
       "clear": "Wyraźne",
       "close": "Zamknij",
+      "configured": "Skonfigurowano",
       "confirmDisable": "Wyłączyć to urządzenie? Będzie ignorowane po następnym ponownym uruchomieniu.",
       "confirmEnable": "Ponownie włączyć to urządzenie?",
       "confirmSave": "Są niezachowane zmiany. Zapisać teraz?",
@@ -402,6 +434,8 @@
       "disable": "Wyłącz",
       "disabled": "wyłączone",
       "dismiss": "Odrzuć",
+      "dismissAll": "Odrzuć wszystko",
+      "dismissed": "Odrzucono",
       "docsLink": "Zobacz dokumentacje.",
       "dragHandle": "Uchwyt do przeciągania",
       "dragItem": "Przeciągalny: {title}",
@@ -531,6 +565,27 @@
       "defaultModeKeep": "zostaw jak jest",
       "defaultModeLabel": "Tryb domyślny",
       "delete": "Usuń",
+      "demandPredictor": {
+        "daily": {
+          "description": "Średnia z ostatnich dni. Dla urządzeń o takim samym wzorcu każdego dnia.",
+          "label": "Średnia dzienna"
+        },
+        "defaultGroup": "Domyślne dla urządzenia",
+        "description": "Sposób, w jaki optymalizator przewiduje zapotrzebowanie na podstawie dotychczasowego zużycia.",
+        "label": "Profil",
+        "noTempTariff": "Wymaga prognozy temperatury.",
+        "noTempTariffLink": "Dodaj prognozę",
+        "profilesGroup": "Profile",
+        "temperature": {
+          "description": "Dotychczasowe zużycie przy podobnych temperaturach zewnętrznych. Do ogrzewania pomieszczeń, np. pomp ciepła.",
+          "label": "Temperatura"
+        },
+        "title": "Prognoza zapotrzebowania",
+        "weekday": {
+          "description": "Średnia z tego samego dnia tygodnia. Dla urządzeń pracujących według tygodniowego harmonogramu, np. podgrzewaczy wody lub basenu.",
+          "label": "Dzień tygodnia"
+        }
+      },
       "electricalSubtitle": "W razie wątpliwości skonsultuj się z elektrykiem.",
       "electricalTitle": "Elektryczny",
       "energyMeterHelp": "Dodatkowy miernik, jeśli ładowarka nie posiada wbudowanego miernika.",
@@ -931,6 +986,7 @@
       "noClients": "Brak klientów. Nikt nie może się jeszcze połączyć.",
       "password": "Hasło",
       "passwordOnce": "To hasło jest wyświetlane tylko raz. Zeskanuj kod QR lub skopiuj je teraz. Nie będzie można go zobaczyć ponownie.",
+      "print": "Drukuj / PDF",
       "privacy": "Włączając tę funkcję, akceptujesz naszą {0}.",
       "privacyLink": "politykę prywatności",
       "qrInstall": "Zainstaluj aplikację evcc na {ios} lub {android}.",
@@ -1123,6 +1179,7 @@
       "template": "Dostawca",
       "title": "Taryfy i Prognozy",
       "titleChoice": "Co zamierzasz dodać?",
+      "titleSub": "Taryfa podrzędna",
       "type": {
         "co2": "Intensywność CO₂",
         "feedIn": "Cena za zasilanie sieci",
@@ -1182,7 +1239,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Ładowanie",
       "charged": "Naładowano",
+      "discharge": "Rozładowanie",
       "discharged": "Rozładowano"
     },
     "consumers": {
@@ -1203,16 +1262,32 @@
         "energy": "naładowane",
         "returnEnergy": "rozładowane"
       },
+      "consumer": {
+        "energy": "Zużyto"
+      },
       "grid": {
         "energy": "zaimportowane",
         "returnEnergy": "wyeksportowane"
       },
+      "heating": {
+        "energy": "Zużyto"
+      },
+      "loadpoint": {
+        "energy": "Naładowano"
+      },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (zwrotna)"
+      },
+      "pv": {
+        "energy": "Wyprodukowano"
       }
     },
-    "empty": "Brak danych o energii dla tego zakresu czasu.",
+    "empty": {
+      "description": "Brak danych energetycznych dla tego okresu.",
+      "descriptionCurrent": "Brak danych energetycznych. Wartości pojawią się po zapisaniu pierwszych pomiarów.",
+      "showCurrent": "Bieżący okres"
+    },
     "flow": {
       "battery": "Magazyn energii",
       "batteryCharge": "Ładowanie magazynu energii",
@@ -1225,6 +1300,7 @@
       "overview": "Przegląd",
       "pv": "Produkcja",
       "title": "Przepływ energii",
+      "totalConsumption": "Całkowite zużycie",
       "usage": "Zużycie",
       "withdrawal": "Pobór"
     },
@@ -1263,6 +1339,7 @@
     },
     "socTemp": {
       "charged": "naładowano",
+      "power": "Moc",
       "soc": "poziom naładowania",
       "temperature": "temperatura",
       "used": "zużyto"
@@ -1285,12 +1362,14 @@
       "co2Saved": "Zaoszczędzone CO₂",
       "co2SavedTooltip": "W porównaniu do pobrania zużytych {energy} z sieci.",
       "configure": "Skonfiguruj teraz",
+      "fromGrid": "{value} z sieci",
       "noCo2": "Brak danych CO₂.",
       "noPrice": "Brak danych o cenach.",
       "savings": "Oszczędności",
       "savingsTooltip": "W porównaniu do zakupu zużytych {energy} z sieci.",
       "versus": "{value} wobec {reference}"
     },
+    "summary": "Podsumowanie",
     "title": "Energia"
   },
   "footer": {
@@ -1402,6 +1481,7 @@
     "price": {
       "average": "Średnia",
       "constant": "Cena",
+      "estimate": "szacunek",
       "lowestHour": "Najtańsza godzina",
       "range": "Zakres"
     },
@@ -1433,6 +1513,7 @@
     "cancel": "Anuluj",
     "download": "Pobierz",
     "error": "Błąd",
+    "loading": "Wczytywanie",
     "none": "brak",
     "note": "Uwaga:",
     "warning": "Ostrzeżenie"
@@ -1600,7 +1681,8 @@
       "repeatingPlans": "Powtarzające się plany",
       "selectAll": "Wybierz wszystko",
       "strategy": {
-        "label": "Strategia"
+        "label": "Strategia",
+        "optimizerHint": "{optimizer} nie uwzględnia jeszcze ustawienia optymalizacji i zawsze wybiera najtańsze przedziały czasowe. Ogranicz automatyczne sterowanie do „Domowego magazynu energii”, jeśli tego potrzebujesz."
       },
       "time": "Czas",
       "title": "Plan",
@@ -1626,6 +1708,7 @@
       "forecast": "Prognoza",
       "forecastTooltip": "prognoza: pozostała na dziś produkcja energii słonecznej",
       "gridImport": "Z sieci",
+      "heaters": "Grzejnik | Grzejniki",
       "homePower": "Konsumpcja",
       "loadpoints": "Odbiornik energii| Odbiornik energii | {count} odbiorniki energii",
       "loadpointsLimit": "{limit} limit",
@@ -1654,18 +1737,22 @@
       "avgPrice": "⌀ Cena",
       "charged": "Zużyto",
       "co2": "⌀ CO₂",
+      "consumed": "Zużyto",
       "duration": "Czas trwania",
       "emission": "Emisyjność",
       "fallbackName": "Punkt odbioru energii",
       "finished": "Godzina zakończenia",
       "last24hEnergy": "Ostatnie 24h",
+      "last24hShort": "24 godz.",
       "last7dEnergy": "Ostatnie 7 dni",
+      "last7dShort": "7 dni",
       "phasesMismatch": "Aktywnych jest więcej faz niż skonfigurowano. Sprawdź konfigurację faz.",
       "power": "Moc",
       "price": "Koszt",
       "remaining": "Pozostało",
       "remoteDisabledHard": "{source}: wyłączone",
       "remoteDisabledSoft": "{source}: adaptacyjne ładowanie słonecznie wyłączone",
+      "session": "Sesja",
       "solar": "Słońce",
       "todayEnergy": "Dzisiaj"
     },
@@ -1885,6 +1972,7 @@
       "dismiss": "Zamknij",
       "legacyTariffs": "Używana jest starsza konfiguracja taryf.",
       "progress": "{done} z {total} gotowe",
+      "suggestions": "1 sugestia | {count} sugestii",
       "title": "Dokończ konfigurację"
     },
     "control": {
@@ -1895,6 +1983,7 @@
     "done": {
       "close": "Do konfiguracji",
       "description": "Konfiguracja zostanie zastosowana po ponownym uruchomieniu. Potem poznaj funkcje. Pojazdy, taryfy i więcej możesz dodać w dowolnym momencie.",
+      "restart": "Uruchom ponownie",
       "title": "Wszystko gotowe"
     },
     "grid": {

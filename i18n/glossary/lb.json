@@ -76,5 +76,7 @@
     "vehicle": "Gefier",
     "vehicleLimit": "Limitt vum Gefier",
     "vehicleRange": "Autonomie",
-    "withdrawal": "Ofzéien"
+    "withdrawal": "Ofzéien",
+    "consumed": "Verbraucht",
+    "totalConsumption": "Gesamtverbrauch"
 }

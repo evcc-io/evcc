@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Naudoja esamą jūsų sistemos tinklo skaitiklį.",
       "meterSelectionHelpNoMeter": "Naudojama visų įkroviklių suma.",
       "meterSelectionLabel": "Skaitiklio Pasirinkimas",
+      "meterSelectionWarningNoMeter": "Namų vartojimas neįtrauktas, todėl ribos gali būti viršytos. Šakninei grandinei labai rekomenduojama naudoti skaitiklį.",
       "parentCircuit": "Pagrindinė grandinė",
       "template": "Grandinė",
       "titleAdd": "Pridėti grandinę",
@@ -421,6 +422,7 @@
       "change": "Pakeisti",
       "clear": "Išvalyti",
       "close": "Uždaryti",
+      "configured": "Sukonfigūruota",
       "confirmDisable": "Išjungti šį įrenginį? Jis bus ignoruojamas po evcc paleidimo iš naujo.",
       "confirmEnable": "Vėl įjungti šį įrenginį?",
       "confirmSave": "Yra neišsaugotų pakeitimų. Išsaugoti dabar ?",
@@ -433,6 +435,8 @@
       "disable": "Išjungti",
       "disabled": "išjungta",
       "dismiss": "Atmesti",
+      "dismissAll": "Atmesti viską",
+      "dismissed": "Atmesta",
       "docsLink": "Žiūrėkite dokumentaciją.",
       "dragHandle": "Vilkti",
       "dragItem": "Galima vilkti: {title}",
@@ -1236,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Įkrauti",
       "charged": "Įkrauta",
+      "discharge": "Iškrauti",
       "discharged": "Iškrauta"
     },
     "consumers": {
@@ -1266,8 +1272,8 @@
         "energy": "Suvartota"
       },
       "grid": {
-        "energy": "iš tinklo",
-        "returnEnergy": "į tinklą"
+        "energy": "Importuota",
+        "returnEnergy": "Eksportuota"
       },
       "heating": {
         "energy": "Suvartota"
@@ -1278,6 +1284,9 @@
       "meter": {
         "energy": "Energija iš tinklo",
         "returnEnergy": "Energija (patiekta į tinklą)"
+      },
+      "pv": {
+        "energy": "Pagaminta"
       }
     },
     "empty": {
@@ -1297,6 +1306,7 @@
       "overview": "Apžvalga",
       "pv": "Gamyba",
       "title": "Energijos tėkmė",
+      "totalConsumption": "Bendras suvartojimas",
       "usage": "Vartojimas",
       "withdrawal": "Išimta"
     },
@@ -1971,7 +1981,8 @@
       "dismiss": "Atmesti",
       "legacyTariffs": "Yra naudojama pasenusi tarifų konfigūracija.",
       "progress": "{done} iš {total} atlikta",
-      "title": "Užbaikite nustatymus"
+      "suggestions": "1 patarimas | {count} patarimai",
+      "title": "Jūsų nustatymai"
     },
     "control": {
       "description": "Pradėkite nuo pirmojo. Vėliau konfigūracijos puslapyje bus galima pridėti daugiau.",

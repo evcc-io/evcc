@@ -146,11 +146,13 @@
       "template": "メーカー",
       "titleAdd": {
         "charging": "充電器を追加",
-        "heating": "ヒーターを追加"
+        "heating": "ヒーターを追加",
+        "switch": "切り替え可能ソケットを追加"
       },
       "titleEdit": {
         "charging": "充電器を編集",
-        "heating": "ヒーターを編集"
+        "heating": "ヒーターを編集",
+        "switch": "切り替え可能ソケットを編集"
       },
       "type": {
         "custom": {
@@ -179,6 +181,7 @@
       "meterSelectionHelpGridMeter": "設備の既存の系統メーターを使用します。",
       "meterSelectionHelpNoMeter": "すべての充電ポイントの合計が使用されます。",
       "meterSelectionLabel": "メーターの選択",
+      "meterSelectionWarningNoMeter": "家庭の消費電力が含まれていないため、上限を超える可能性があります。ルート回路にはメーターの使用を強く推奨します。",
       "parentCircuit": "親回路",
       "template": "回路",
       "titleAdd": "回路を追加",
@@ -188,10 +191,20 @@
     "circuits": {
       "addMainCircuit": "主回路を追加",
       "addSubCircuit": "サブ回路を追加",
+      "assignHere": "ここに割り当て",
+      "assignmentFailed": "割り当てを保存できませんでした。もう一度お試しください。",
       "description": "同一回路内の全充電ポイントの合計が、設定された電力および電流の上限値を超えないように保護します。回路を入れ子状に組み合わせて、階層構造を作ることもできます。",
+      "destination": "回路 {title}",
+      "dragHint": "回路にドラッグするか、タップして選択してください。",
+      "dropAssign": "ドロップして割り当て",
+      "dropRemove": "ここにドロップすると回路から外れます。",
       "legacyWarning": "新しい回路設定が利用できるようになりました。現在の設定を削除して保存し直すことで、新しいガイド付き設定手順を利用できます。",
       "meterDedicated": "メーター",
       "meterGrid": "系統",
+      "moveHere": "ここに移動",
+      "notAssigned": "未割り当て",
+      "selectAssign": "{title} を割り当てる回路をタップしてください。",
+      "selectMove": "{title} を移動する回路をタップしてください。プールにタップすると割り当てを解除します。",
       "title": "負荷管理",
       "usableMeters": "利用可能なメーター参照"
     },
@@ -230,6 +243,15 @@
       "title": "出力制限",
       "titleAdd": "出力制限機器を追加",
       "titleEdit": "出力制限機器を編集"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "充電器を追加",
+        "meter": "メーターを追加",
+        "switch": "切り替え可能ソケットを追加",
+        "tariff": "料金プランを追加"
+      },
+      "noNesting": "入れ子にできるのは1階層までです。別の選択肢を選んでください。"
     },
     "deviceValue": {
       "activeClients": "アクティブなクライアント",
@@ -309,8 +331,16 @@
           "returnEnergy": "放電"
         },
         "consumer": {
+          "chargeStatusB": "スタンバイ",
+          "chargeStatusC": "加熱",
           "energy": "消費",
           "returnEnergy": "発電"
+        },
+        "continuous": {
+          "chargeStatusB": "通常",
+          "chargeStatusC": "ブースト",
+          "dimmed": "制限中",
+          "enabled": "ブースト中"
         },
         "grid": {
           "energy": "買電",
@@ -332,6 +362,7 @@
       "auxMeter": "スマート機器",
       "batteryStorage": "蓄電池",
       "consumer": "一般機器",
+      "extMeter": "追加メーター",
       "solarSystem": "太陽光発電システム"
     },
     "editor": {
@@ -391,6 +422,7 @@
       "change": "変更",
       "clear": "クリア",
       "close": "閉じる",
+      "configured": "設定済み",
       "confirmDisable": "このデバイスを無効にしますか？次回の再起動後は無視されます。",
       "confirmEnable": "このデバイスを再度有効にしますか？",
       "confirmSave": "保存されていない変更があります。保存しますか？",
@@ -403,6 +435,8 @@
       "disable": "無効化",
       "disabled": "無効",
       "dismiss": "無視",
+      "dismissAll": "すべて無視",
+      "dismissed": "無視済み",
       "docsLink": "ドキュメントを参照。",
       "dragHandle": "ドラッグハンドル",
       "dragItem": "ドラッグ可能: {title}",
@@ -532,6 +566,27 @@
       "defaultModeKeep": "変更しない",
       "defaultModeLabel": "デフォルトモード",
       "delete": "削除",
+      "demandPredictor": {
+        "daily": {
+          "description": "直近数日間の平均です。毎日同じパターンで動作する機器向けです。",
+          "label": "日次平均"
+        },
+        "defaultGroup": "機器のデフォルト",
+        "description": "過去の消費量から最適化機能が需要を予測する方法です。",
+        "label": "プロファイル",
+        "noTempTariff": "気温予測が必要です。",
+        "noTempTariffLink": "予測を追加",
+        "profilesGroup": "プロファイル",
+        "temperature": {
+          "description": "外気温が近い時の過去の消費量です。ヒートポンプなど、室内暖房向けです。",
+          "label": "温度"
+        },
+        "title": "需要予測",
+        "weekday": {
+          "description": "同じ曜日の平均です。給湯器やプール用ヒーターなど、週単位のスケジュールで動作する機器向けです。",
+          "label": "曜日"
+        }
+      },
       "electricalSubtitle": "ご不明な点がある場合は、電気工事士にご相談ください。",
       "electricalTitle": "電気",
       "energyMeterHelp": "充電器にメーターが内蔵されていない場合の追加メーターです。",
@@ -932,6 +987,7 @@
       "noClients": "クライアントがまだありません。まだ誰も接続できません。",
       "password": "パスワード",
       "passwordOnce": "このパスワードは一度しか表示されません。すぐにQRコードをスキャンするか、コピーして控えてください。再表示はできません。",
+      "print": "印刷 / PDF",
       "privacy": "この機能を有効にすると、{0}に同意したものとみなされます。",
       "privacyLink": "プライバシーポリシー",
       "qrInstall": "{ios} / {android} 用の evcc アプリをインストールしてください。",
@@ -1124,6 +1180,7 @@
       "template": "プロバイダー",
       "title": "料金プラン・予測",
       "titleChoice": "何を追加しますか？",
+      "titleSub": "サブ料金プラン",
       "type": {
         "co2": "CO₂排出量",
         "feedIn": "売電単価",
@@ -1183,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "充電",
       "charged": "充電",
+      "discharge": "放電",
       "discharged": "放電"
     },
     "consumers": {
@@ -1204,16 +1263,32 @@
         "energy": "充電",
         "returnEnergy": "放電"
       },
+      "consumer": {
+        "energy": "消費量"
+      },
       "grid": {
         "energy": "買電",
         "returnEnergy": "売電"
       },
+      "heating": {
+        "energy": "消費量"
+      },
+      "loadpoint": {
+        "energy": "充電量"
+      },
       "meter": {
         "energy": "エネルギー",
         "returnEnergy": "エネルギー (逆方向)"
+      },
+      "pv": {
+        "energy": "発電量"
       }
     },
-    "empty": "この期間のエネルギーデータはありません。",
+    "empty": {
+      "description": "この期間のエネルギーデータはありません。",
+      "descriptionCurrent": "エネルギーデータはまだありません。最初の計測値が記録されると表示されます。",
+      "showCurrent": "今期を表示"
+    },
     "flow": {
       "battery": "蓄電池",
       "batteryCharge": "蓄電池充電",
@@ -1226,6 +1301,7 @@
       "overview": "概要",
       "pv": "発電",
       "title": "エネルギーフロー",
+      "totalConsumption": "総消費量",
       "usage": "使用量",
       "withdrawal": "消費"
     },
@@ -1264,6 +1340,7 @@
     },
     "socTemp": {
       "charged": "充電",
+      "power": "出力",
       "soc": "充電残量",
       "temperature": "温度",
       "used": "使用"
@@ -1286,12 +1363,14 @@
       "co2Saved": "CO₂削減量",
       "co2SavedTooltip": "消費した{energy}を系統から取得した場合との比較。",
       "configure": "今すぐ設定",
+      "fromGrid": "系統から {value}",
       "noCo2": "CO₂データなし。",
       "noPrice": "価格データなし。",
       "savings": "節約額",
       "savingsTooltip": "消費した{energy}を系統から購入した場合との比較。",
       "versus": "{value} 対 {reference}"
     },
+    "summary": "サマリー",
     "title": "エネルギー"
   },
   "footer": {
@@ -1403,6 +1482,7 @@
     "price": {
       "average": "平均",
       "constant": "料金",
+      "estimate": "推定",
       "lowestHour": "最安の時間",
       "range": "変動範囲"
     },
@@ -1434,6 +1514,7 @@
     "cancel": "取消",
     "download": "ダウンロード",
     "error": "エラー",
+    "loading": "読み込み中",
     "none": "なし",
     "note": "注意:",
     "warning": "警告"
@@ -1601,7 +1682,8 @@
       "repeatingPlans": "繰り返しプラン",
       "selectAll": "すべて選択",
       "strategy": {
-        "label": "戦略"
+        "label": "戦略",
+        "optimizerHint": "{optimizer}は最適化設定にまだ対応しておらず、常に最も安いスロットを選択します。必要な場合は、自動制御を「家庭用蓄電池」のみに制限してください。"
       },
       "time": "時間",
       "title": "プラン",
@@ -1627,6 +1709,7 @@
       "forecast": "予測",
       "forecastTooltip": "予測: 本日の残り太陽光発電量",
       "gridImport": "買電",
+      "heaters": "ヒーター | ヒーター",
       "homePower": "消費電力",
       "loadpoints": "充電器 | 充電器 | {count} 台の充電器",
       "loadpointsLimit": "{limit} に制限",
@@ -1655,18 +1738,22 @@
       "avgPrice": "⌀ 単価",
       "charged": "充電量",
       "co2": "⌀ CO₂",
+      "consumed": "消費量",
       "duration": "時間",
       "emission": "排出量",
       "fallbackName": "充電ポイント",
       "finished": "終了時刻",
       "last24hEnergy": "過去24時間",
+      "last24hShort": "24時間",
       "last7dEnergy": "過去7日間",
+      "last7dShort": "7日",
       "phasesMismatch": "設定よりも多くの相がアクティブです。相の設定を確認してください。",
       "power": "出力",
       "price": "コスト",
       "remaining": "残り時間",
       "remoteDisabledHard": "{source}: 停止",
       "remoteDisabledSoft": "{source}: アダプティブ太陽光充電を停止しました",
+      "session": "セッション",
       "solar": "太陽光",
       "todayEnergy": "今日"
     },
@@ -1886,6 +1973,7 @@
       "dismiss": "閉じる",
       "legacyTariffs": "旧形式の料金プラン設定を使用中です。",
       "progress": "{total}件中{done}件完了",
+      "suggestions": "{count}件の提案 | {count}件の提案",
       "title": "セットアップを完了する"
     },
     "control": {

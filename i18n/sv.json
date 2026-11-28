@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Anläggningens befintliga elnätsmätare används.",
       "meterSelectionHelpNoMeter": "Den sammanlagda belastningen från alla laddpunkter används.",
       "meterSelectionLabel": "Val av mätare",
+      "meterSelectionWarningNoMeter": "Hushållets förbrukning ingår inte, så gränserna kan överskridas. Det rekommenderas starkt att använda en mätare för den översta kretsen.",
       "parentCircuit": "Överordnad krets",
       "template": "Krets",
       "titleAdd": "Lägg till krets",
@@ -1300,6 +1301,7 @@
       "overview": "Översikt",
       "pv": "Produktion",
       "title": "Energiflöde",
+      "totalConsumption": "Total förbrukning",
       "usage": "Användning",
       "withdrawal": "Uttag"
     },

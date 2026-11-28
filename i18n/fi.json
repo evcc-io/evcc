@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Käyttää olemassa olevaa verkon syöttömittaria.",
       "meterSelectionHelpNoMeter": "Käytetään kaikkien latauspisteiden yhteiskulutusta.",
       "meterSelectionLabel": "Mittarin valinta",
+      "meterSelectionWarningNoMeter": "Talon kulutusta ei sisällytetä, joten rajat voivat ylittyä. Päävirtapiirille suositellaan vahvasti mittarin käyttöä.",
       "parentCircuit": "Ylempi virtapiiri",
       "template": "Virtapiiri",
       "titleAdd": "Lisää virtapiiri",
@@ -421,6 +422,7 @@
       "change": "Muuta",
       "clear": "Tyhjennä",
       "close": "Sulje",
+      "configured": "Määritetty",
       "confirmDisable": "Poista tämä laite käytöstä? Laitetta ei huomioida seuraavan käynnistyksen jälkeen.",
       "confirmEnable": "Ota laite uudelleen käyttöön?",
       "confirmSave": "Asetuksien muutoksia on tallentamatta. Tallennetaanko nyt heti?",
@@ -433,6 +435,8 @@
       "disable": "Poista käytöstä",
       "disabled": "ei käytössä",
       "dismiss": "Ohita",
+      "dismissAll": "Ohita kaikki",
+      "dismissed": "Ohitettu",
       "docsLink": "Katso dokumentaatio.",
       "dragHandle": "Kahva",
       "dragItem": "Raahattavissa: {title}",
@@ -983,6 +987,7 @@
       "noClients": "Ei vielä etäyhteysasiakkaita. Kukaan ei vielä voi kirjautua etänä.",
       "password": "Salasana",
       "passwordOnce": "Tämä salasana näytetään vain kerran. Skannaa QR-koodi tai kopioi se, sillä et voi nähdä sitä enää uudelleen.",
+      "print": "Tulosta / PDF",
       "privacy": "Ottamalla tämän ominaisuuden käyttöön, hyväksyt {0}.",
       "privacyLink": "yksityisyyskäytäntömme",
       "qrInstall": "Asenna evcc-sovellus {ios}:sta tai {android}:sta.",
@@ -1235,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Lataus",
       "charged": "Ladattu",
+      "discharge": "Purku",
       "discharged": "Purettu"
     },
     "consumers": {
@@ -1256,16 +1263,32 @@
         "energy": "ladattu",
         "returnEnergy": "käytetty"
       },
+      "consumer": {
+        "energy": "Kulutettu"
+      },
       "grid": {
         "energy": "käytetty verkosta",
         "returnEnergy": "syötetty verkkoon"
       },
+      "heating": {
+        "energy": "Kulutettu"
+      },
+      "loadpoint": {
+        "energy": "Ladattu"
+      },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (käänteinen)"
+      },
+      "pv": {
+        "energy": "Tuotettu"
       }
     },
-    "empty": "Ei energiatietoja saatavilla tähän aikasarjaan.",
+    "empty": {
+      "description": "Tälle ajanjaksolle ei ole energiatietoja.",
+      "descriptionCurrent": "Energiatietoja ei ole vielä. Arvot näkyvät, kun ensimmäiset mittaukset on tallennettu.",
+      "showCurrent": "Näytä nykyinen jakso"
+    },
     "flow": {
       "battery": "Akku",
       "batteryCharge": "Akun lataus",
@@ -1278,6 +1301,7 @@
       "overview": "Yleisnäkymä",
       "pv": "Tuotanto",
       "title": "Energiavirta",
+      "totalConsumption": "Kokonaiskulutus",
       "usage": "Käyttö",
       "withdrawal": "Hankinta"
     },
@@ -1316,6 +1340,7 @@
     },
     "socTemp": {
       "charged": "ladattu",
+      "power": "Teho",
       "soc": "varaus",
       "temperature": "lämpötila",
       "used": "kulutettu"
@@ -1345,6 +1370,7 @@
       "savingsTooltip": "Verrattuna siihen, että kulutettu {energy} olisi ostettu sähköverkosta.",
       "versus": "{value} vrt. {reference}"
     },
+    "summary": "Yhteenveto",
     "title": "Energia"
   },
   "footer": {
@@ -1456,6 +1482,7 @@
     "price": {
       "average": "Keskimääräinen",
       "constant": "Hinta",
+      "estimate": "arvio",
       "lowestHour": "Edullisin tunti",
       "range": "Vaihteluväli"
     },
@@ -1487,6 +1514,7 @@
     "cancel": "Peruuta",
     "download": "Lataa",
     "error": "Virhe",
+    "loading": "Ladataan",
     "none": "ei mitään",
     "note": "Huomautus:",
     "warning": "Varoitus"
@@ -1655,7 +1683,8 @@
       "repeatingPlans": "Toistuvat suunnitelmat",
       "selectAll": "Valitse kaikki",
       "strategy": {
-        "label": "Strategia"
+        "label": "Strategia",
+        "optimizerHint": "{optimizer} ei vielä huomioi optimointiasetusta ja valitsee aina halvimmat ajankohdat. Rajoita automaattinen ohjaus vaihtoehtoon “Kotiakku”, jos tarvitset sitä."
       },
       "time": "Aika",
       "title": "Suunnitelma",
@@ -1947,6 +1976,7 @@
       "dismiss": "Sulje",
       "legacyTariffs": "Vanhaa tariffimääritystä käytössä.",
       "progress": "{done}/{total} valmista",
+      "suggestions": "1 ehdotus | {count} ehdotusta",
       "title": "Viimeistele käyttöönotto"
     },
     "control": {

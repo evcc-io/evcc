@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Utiliza o contador de rede já existente na sua instalação.",
       "meterSelectionHelpNoMeter": "É utilizada a soma de todos os pontos de carregamento.",
       "meterSelectionLabel": "Seleção do contador",
+      "meterSelectionWarningNoMeter": "O consumo da casa não está incluído, pelo que os limites podem ser excedidos. Recomenda-se vivamente a utilização de um contador no circuito principal.",
       "parentCircuit": "Circuito principal",
       "template": "Circuito",
       "titleAdd": "Adicionar circuito",
@@ -257,7 +258,7 @@
       "amount": "Quantidade",
       "asleep": "em repouso",
       "broker": "Broker",
-      "bucket": "Bucket",
+      "bucket": "Bucket / Banco de Dados",
       "capacity": "Capacidade",
       "chargeStatus": "Estado",
       "chargeStatusA": "Desligado",
@@ -421,6 +422,7 @@
       "change": "Alterar",
       "clear": "Apagar",
       "close": "Fechar",
+      "configured": "Configurado",
       "confirmDisable": "Desativar este dispositivo? Será ignorado após o próximo reinício.",
       "confirmEnable": "Ativar novamente este dispositivo?",
       "confirmSave": "Existem modificações não guardadas. Guardar agora?",
@@ -433,6 +435,8 @@
       "disable": "Desativar",
       "disabled": "desativado",
       "dismiss": "Ignorar",
+      "dismissAll": "Rejeitar tudo",
+      "dismissed": "Rejeitado",
       "docsLink": "Ver documentação.",
       "dragHandle": "Arrastar",
       "dragItem": "Arrastável: {title}",
@@ -508,7 +512,7 @@
     "influx": {
       "description": "Escreve dados de carregamento e outras métricas no InfluxDB. Use o Grafana ou outras ferramentas para visualizar os dados.",
       "descriptionToken": "Verifique a documentação do InfluxDB para aprender a criar uma. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Bucket / Banco de dados",
       "labelCheckInsecure": "Permitir certificados auto-assinados",
       "labelDatabase": "Base de dados",
       "labelInsecure": "Validação do Certificado",
@@ -519,7 +523,7 @@
       "labelUser": "Nome do utilizador",
       "title": "InfluxDB",
       "v1Support": "Necessita apoio para o InfluxDB 1.x?",
-      "v2Support": "Voltar ao InfluxDB 2.x"
+      "v2Support": "Voltar ao InfluxDB 2+"
     },
     "loadpoint": {
       "addCharger": {
@@ -982,7 +986,8 @@
       "manualLogin": "Ou inicie sessão manualmente em {url} no seu navegador utilizando estas credenciais:",
       "noClients": "Ainda não há clientes. Ninguém pode ligar-se ainda.",
       "password": "Palavra-passe",
-      "passwordOnce": "Esta palavra-passe é apresentada apenas uma vez. Leia o código QR ou copie-a agora. Não poderá voltar a vê-la.",
+      "passwordOnce": "Esta palavra-passe é apresentada apenas uma vez. Leia o código QR, copie-o ou imprime-o agora. Não poderá voltar a vê-lo.",
+      "print": "Imprimir / PDF",
       "privacy": "Ao ativar esta funcionalidade, concorda com os nossos {0}.",
       "privacyLink": "política de privacidade",
       "qrInstall": "Instale a aplicação evcc para {ios} ou {android}.",
@@ -1235,8 +1240,10 @@
   },
   "energy": {
     "battery": {
-      "charged": "Carga",
-      "discharged": "Descarga"
+      "charge": "Carga",
+      "charged": "Carregado",
+      "discharge": "Descarga",
+      "discharged": "Descarregado"
     },
     "consumers": {
       "chart": {
@@ -1258,19 +1265,35 @@
     },
     "direction": {
       "battery": {
-        "energy": "carregado",
-        "returnEnergy": "descarregado"
+        "energy": "Carregado",
+        "returnEnergy": "Descarregado"
+      },
+      "consumer": {
+        "energy": "Consumido"
       },
       "grid": {
-        "energy": "importado",
-        "returnEnergy": "exportado"
+        "energy": "Importado",
+        "returnEnergy": "Exportado"
+      },
+      "heating": {
+        "energy": "Consumido"
+      },
+      "loadpoint": {
+        "energy": "Carregado"
       },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (inversa)"
+      },
+      "pv": {
+        "energy": "Produzido"
       }
     },
-    "empty": "Não há dados de energia disponíveis para este período.",
+    "empty": {
+      "description": "Não há dados de energia para este período.",
+      "descriptionCurrent": "Ainda não há dados de energia. Os valores serão exibidos assim que as primeiras medições forem registradas.",
+      "showCurrent": "Mostrar período atual"
+    },
     "flow": {
       "battery": "Bateria",
       "batteryCharge": "Carga da bateria",
@@ -1283,6 +1306,7 @@
       "overview": "Visão geral",
       "pv": "Produção",
       "title": "Fluxo de energia",
+      "totalConsumption": "Consumo total",
       "usage": "Uso",
       "withdrawal": "Cancelamento"
     },
@@ -1309,7 +1333,7 @@
     },
     "production": {
       "above": "{value} acima",
-      "accuracy": "Precisão da previsão",
+      "accuracy": "Precisão",
       "below": "{value} abaixo",
       "deviation": "Desvio",
       "expectedTomorrow": "esperado amanhã",
@@ -1321,8 +1345,9 @@
     },
     "socTemp": {
       "charged": "carregado",
-      "soc": "carga",
-      "temperature": "temperatura",
+      "power": "Potência",
+      "soc": "Carga",
+      "temperature": "Temperatura",
       "used": "usado"
     },
     "sources": {
@@ -1343,12 +1368,14 @@
       "co2Saved": "CO₂ economizado",
       "co2SavedTooltip": "Em comparação com a {energy} consumida da rede elétrica.",
       "configure": "Configure agora",
+      "fromGrid": "{value} da rede elétrica",
       "noCo2": "Sem dados de CO₂.",
       "noPrice": "Sem dados de preço.",
       "savings": "Poupança",
       "savingsTooltip": "Em comparação com a compra da {energy} consumida da rede elétrica.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Resumo",
     "title": "Energia"
   },
   "footer": {
@@ -1460,6 +1487,7 @@
     "price": {
       "average": "Média",
       "constant": "Preço",
+      "estimate": "estimativa",
       "lowestHour": "Horário mais barato",
       "range": "Intervalo"
     },
@@ -1491,6 +1519,7 @@
     "cancel": "Cancelar",
     "download": "Descarregar",
     "error": "Erro",
+    "loading": "Carregando",
     "none": "nenhum",
     "note": "Nota:",
     "warning": "Aviso"
@@ -1659,7 +1688,8 @@
       "repeatingPlans": "Repetição de planos",
       "selectAll": "Selecionar tudo",
       "strategy": {
-        "label": "Estratégia"
+        "label": "Estratégia",
+        "optimizerHint": "O {optimizer} ainda não leva em consideração a configuração de otimização e sempre escolhe os slots mais baratos. Limite o controle automático à \"Bateria doméstica\" se necessário."
       },
       "time": "Hora",
       "title": "Plano",
@@ -1685,8 +1715,9 @@
       "forecast": "Previsões",
       "forecastTooltip": "previsão: produção solar restante de hoje",
       "gridImport": "Importação da rede",
+      "heaters": "Aquecedor | Aquecedores",
       "homePower": "Consumo",
-      "loadpoints": "Carregador | Carregador | {count} Carregadores",
+      "loadpoints": "Carregador | Carregadores",
       "loadpointsLimit": "limite {limit}",
       "noEnergy": "Sem dados",
       "pv": "Sistema fotovoltaico",
@@ -1713,18 +1744,22 @@
       "avgPrice": "Preço ⌀",
       "charged": "Carregado",
       "co2": "CO₂",
+      "consumed": "Consumido",
       "duration": "Duração",
       "emission": "Emissões",
       "fallbackName": "Posto de Carregamento",
       "finished": "Tempo de finalização",
       "last24hEnergy": "Últimas 24 horas",
+      "last24hShort": "24h",
       "last7dEnergy": "Últimos 7 dias",
+      "last7dShort": "7d",
       "phasesMismatch": "Estão ativas mais fases do que as configuradas. Verifique a configuração das fases.",
       "power": "Potência",
       "price": "Custo",
       "remaining": "Tempo restante",
       "remoteDisabledHard": "{source}: desativado",
       "remoteDisabledSoft": "{source}: carregamento PV adaptável desativado",
+      "session": "Sessão",
       "solar": "Solar",
       "todayEnergy": "Hoje"
     },
@@ -1945,7 +1980,8 @@
       "dismiss": "Ignorar",
       "legacyTariffs": "Configuração tarifária velha em uso.",
       "progress": "{done} de {total} concluído",
-      "title": "Conclua a configuração"
+      "suggestions": "1 sugestão | {count} sugestões",
+      "title": "Sua configuração"
     },
     "control": {
       "description": "Comece com o primeiro. Mais poderão ser adicionados posteriormente na página de configuração.",
@@ -2033,7 +2069,7 @@
   },
   "sessions": {
     "addedRange": "Autonomia",
-    "avgPower": "Potência",
+    "avgPower": "Potência ⌀",
     "avgPrice": "Preço ⌀",
     "chargeDuration": "Duração",
     "chargedSoc": "Carga",

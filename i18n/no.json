@@ -144,11 +144,13 @@
       "template": "Produsent",
       "titleAdd": {
         "charging": "Legg til lader",
-        "heating": "Legg til varmeapparat"
+        "heating": "Legg til varmeapparat",
+        "switch": "Legg til stikkontakt med bryter"
       },
       "titleEdit": {
         "charging": "Rediger lader",
-        "heating": "Rediger varmeapparat"
+        "heating": "Rediger varmeapparat",
+        "switch": "Rediger stikkontakt med bryter"
       },
       "type": {
         "custom": {
@@ -177,6 +179,7 @@
       "meterSelectionHelpGridMeter": "Bruker den eksisterende nettmåleren i installasjonen din.",
       "meterSelectionHelpNoMeter": "Summen av alle ladepunkter brukes.",
       "meterSelectionLabel": "Målervalg",
+      "meterSelectionWarningNoMeter": "Husforbruket er ikke inkludert, så grensene kan bli overskredet. Det anbefales sterkt å bruke en måler for rotkretsen.",
       "parentCircuit": "Overordnet krets",
       "template": "Krets",
       "titleAdd": "Legg til krets",
@@ -186,10 +189,20 @@
     "circuits": {
       "addMainCircuit": "Legg til hovedkrets",
       "addSubCircuit": "Legg til underkrets",
+      "assignHere": "Tildel her",
+      "assignmentFailed": "Kunne ikke lagre tildelingen. Prøv igjen.",
       "description": "Sikrer at summen av alle lastpunkter som er koblet til en krets, ikke overskrider de konfigurerte effekt- og strømgrensene. Kretser kan nestes for å danne en hierarki.",
+      "destination": "Krets {title}",
+      "dragHint": "Dra til en krets, eller trykk for å velge.",
+      "dropAssign": "Slipp for å tildele",
+      "dropRemove": "Slipp her for å fjerne fra kretsen.",
       "legacyWarning": "Ny kretskonfigurasjon tilgjengelig! Fjern og lagre konfigurasjonen din her for å bruke den nye veiledede prosessen.",
       "meterDedicated": "Måler",
       "meterGrid": "Nett",
+      "moveHere": "Flytt hit",
+      "notAssigned": "Ikke tildelt",
+      "selectAssign": "Trykk på en krets for å tildele {title}.",
+      "selectMove": "Trykk på en krets for å flytte {title}, eller på poolen for å fjerne den.",
       "title": "Laststyring",
       "usableMeters": "Brukbare målerreferanser"
     },
@@ -228,6 +241,15 @@
       "title": "Begrensning",
       "titleAdd": "Legg til begrensningsenhet",
       "titleEdit": "Rediger begrensningsenhet"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Legg til lader",
+        "meter": "Legg til måler",
+        "switch": "Legg til stikkontakt med bryter",
+        "tariff": "Legg til tariff"
+      },
+      "noNesting": "Nesting er begrenset til ett nivå. Velg et annet alternativ."
     },
     "deviceValue": {
       "activeClients": "Aktive tilkoblinger",
@@ -307,8 +329,13 @@
           "returnEnergy": "Utladet"
         },
         "consumer": {
+          "chargeStatusC": "oppvarming",
           "energy": "Forbrukt",
           "returnEnergy": "Produsert"
+        },
+        "continuous": {
+          "dimmed": "Dimmet",
+          "enabled": "Boostet"
         },
         "grid": {
           "energy": "Importert",
@@ -330,6 +357,7 @@
       "auxMeter": "Smart forbruker",
       "batteryStorage": "Batterilagring",
       "consumer": "Forbruker",
+      "extMeter": "Ekstra måler",
       "solarSystem": "Solsystem"
     },
     "editor": {
@@ -389,6 +417,7 @@
       "change": "Endring",
       "clear": "Tydelig",
       "close": "Lukk",
+      "configured": "Konfigurert",
       "confirmDisable": "Deaktivere denne enheten? Den blir ignorert etter neste omstart.",
       "confirmEnable": "Aktivere denne enheten igjen?",
       "confirmSave": "Du har ulagrede endringer. Lagre nå?",
@@ -401,6 +430,8 @@
       "disable": "Deaktiver",
       "disabled": "deaktivert",
       "dismiss": "Avvise",
+      "dismissAll": "Avvis alle",
+      "dismissed": "Avvist",
       "docsLink": "Se documentasjonen.",
       "dragHandle": "Dra i håndtaket",
       "dragItem": "Draggable: {title}",
@@ -530,6 +561,27 @@
       "defaultModeKeep": "behold som den er",
       "defaultModeLabel": "Standartmodus",
       "delete": "Slett",
+      "demandPredictor": {
+        "daily": {
+          "description": "Gjennomsnitt av de siste dagene. For enheter med samme mønster hver dag.",
+          "label": "Daglig gjennomsnitt"
+        },
+        "defaultGroup": "Enhetsstandard",
+        "description": "Hvordan optimalisereren forutsier behovet ut fra tidligere forbruk.",
+        "label": "Profil",
+        "noTempTariff": "Krever en temperaturprognose.",
+        "noTempTariffLink": "Legg til prognose",
+        "profilesGroup": "Profiler",
+        "temperature": {
+          "description": "Tidligere forbruk ved lignende utetemperaturer. For romoppvarming, som varmepumper.",
+          "label": "Temperatur"
+        },
+        "title": "Behovsprognose",
+        "weekday": {
+          "description": "Gjennomsnitt av samme ukedag. For enheter med ukentlig timeplan, som varmtvanns- eller bassengvarmere.",
+          "label": "Ukedag"
+        }
+      },
       "electricalSubtitle": "Hvis du er i tvil, spør elektrikeren din.",
       "electricalTitle": "Elektrisk",
       "energyMeterHelp": "Ekstra måler hvis laderen ikke har en integrert måler.",
@@ -929,6 +981,7 @@
       "noClients": "Ingen klienter ennå. Ingen kan koble til ennå.",
       "password": "Passord",
       "passwordOnce": "Dette passordet vises bare én gang. Skann QR-koden eller kopier det nå. Du vil ikke kunne se det igjen.",
+      "print": "Skriv ut / PDF",
       "privacy": "Ved å aktivere denne funksjonen godtar du vår {0}.",
       "privacyLink": "personvernerklæring",
       "qrInstall": "Installer evcc-appen for {ios} eller {android}.",
@@ -1121,6 +1174,7 @@
       "template": "Leverandør",
       "title": "Tariffer og prognoser",
       "titleChoice": "Hva vil du legge til?",
+      "titleSub": "Undertariff",
       "type": {
         "co2": "CO₂-intensitet",
         "feedIn": "Eksportpris",
@@ -1180,7 +1234,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Lading",
       "charged": "Ladet",
+      "discharge": "Utlading",
       "discharged": "Utladet"
     },
     "consumers": {
@@ -1201,15 +1257,32 @@
         "energy": "ladet",
         "returnEnergy": "utladet"
       },
+      "consumer": {
+        "energy": "Forbrukt"
+      },
       "grid": {
+        "energy": "Importert",
         "returnEnergy": "Eksport"
+      },
+      "heating": {
+        "energy": "Forbrukt"
+      },
+      "loadpoint": {
+        "energy": "Oppladet"
       },
       "meter": {
         "energy": "Energi",
         "returnEnergy": "Energi (retur)"
+      },
+      "pv": {
+        "energy": "Produsert"
       }
     },
-    "empty": "Ingen energidata tilgjengelig for denne perioden.",
+    "empty": {
+      "description": "Ingen energidata for denne perioden.",
+      "descriptionCurrent": "Ingen energidata ennå. Verdier vises når de første målingene er registrert.",
+      "showCurrent": "Vis gjeldende periode"
+    },
     "flow": {
       "battery": "Batteri",
       "batteryCharge": "Batterilading",
@@ -1222,6 +1295,7 @@
       "overview": "Oversikt",
       "pv": "Produksjon",
       "title": "Energiflyt",
+      "totalConsumption": "Totalt forbruk",
       "usage": "Bruk",
       "withdrawal": "Uttak"
     },
@@ -1259,6 +1333,7 @@
     },
     "socTemp": {
       "charged": "ladet",
+      "power": "Effekt",
       "soc": "ladenivå",
       "temperature": "temperatur",
       "used": "brukt"
@@ -1281,12 +1356,14 @@
       "co2Saved": "CO₂ spart",
       "co2SavedTooltip": "Sammenlignet med å hente de forbrukte {energy} fra nettet.",
       "configure": "Konfigurer nå",
+      "fromGrid": "{value} fra nett",
       "noCo2": "Ingen CO₂-data.",
       "noPrice": "Ingen prisdata.",
       "savings": "Besparelser",
       "savingsTooltip": "Sammenlignet med å kjøpe de forbrukte {energy} fra nettet.",
       "versus": "{value} mot {reference}"
     },
+    "summary": "Sammendrag",
     "title": "Energi"
   },
   "footer": {
@@ -1398,6 +1475,7 @@
     "price": {
       "average": "Gjennomsnitt",
       "constant": "Pris",
+      "estimate": "estimat",
       "lowestHour": "Billigste time",
       "range": "Rekkevidde"
     },
@@ -1429,6 +1507,7 @@
     "cancel": "Avbryt",
     "download": "Last ned",
     "error": "Feil",
+    "loading": "Laster",
     "none": "ingen",
     "note": "Merk:",
     "warning": "Advarsel"
@@ -1596,7 +1675,8 @@
       "repeatingPlans": "Gjentatte planer",
       "selectAll": "Velg alt",
       "strategy": {
-        "label": "Strategi"
+        "label": "Strategi",
+        "optimizerHint": "{optimizer} tar ikke hensyn til optimaliseringsinnstillingen ennå og velger alltid de billigste tidsrommene. Begrens automatisk styring til «Hjemmebatteri» hvis du trenger den."
       },
       "time": "Tid",
       "title": "Plan",
@@ -1622,6 +1702,7 @@
       "forecast": "Prognose",
       "forecastTooltip": "prognose: gjenværende solenergiproduksjon i dag",
       "gridImport": "Lysnettimport",
+      "heaters": "Varmeapparat | Varmeapparater",
       "homePower": "Forbruk",
       "loadpoints": "Lader| Lader | {count} ladere",
       "loadpointsLimit": "{limit} grense",
@@ -1650,11 +1731,13 @@
       "avgPrice": "⌀-pris",
       "charged": "Oppladet",
       "co2": "⌀-CO₂",
+      "consumed": "Forbrukt",
       "duration": "Varighet",
       "emission": "Utslipp",
       "fallbackName": "Ladepunkt",
       "finished": "Sluttid",
       "last24hEnergy": "Siste 24 t",
+      "last24hShort": "24t",
       "last7dEnergy": "Siste 7 dager",
       "phasesMismatch": "Flere faser aktive enn konfigurert. Kontroller fasekonfigurasjonen.",
       "power": "Effekt",
@@ -1662,6 +1745,7 @@
       "remaining": "Gjenværende",
       "remoteDisabledHard": "{source}: slått av",
       "remoteDisabledSoft": "{source}: slått av adaptiv solcellelading",
+      "session": "Økt",
       "solar": "Solenergi",
       "todayEnergy": "I dag"
     },
@@ -1879,6 +1963,7 @@
       "dismiss": "Lukk",
       "legacyTariffs": "Eldre tariffkonfigurasjon er i bruk.",
       "progress": "{done} av {total} fullført",
+      "suggestions": "1 forslag | {count} forslag",
       "title": "Fullfør oppsettet"
     },
     "control": {

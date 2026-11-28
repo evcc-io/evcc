@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Použije stávající elektroměr vaší instalace.",
       "meterSelectionHelpNoMeter": "Použije se součet všech nabíjecích bodů.",
       "meterSelectionLabel": "Výběr elektroměru",
+      "meterSelectionWarningNoMeter": "Spotřeba domu není zahrnuta, takže limity mohou být překročeny. Pro hlavní okruh důrazně doporučujeme použít měřič.",
       "parentCircuit": "Nadřazený okruh",
       "template": "Okruh",
       "titleAdd": "Přidat okruh",
@@ -1300,6 +1301,7 @@
       "overview": "Přehled",
       "pv": "Výroba",
       "title": "Tok energie",
+      "totalConsumption": "Celková spotřeba",
       "usage": "Využití",
       "withdrawal": "Odběr"
     },
@@ -1361,12 +1363,14 @@
       "co2Saved": "Ušetřené CO₂",
       "co2SavedTooltip": "Ve srovnání s odběrem spotřebovaných {energy} ze sítě.",
       "configure": "Nastavit nyní",
+      "fromGrid": "{value} ze sítě",
       "noCo2": "Žádná data o CO₂.",
       "noPrice": "Žádná data o cenách.",
       "savings": "Úspory",
       "savingsTooltip": "Ve srovnání s nákupem spotřebovaných {energy} ze sítě.",
       "versus": "{value} oproti {reference}"
     },
+    "summary": "Souhrn",
     "title": "Energie"
   },
   "footer": {
@@ -1678,7 +1682,8 @@
       "repeatingPlans": "Opakující se plány",
       "selectAll": "Vybrat vše",
       "strategy": {
-        "label": "Strategie nabíjení"
+        "label": "Strategie nabíjení",
+        "optimizerHint": "{optimizer} zatím nezohledňuje nastavení optimalizace a vždy vybírá nejlevnější sloty. Pokud to potřebujete, omezte automatické řízení na „Domácí baterie“."
       },
       "time": "Čas",
       "title": "Plán",
@@ -1704,6 +1709,7 @@
       "forecast": "Předpověď",
       "forecastTooltip": "předpověď: zbývající solární výroba dnes",
       "gridImport": "Odběr ze sítě",
+      "heaters": "Topení | Topení",
       "homePower": "Spotřeba domu",
       "loadpoints": "Nabíječka | Nabíječka | {count} nabíječek",
       "loadpointsLimit": "{limit} limit",
@@ -1738,6 +1744,7 @@
       "fallbackName": "Nabíjecí bod",
       "finished": "Čas dokončení",
       "last24hEnergy": "Posledních 24h",
+      "last24hShort": "24 h",
       "last7dEnergy": "Poslední 7 dní",
       "last7dShort": "7 dní",
       "phasesMismatch": "Aktivních je více fází, než je nastaveno. Zkontrolujte nastavení fází.",
@@ -1746,6 +1753,7 @@
       "remaining": "Zbývající",
       "remoteDisabledHard": "{source}: vypnut",
       "remoteDisabledSoft": "{source}: adaptivní nabíjení ze slunce vypnuto",
+      "session": "Relace",
       "solar": "Solár",
       "todayEnergy": "Dnes"
     },
@@ -1966,6 +1974,7 @@
       "dismiss": "Zahodit",
       "legacyTariffs": "Používá se stará konfigurace tarifů.",
       "progress": "Hotovo {done} z {total}",
+      "suggestions": "1 návrh | {count} návrhů",
       "title": "Dokončete nastavení"
     },
     "control": {

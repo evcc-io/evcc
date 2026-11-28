@@ -144,11 +144,13 @@
       "template": "Proizvođač",
       "titleAdd": {
         "charging": "Dodaj punjač",
-        "heating": "Dodaj grijač"
+        "heating": "Dodaj grijač",
+        "switch": "Dodaj upravljivu utičnicu"
       },
       "titleEdit": {
         "charging": "Uredi punjač",
-        "heating": "Uredi grijač"
+        "heating": "Uredi grijač",
+        "switch": "Uredi upravljivu utičnicu"
       },
       "type": {
         "custom": {
@@ -177,6 +179,7 @@
       "meterSelectionHelpGridMeter": "Koristi postojeće brojilo mreže vaše instalacije.",
       "meterSelectionHelpNoMeter": "Koristi se zbroj svih mjesta punjenja.",
       "meterSelectionLabel": "Odabir brojila",
+      "meterSelectionWarningNoMeter": "Potrošnja kuće nije uključena pa se ograničenja mogu premašiti. Za korijenski strujni krug toplo se preporučuje korištenje brojila.",
       "parentCircuit": "Nadređeni strujni krug",
       "template": "Strujni krug",
       "titleAdd": "Dodaj strujni krug",
@@ -186,10 +189,20 @@
     "circuits": {
       "addMainCircuit": "Dodaj glavni krug",
       "addSubCircuit": "Dodaj podređeni strujni krug",
+      "assignHere": "Dodijeli ovdje",
+      "assignmentFailed": "Dodjela nije spremljena. Pokušajte ponovno.",
       "description": "Osigurava da zbroj svih točaka opterećenja povezanih na strujni krug ne premašuje konfigurirana ograničenja snage i struje. Strujni krugovi se mogu ugnijezditi kako bi se izgradila hijerarhija.",
+      "destination": "Strujni krug {title}",
+      "dragHint": "Povucite na strujni krug ili dodirnite za odabir.",
+      "dropAssign": "Ispusti za dodjelu",
+      "dropRemove": "Ispustite ovdje za uklanjanje iz strujnog kruga.",
       "legacyWarning": "Dostupna je nova konfiguracija strujnih krugova! Uklonite i spremite ovdje svoju konfiguraciju kako biste koristili novi vođeni postupak.",
       "meterDedicated": "Brojilo",
       "meterGrid": "Mreža",
+      "moveHere": "Premjesti ovdje",
+      "notAssigned": "Nije dodijeljeno",
+      "selectAssign": "Dodirnite strujni krug za dodjelu: {title}.",
+      "selectMove": "Dodirnite strujni krug za premještanje: {title}, ili skup za uklanjanje.",
       "title": "Upravljanje opterećenjem",
       "usableMeters": "Dostupne reference brojila"
     },
@@ -222,6 +235,15 @@
       "title": "Ograničenje proizvodnje",
       "titleAdd": "Dodaj uređaj za ograničenje",
       "titleEdit": "Uredi uređaj za ograničenje"
+    },
+    "deviceRef": {
+      "add": {
+        "charger": "Dodaj punjač",
+        "meter": "Dodaj brojilo",
+        "switch": "Dodaj upravljivu utičnicu",
+        "tariff": "Dodaj tarifu"
+      },
+      "noNesting": "Ugniježđivanje je ograničeno na jednu razinu. Odaberite drugu opciju."
     },
     "deviceValue": {
       "activeClients": "Aktivni klijenti",
@@ -301,8 +323,16 @@
           "returnEnergy": "Ispražnjeno"
         },
         "consumer": {
+          "chargeStatusB": "pripravnost",
+          "chargeStatusC": "grijanje",
           "energy": "Potrošeno",
           "returnEnergy": "Proizvedeno"
+        },
+        "continuous": {
+          "chargeStatusB": "normalno",
+          "chargeStatusC": "pojačano",
+          "dimmed": "Prigušeno",
+          "enabled": "Pojačano"
         },
         "grid": {
           "energy": "Uvezeno",
@@ -324,6 +354,7 @@
       "auxMeter": "Pametni potrošač",
       "batteryStorage": "Baterijski spremnik",
       "consumer": "Potrošač",
+      "extMeter": "Dodatno brojilo",
       "solarSystem": "Solarni sustav"
     },
     "editor": {
@@ -380,6 +411,7 @@
       "change": "Promijeni",
       "clear": "Očisti",
       "close": "Zatvori",
+      "configured": "Konfigurirano",
       "confirmDisable": "Onemogućiti ovaj uređaj? Bit će zanemaren nakon sljedećeg ponovnog pokretanja.",
       "confirmEnable": "Ponovno omogućiti ovaj uređaj?",
       "confirmSave": "Postoje promjene koje nisu spremljene. Spremiti sada?",
@@ -392,6 +424,8 @@
       "disable": "Onemogući",
       "disabled": "onemogućeno",
       "dismiss": "Odbaci",
+      "dismissAll": "Odbaci sve",
+      "dismissed": "Odbačeno",
       "docsLink": "Pogledaj dokumentaciju.",
       "dragHandle": "Ručka za povlačenje",
       "dragItem": "Povlačivo: {title}",
@@ -521,6 +555,27 @@
       "defaultModeKeep": "zadrži kako jest",
       "defaultModeLabel": "Uobičajeni način",
       "delete": "Izbriši",
+      "demandPredictor": {
+        "daily": {
+          "description": "Prosjek posljednjih dana. Za uređaje s istim obrascem svaki dan.",
+          "label": "Dnevni prosjek"
+        },
+        "defaultGroup": "Zadano za uređaj",
+        "description": "Kako optimizator predviđa potražnju na temelju prošle potrošnje.",
+        "label": "Profil",
+        "noTempTariff": "Zahtijeva prognozu temperature.",
+        "noTempTariffLink": "Dodaj prognozu",
+        "profilesGroup": "Profili",
+        "temperature": {
+          "description": "Prošla potrošnja pri sličnim vanjskim temperaturama. Za grijanje prostora, poput toplinskih pumpi.",
+          "label": "Temperatura"
+        },
+        "title": "Prognoza potražnje",
+        "weekday": {
+          "description": "Prosjek istog dana u tjednu. Za uređaje s tjednim rasporedom, poput grijača vode ili bazena.",
+          "label": "Dan u tjednu"
+        }
+      },
       "electricalSubtitle": "Ako niste sigurni, pitajte električara.",
       "electricalTitle": "Elektrooprema",
       "energyMeterHelp": "Dodatno brojilo ukoliko punjač nema integrirano brojilo.",
@@ -921,6 +976,7 @@
       "noClients": "Još nema klijenata. Nitko se još ne može povezati.",
       "password": "Lozinka",
       "passwordOnce": "Ova lozinka prikazuje se samo jednom. Skenirajte QR kod ili je odmah kopirajte. Kasnije je više nećete moći vidjeti.",
+      "print": "Ispis / PDF",
       "privacy": "Omogućavanjem ove značajke prihvaćate naša {0}.",
       "privacyLink": "pravila o privatnosti",
       "qrInstall": "Instalirajte evcc aplikaciju za {ios} ili {android}.",
@@ -1113,6 +1169,7 @@
       "template": "Pružatelj",
       "title": "Tarife i prognoze",
       "titleChoice": "Što želite dodati?",
+      "titleSub": "Podtarifa",
       "type": {
         "co2": "CO₂ intenzitet",
         "feedIn": "Cijena predaje u mrežu",
@@ -1172,7 +1229,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Punjenje",
       "charged": "Napunjeno",
+      "discharge": "Pražnjenje",
       "discharged": "Ispražnjeno"
     },
     "consumers": {
@@ -1193,16 +1252,32 @@
         "energy": "napunjeno",
         "returnEnergy": "ispražnjeno"
       },
+      "consumer": {
+        "energy": "Potrošeno"
+      },
       "grid": {
         "energy": "Uvoz",
         "returnEnergy": "Izvoz"
       },
+      "heating": {
+        "energy": "Potrošeno"
+      },
+      "loadpoint": {
+        "energy": "Napunjeno"
+      },
       "meter": {
         "energy": "Energija",
         "returnEnergy": "Energija (povratna)"
+      },
+      "pv": {
+        "energy": "Proizvedeno"
       }
     },
-    "empty": "Nema podataka o energiji za ovo razdoblje.",
+    "empty": {
+      "description": "Nema podataka o energiji za ovo razdoblje.",
+      "descriptionCurrent": "Još nema podataka o energiji. Vrijednosti se pojavljuju nakon prvih zabilježenih mjerenja.",
+      "showCurrent": "Prikaži trenutno razdoblje"
+    },
     "flow": {
       "battery": "Baterija",
       "batteryCharge": "Punjenje baterije",
@@ -1215,6 +1290,7 @@
       "overview": "Pregled",
       "pv": "Proizvodnja",
       "title": "Tok energije",
+      "totalConsumption": "Ukupna potrošnja",
       "usage": "Upotreba",
       "withdrawal": "Povlačenje"
     },
@@ -1252,6 +1328,7 @@
     },
     "socTemp": {
       "charged": "napunjeno",
+      "power": "Snaga",
       "soc": "napunjenost",
       "temperature": "temperatura",
       "used": "potrošeno"
@@ -1274,12 +1351,14 @@
       "co2Saved": "Ušteđeni CO₂",
       "co2SavedTooltip": "U usporedbi s preuzimanjem potrošenih {energy} iz mreže.",
       "configure": "Konfiguriraj sada",
+      "fromGrid": "{value} iz mreže",
       "noCo2": "Nema CO₂ podataka.",
       "noPrice": "Nema podataka o cijeni.",
       "savings": "Uštede",
       "savingsTooltip": "U usporedbi s kupnjom potrošenih {energy} iz mreže.",
       "versus": "{value} naspram {reference}"
     },
+    "summary": "Sažetak",
     "title": "Energija"
   },
   "footer": {
@@ -1391,6 +1470,7 @@
     "price": {
       "average": "Prosjek",
       "constant": "Cijena",
+      "estimate": "procjena",
       "lowestHour": "Najjeftiniji sati",
       "range": "Raspon"
     },
@@ -1422,6 +1502,7 @@
     "cancel": "Odustani",
     "download": "Preuzmi",
     "error": "Greška",
+    "loading": "Učitavanje",
     "none": "bez",
     "note": "Napomena:",
     "warning": "Upozorenje"
@@ -1589,7 +1670,8 @@
       "repeatingPlans": "Ponavljajući planovi",
       "selectAll": "Odaberi sve",
       "strategy": {
-        "label": "Strategija"
+        "label": "Strategija",
+        "optimizerHint": "{optimizer} još ne uzima u obzir postavku optimizacije i uvijek odabire najjeftinije termine. Ograničite automatsko upravljanje na „Kućna baterija” ako ga trebate."
       },
       "time": "Vrijeme",
       "title": "Plan",
@@ -1615,6 +1697,7 @@
       "forecast": "Prognoza",
       "forecastTooltip": "predviđanje: današnja preostala solarna proizvodnja",
       "gridImport": "Korištenje mreže",
+      "heaters": "Grijač | Grijači",
       "homePower": "Potrošnja",
       "loadpoints": "Punjač| Punjač | {count} punjača",
       "loadpointsLimit": "{limit} ograničenje",
@@ -1643,18 +1726,22 @@
       "avgPrice": "⌀ cijena",
       "charged": "Napunjeno",
       "co2": "⌀ CO₂",
+      "consumed": "Potrošeno",
       "duration": "Trajanje",
       "emission": "Emisija",
       "fallbackName": "Mjesto punjenja",
       "finished": "Vrijeme završetka",
       "last24hEnergy": "Zadnja 24 h",
+      "last24hShort": "24 h",
       "last7dEnergy": "Zadnjih 7 dana",
+      "last7dShort": "7 d",
       "phasesMismatch": "Aktivno je više faza nego što je konfigurirano. Provjerite konfiguraciju faza.",
       "power": "Snaga",
       "price": "Trošak",
       "remaining": "Preostalo vrijeme",
       "remoteDisabledHard": "{source}: isključeno",
       "remoteDisabledSoft": "{source}: adaptivno solarno punjenje isključeno",
+      "session": "Sesija",
       "solar": "Solarno",
       "todayEnergy": "Danas"
     },
@@ -1874,6 +1961,7 @@
       "dismiss": "Odbaci",
       "legacyTariffs": "Koristi se stara konfiguracija tarifa.",
       "progress": "{done} od {total} završeno",
+      "suggestions": "1 prijedlog | {count} prijedloga",
       "title": "Dovršite postavljanje"
     },
     "control": {

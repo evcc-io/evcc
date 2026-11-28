@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Utilise le compteur de réseau déjà en place dans votre installation.",
       "meterSelectionHelpNoMeter": "C'est la somme de tous les points de recharge qui est prise en compte.",
       "meterSelectionLabel": "Choix du compteur",
+      "meterSelectionWarningNoMeter": "La consommation de la maison n’est pas incluse, les limites peuvent donc être dépassées. L’utilisation d’un compteur est vivement recommandée pour le circuit racine.",
       "parentCircuit": "Circuit principal",
       "template": "Circuit",
       "titleAdd": "Ajouter un circuit",
@@ -421,6 +422,7 @@
       "change": "Changer",
       "clear": "Effacer",
       "close": "Fermer",
+      "configured": "Configuré",
       "confirmDisable": "Désactiver cet équipement ? Il sera ignoré dès le prochain redémarrage.",
       "confirmEnable": "Réactiver cet appareil ?",
       "confirmSave": "Il y a des modifications. Enregistrer maintenant ?",
@@ -433,6 +435,8 @@
       "disable": "Désactiver",
       "disabled": "désactivé",
       "dismiss": "Ignorer",
+      "dismissAll": "Tout rejeter",
+      "dismissed": "Rejeté",
       "docsLink": "Se référer à la documentation.",
       "dragHandle": "Poignée de déplacement",
       "dragItem": "Déplaçable : {title}",
@@ -1236,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Charge",
       "charged": "Chargé",
+      "discharge": "Décharge",
       "discharged": "Déchargé"
     },
     "consumers": {
@@ -1259,16 +1265,28 @@
     },
     "direction": {
       "battery": {
-        "energy": "chargée",
-        "returnEnergy": "déchargée"
+        "energy": "Chargée",
+        "returnEnergy": "Déchargée"
+      },
+      "consumer": {
+        "energy": "Consommé"
       },
       "grid": {
-        "energy": "importée",
-        "returnEnergy": "exportée"
+        "energy": "Importée",
+        "returnEnergy": "Exportée"
+      },
+      "heating": {
+        "energy": "Consommée"
+      },
+      "loadpoint": {
+        "energy": "Chargée"
       },
       "meter": {
         "energy": "Énergie",
         "returnEnergy": "Énergie (inversée)"
+      },
+      "pv": {
+        "energy": "Produite"
       }
     },
     "empty": {
@@ -1288,6 +1306,7 @@
       "overview": "Aperçu",
       "pv": "Production",
       "title": "Flux d'énergie",
+      "totalConsumption": "Consommation totale",
       "usage": "Usage",
       "withdrawal": "Retrait"
     },
@@ -1326,8 +1345,9 @@
     },
     "socTemp": {
       "charged": "chargé",
-      "soc": "charge",
-      "temperature": "température",
+      "power": "Puissance",
+      "soc": "Charge",
+      "temperature": "Température",
       "used": "utilisé"
     },
     "sources": {
@@ -1467,6 +1487,7 @@
     "price": {
       "average": "Moyenne",
       "constant": "Prix",
+      "estimate": "estimation",
       "lowestHour": "Heure la moins chère",
       "range": "Amplitude"
     },
@@ -1667,7 +1688,8 @@
       "repeatingPlans": "Plans récurrents",
       "selectAll": "Sélect. tous",
       "strategy": {
-        "label": "Stratégie"
+        "label": "Stratégie",
+        "optimizerHint": "L'{optimizer} ne tient pas encore compte du paramètre d'optimisation et choisit systématiquement les emplacements les moins chers. Limitez le contrôle automatique à « Batterie principale » si nécessaire."
       },
       "time": "Heure",
       "title": "Planification",
@@ -1958,7 +1980,8 @@
       "dismiss": "Ignorer",
       "legacyTariffs": "L’ancienne configuration tarifaire est utilisée.",
       "progress": "{done} sur {total} effectué",
-      "title": "Terminer votre configuration"
+      "suggestions": "1 suggestion | {count} suggestions",
+      "title": "Votre configuration"
     },
     "control": {
       "description": "Commencez par le premier. Vous pourrez en rajouter d’autres plus tard sur l’écran de configuration.",

@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Utilitza el comptador de xarxa existent de la vostra instal·lació.",
       "meterSelectionHelpNoMeter": "S’utilitza la suma de tots els punts de recàrrega.",
       "meterSelectionLabel": "Selecció del comptador",
+      "meterSelectionWarningNoMeter": "El consum de la llar no s’inclou, de manera que es poden superar els límits. Es recomana molt utilitzar un comptador per al circuit arrel.",
       "parentCircuit": "Circuit pare",
       "template": "Circuit",
       "titleAdd": "Afegeix circuit",
@@ -421,6 +422,7 @@
       "change": "Canvia",
       "clear": "Neteja",
       "close": "Tanca",
+      "configured": "Configurat",
       "confirmDisable": "Voleu inhabilitar aquest dispositiu? S’ignorarà després del pròxim reinici.",
       "confirmEnable": "Voleu tornar a habilitar aquest dispositiu?",
       "confirmSave": "Hi ha canvis sense desar. Voleu desar-los ara?",
@@ -433,6 +435,8 @@
       "disable": "Inhabilita",
       "disabled": "inhabilitat",
       "dismiss": "Descarta",
+      "dismissAll": "Descarta-ho tot",
+      "dismissed": "Descartat",
       "docsLink": "Consulteu la documentació.",
       "dragHandle": "Nansa d’arrossegament",
       "dragItem": "Arrossegable: {title}",
@@ -983,6 +987,7 @@
       "noClients": "Encara no hi ha clients. Ningú no es pot connectar encara.",
       "password": "Contrasenya",
       "passwordOnce": "Aquesta contrasenya es mostra una sola vegada. Escanegeu el codi QR o copieu-la ara. No la tornareu a veure.",
+      "print": "Imprimeix / PDF",
       "privacy": "Habilitant aquesta funció, dones el consentiment a la nostra {0}.",
       "privacyLink": "Política de privacitat",
       "qrInstall": "Instal·leu l’app d’evcc per a {ios} o {android}.",
@@ -1235,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Càrrega",
       "charged": "Carregat",
+      "discharge": "Descàrrega",
       "discharged": "Descarregat"
     },
     "consumers": {
@@ -1256,16 +1263,32 @@
         "energy": "carregada",
         "returnEnergy": "descarregada"
       },
+      "consumer": {
+        "energy": "Consumit"
+      },
       "grid": {
         "energy": "importada",
         "returnEnergy": "exportada"
       },
+      "heating": {
+        "energy": "Consumit"
+      },
+      "loadpoint": {
+        "energy": "Carregat"
+      },
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (inversa)"
+      },
+      "pv": {
+        "energy": "Produït"
       }
     },
-    "empty": "No hi ha dades d’energia per a aquest període.",
+    "empty": {
+      "description": "No hi ha dades d’energia per a aquest període.",
+      "descriptionCurrent": "Encara no hi ha dades d’energia. Els valors apareixeran quan es registrin les primeres mesures.",
+      "showCurrent": "Mostra el període actual"
+    },
     "flow": {
       "battery": "Bateria",
       "batteryCharge": "Càrrega de bateria",
@@ -1278,6 +1301,7 @@
       "overview": "Resum",
       "pv": "Producció",
       "title": "Flux d’energia",
+      "totalConsumption": "Consum total",
       "usage": "Ús",
       "withdrawal": "Retirada"
     },
@@ -1316,6 +1340,7 @@
     },
     "socTemp": {
       "charged": "carregat",
+      "power": "Potència",
       "soc": "càrrega",
       "temperature": "temperatura",
       "used": "utilitzat"
@@ -1345,6 +1370,7 @@
       "savingsTooltip": "En comparació amb comprar a la xarxa els {energy} consumits.",
       "versus": "{value} vs. {reference}"
     },
+    "summary": "Resum",
     "title": "Energia"
   },
   "footer": {
@@ -1456,6 +1482,7 @@
     "price": {
       "average": "Mitjana",
       "constant": "Preu",
+      "estimate": "estimació",
       "lowestHour": "Hora més barata",
       "range": "Interval"
     },
@@ -1487,6 +1514,7 @@
     "cancel": "Cancel·la",
     "download": "Descarrega",
     "error": "Error",
+    "loading": "S’està carregant",
     "none": "cap",
     "note": "Nota:",
     "warning": "Avís"
@@ -1655,7 +1683,8 @@
       "repeatingPlans": "Plans repetitius",
       "selectAll": "Selecciona-ho tot",
       "strategy": {
-        "label": "Estratègia"
+        "label": "Estratègia",
+        "optimizerHint": "L’{optimizer} encara no té en compte l’opció d’optimització i tria sempre les franges més barates. Limiteu el control automàtic a «Bateria domèstica» si ho necessiteu."
       },
       "time": "Hora",
       "title": "Pla",
@@ -1947,6 +1976,7 @@
       "dismiss": "Descarta",
       "legacyTariffs": "S’utilitza la configuració de tarifes antiga.",
       "progress": "{done} de {total} fets",
+      "suggestions": "1 suggeriment | {count} suggeriments",
       "title": "Completeu la configuració"
     },
     "control": {

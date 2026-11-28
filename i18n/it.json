@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Utilizza il contatore di rete esistente della tua installazione.",
       "meterSelectionHelpNoMeter": "Viene utilizzata la somma di tutti i contatori di carica.",
       "meterSelectionLabel": "Selezione del contatore",
+      "meterSelectionWarningNoMeter": "Il consumo della casa non è incluso, quindi i limiti possono essere superati. Per il circuito principale si consiglia vivamente di usare un contatore.",
       "parentCircuit": "Circuito principale",
       "template": "Circuito",
       "titleAdd": "Aggiungi circuito",
@@ -421,6 +422,7 @@
       "change": "Cambia",
       "clear": "Cancella",
       "close": "Chiudi",
+      "configured": "Configurato",
       "confirmDisable": "Vuoi disabilitare questo dispositivo? Verrà ignorato al prossimo riavvio.",
       "confirmEnable": "Vuoi abilitare di nuovo questo dispositivo?",
       "confirmSave": "Sono presenti modifiche non salvate. Salvare ora?",
@@ -433,6 +435,8 @@
       "disable": "Disabilita",
       "disabled": "disabilitato",
       "dismiss": "Ignora",
+      "dismissAll": "Ignora tutti",
+      "dismissed": "Ignorati",
       "docsLink": "Vedi la documentazione.",
       "dragHandle": "Maniglia di trascinamento",
       "dragItem": "Trascinabile: {title}",
@@ -1236,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Carica",
       "charged": "Caricati",
+      "discharge": "Scarica",
       "discharged": "Scaricati"
     },
     "consumers": {
@@ -1273,6 +1279,9 @@
       "meter": {
         "energy": "Energia",
         "returnEnergy": "Energia (inversa)"
+      },
+      "pv": {
+        "energy": "Prodotti"
       }
     },
     "empty": {
@@ -1292,6 +1301,7 @@
       "overview": "Riepilogo",
       "pv": "Produzione",
       "title": "Flusso di energia",
+      "totalConsumption": "Consumo totale",
       "usage": "Utilizzo",
       "withdrawal": "Prelievo"
     },
@@ -1964,6 +1974,7 @@
       "dismiss": "Chiudi",
       "legacyTariffs": "La configurazione delle tariffe in uso è obsoleta.",
       "progress": "{done} di {total} completato",
+      "suggestions": "1 suggerimento | {count} suggerimenti",
       "title": "Completa la configurazione"
     },
     "control": {

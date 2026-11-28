@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Uporablja obstoječi omrežni števec vaše namestitve.",
       "meterSelectionHelpNoMeter": "Uporabi se vsota vseh polnilnih mest.",
       "meterSelectionLabel": "Izbira števca",
+      "meterSelectionWarningNoMeter": "Poraba hiše ni vključena, zato se omejitve lahko presežejo. Za glavni krog je zelo priporočljiva uporaba števca.",
       "parentCircuit": "Nadrejeni krog",
       "template": "Krog",
       "titleAdd": "Dodaj krog",
@@ -415,6 +416,7 @@
       "change": "Spremeni",
       "clear": "Jasno",
       "close": "Zapri",
+      "configured": "Konfigurirano",
       "confirmDisable": "Onemogočim to napravo? Po naslednjem ponovnem zagonu bo prezrta.",
       "confirmEnable": "Ponovno omogočim to napravo?",
       "confirmSave": "Obstajajo neshranjene spremembe. Želite shraniti zdaj?",
@@ -427,6 +429,8 @@
       "disable": "Onemogoči",
       "disabled": "onemogočeno",
       "dismiss": "Opusti",
+      "dismissAll": "Opusti vse",
+      "dismissed": "Opuščeno",
       "docsLink": "Oglejte si dokumentacijo.",
       "dragHandle": "Ročaj za vlečenje",
       "dragItem": "Možnost vlečenja: {title}",
@@ -1230,7 +1234,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Polnjenje",
       "charged": "Napolnjeno",
+      "discharge": "Praznjenje",
       "discharged": "Izpraznjeno"
     },
     "consumers": {
@@ -1267,6 +1273,9 @@
       "meter": {
         "energy": "Energija",
         "returnEnergy": "Energija (povratna)"
+      },
+      "pv": {
+        "energy": "Proizvedeno"
       }
     },
     "empty": {
@@ -1286,6 +1295,7 @@
       "overview": "Pregled",
       "pv": "Proizvodnja",
       "title": "Pretok energije",
+      "totalConsumption": "Skupna poraba",
       "usage": "Uporaba",
       "withdrawal": "Odvzem"
     },
@@ -1957,6 +1967,7 @@
       "dismiss": "Zavrni",
       "legacyTariffs": "Uporablja se stara konfiguracija tarif.",
       "progress": "{done} od {total} opravljeno",
+      "suggestions": "1 predlog | {count} predlogov",
       "title": "Dokončajte nastavitev"
     },
     "control": {

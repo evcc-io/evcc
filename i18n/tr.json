@@ -181,6 +181,7 @@
       "meterSelectionHelpGridMeter": "Tesisatındaki mevcut elektrik sayacını kullanır.",
       "meterSelectionHelpNoMeter": "Doldurma noktalarının toplamı kullanılır.",
       "meterSelectionLabel": "Sayaç Seçimi",
+      "meterSelectionWarningNoMeter": "Ev tüketimi dahil değil, bu nedenle sınırlar aşılabilir. Ana devre için sayaç kullanılması şiddetle tavsiye edilir.",
       "parentCircuit": "Ana devre",
       "template": "Devre",
       "titleAdd": "Devre ekle",
@@ -421,6 +422,7 @@
       "change": "Değiştir",
       "clear": "Temizle",
       "close": "Kapat",
+      "configured": "Yapılandırıldı",
       "confirmDisable": "Bu cihazı devre dışı mı kalsın? Bir sonraki yeniden başlatmanın ardından bu ayar göz ardı edilecek.",
       "confirmEnable": "Bu cihaz tekrar etkinleştirilsin mi?",
       "confirmSave": "Kaydedilmemiş değişiklikler var. Şimdi kaydedilsin mi?",
@@ -433,6 +435,8 @@
       "disable": "Devre dışı bırak",
       "disabled": "Devre dışı",
       "dismiss": "Kapat",
+      "dismissAll": "Tümünü kapat",
+      "dismissed": "Kapatıldı",
       "docsLink": "Belgelere bak.",
       "dragHandle": "Sürükleme kolu",
       "dragItem": "Sürüklenebilir: {title}",
@@ -1236,7 +1240,9 @@
   },
   "energy": {
     "battery": {
+      "charge": "Doldurma",
       "charged": "Dolduruldu",
+      "discharge": "Boşaltma",
       "discharged": "Boşaltıldı"
     },
     "consumers": {
@@ -1273,6 +1279,9 @@
       "meter": {
         "energy": "Enerji",
         "returnEnergy": "Enerji (ters)"
+      },
+      "pv": {
+        "energy": "Üretilen"
       }
     },
     "empty": {
@@ -1292,6 +1301,7 @@
       "overview": "Genel Bakış",
       "pv": "Üretim",
       "title": "Enerji akışı",
+      "totalConsumption": "Toplam tüketim",
       "usage": "Kullanım",
       "withdrawal": "Çekilen"
     },
@@ -1964,6 +1974,7 @@
       "dismiss": "Kapat",
       "legacyTariffs": "Eski tarife yapılandırması kullanılıyor.",
       "progress": "{done} / {total} tamamlandı",
+      "suggestions": "1 öneri | {count} öneri",
       "title": "Kurulumunu tamamla"
     },
     "control": {

@@ -76,5 +76,7 @@
     "vehicle": "veículo",
     "vehicleLimit": "limite do veículo",
     "vehicleRange": "autonomia",
-    "withdrawal": "retirada"
+    "withdrawal": "retirada",
+    "consumed": "consumido",
+    "totalConsumption": "consumo total"
 }
