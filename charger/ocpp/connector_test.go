@@ -646,11 +646,58 @@ func (suite *connTestSuite) TestOnStatusChange() {
 		{core.ChargePointStatusCharging, core.NoError, 2 * time.Second, 3},
 		{core.ChargePointStatusAvailable, core.NoError, -time.Second, 3}, // outdated
 		{core.ChargePointStatusSuspendedEV, core.NoError, 3 * time.Second, 4},
-		{core.ChargePointStatusSuspendedEVSE, core.NoError, 4 * time.Second, 4}, // same class
-		{core.ChargePointStatusSuspendedEVSE, core.GroundFailure, 5 * time.Second, 5},
+		{core.ChargePointStatusSuspendedEVSE, core.NoError, 4 * time.Second, 4},       // same class
+		{core.ChargePointStatusSuspendedEVSE, core.GroundFailure, 5 * time.Second, 4}, // warning, same class
+		{core.ChargePointStatusFaulted, core.GroundFailure, 5500 * time.Millisecond, 5},
 		{core.ChargePointStatusAvailable, core.NoError, 6 * time.Second, 6},
 	} {
 		status(tc.status, tc.errorCode, tc.d)
 		suite.Equal(tc.calls, calls, "%s %s", tc.status, tc.errorCode)
+	}
+}
+
+// TestErrorStatus covers error codes: a warning unless Faulted, and a Faulted connector
+// that keeps charging through its error
+func (suite *connTestSuite) TestErrorStatus() {
+	for _, tc := range []struct {
+		name      string
+		status    core.ChargePointStatus
+		errorCode core.ChargePointErrorCode
+		txn       int
+		power     string
+		expected  core.ChargePointStatus // empty for error
+	}{
+		{"warning", core.ChargePointStatusCharging, core.PowerMeterFailure, 1, "6900", core.ChargePointStatusCharging},
+		{"faulted charging", core.ChargePointStatusFaulted, core.OtherError, 1, "6900", core.ChargePointStatusCharging},
+		{"faulted without error code", core.ChargePointStatusFaulted, core.NoError, 1, "6900", core.ChargePointStatusCharging},
+		{"faulted suspended", core.ChargePointStatusFaulted, core.OtherError, 1, "0", core.ChargePointStatusSuspendedEV},
+		{"faulted without transaction", core.ChargePointStatusFaulted, core.GroundFailure, 0, "", ""},
+	} {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+				ConnectorId: 1,
+				Status:      tc.status,
+				ErrorCode:   tc.errorCode,
+				Timestamp:   types.NewDateTime(suite.clock.Now()),
+			})
+			suite.Require().NoError(err)
+
+			suite.conn.txnId = tc.txn
+			if tc.power != "" {
+				suite.conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{Value: tc.power}
+				suite.conn.meterUpdated = suite.clock.Now()
+			}
+
+			status, err := suite.conn.Status()
+			if tc.expected == "" {
+				suite.Error(err)
+				return
+			}
+			suite.NoError(err)
+			suite.Equal(tc.expected, status)
+			suite.Equal(tc.status == core.ChargePointStatusFaulted, suite.conn.Faulted())
+		})
 	}
 }
