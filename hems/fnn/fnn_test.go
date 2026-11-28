@@ -49,3 +49,19 @@ func TestDimmingNotConfigured(t *testing.T) {
 	assert.NotNil(t, fnn.CurtailedPercent())
 	assert.NotNil(t, hems.Curtailed(fnn))
 }
+
+// TestProductionNominalMaxMissing verifies that S1/S2 require generator power
+// to convert their percentage into a watt limit, while W3 alone does not.
+func TestProductionNominalMaxMissing(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
+	_, err := NewFnn(&stubSite{}, 0, 0, boolG(false), boolG(false), nil, nil, 0)
+	assert.Error(t, err)
+
+	_, err = NewFnn(&stubSite{}, 0, 0, boolG(false), nil, boolG(false), nil, 0)
+	assert.Error(t, err)
+
+	fnn, err := NewFnn(&stubSite{}, 0, 0, boolG(true), nil, nil, nil, 0)
+	require.NoError(t, err)
+	assert.Equal(t, new(0.0), fnn.MaxProductionPower())
+}
