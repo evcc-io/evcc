@@ -38,8 +38,8 @@ params:
       de: Batteriesteuerung per Fernsteuerung (VPP)
       en: Battery control by remote control (VPP)
     help:
-      de: Steuert die Batterie über die Modbus Power Control Register statt über die Betriebsart. Diese Register werden nicht im EEPROM gespeichert. evcc erneuert sie regelmäßig, ohne Erneuerung kehrt der Wechselrichter nach etwa 10 Minuten zum Eigenverbrauch zurück. Nur Gen4 und neuer, getestet mit X3-Hybrid G4.
-      en: Controls the battery using the Modbus Power Control registers instead of the work mode. These registers are not stored in EEPROM. evcc refreshes them regularly, without refresh the inverter returns to self use after about 10 minutes. Gen4 and later only, tested with X3-Hybrid G4.
+      de: Steuert die Batterie über die Modbus Power Control Register statt über die Betriebsart. Diese Register werden nicht im EEPROM gespeichert. evcc erneuert sie regelmäßig, ohne Erneuerung kehrt der Wechselrichter nach etwa 10 Minuten zum Eigenverbrauch zurück. Benötigt Firmware mit VPP-Modi 0-7 (laut SolaX X3-Hybrid G4 ab ARM 1.40/DSP 1.41, X1-Hybrid G4 ab ARM 1.41/DSP 1.44). Getestet mit X3-Hybrid G4, andere Generationen können sich anders verhalten. Vor dem Aktivieren die Batterie auf Normal schalten.
+      en: Controls the battery using the Modbus Power Control registers instead of the work mode. These registers are not stored in EEPROM. evcc refreshes them regularly, without refresh the inverter returns to self use after about 10 minutes. Requires firmware with VPP modes 0-7 (according to SolaX X3-Hybrid G4 from ARM 1.40/DSP 1.41, X1-Hybrid G4 from ARM 1.41/DSP 1.44). Tested with X3-Hybrid G4, other generations may behave differently. Switch the battery to normal before enabling.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -163,10 +163,7 @@ render: |
   #     decode: uint32s
   #   scale: 0.1
   {{- if .remotecontrol }}
-  {{- /* Modbus Power Control (VPP): FC16 block at 0x7C, 32 bit values low word first.
-         0x7C mode, 0x7D set type, 0x7E active power, 0x80 reactive power, 0x82 duration, 0x83 target soc,
-         0x84 target energy, 0x86 charge/discharge power, 0x88 timeout (s), 0x89 push power (mode 4-7).
-         Mode 7 ends after 600s unless re-written, mode 3 holds the target soc for timeout seconds. */}}
+  {{- /* power control registers are volatile (no EEPROM wear) and expire after ~10 min; 32 bit values are low word first */}}
   {{- $soc := .maxsoc | int }}
   {{- if eq $soc 0 }}{{ $soc = 100 }}{{ end }}
   {{- $power := .maxchargepower | int }}
