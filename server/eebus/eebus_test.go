@@ -1,6 +1,7 @@
 package eebus
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	shipapi "github.com/enbility/ship-go/api"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v4"
 )
@@ -135,4 +137,89 @@ func TestConfigCompleteResolvesPending(t *testing.T) {
 		ConfigComplete()
 		require.True(t, instance.configured)
 	})
+}
+
+// TestRegisterDevice_SerializedWithCleanup guards that removing the last device of a ski
+// does not revoke the trust of a device registering for that ski at the same time.
+func TestRegisterDevice_SerializedWithCleanup(t *testing.T) {
+	const ski = "aabbcc"
+	identity := shipapi.NewServiceIdentity(ski, "", "")
+
+	for _, tc := range []struct {
+		name  string
+		block string // SHIP call held until the other operation had the chance to run
+	}{
+		{"registration during cleanup", "unregister"},
+		{"cleanup during registration", "register"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			old, replacement := &mockDevice{}, &mockDevice{}
+
+			c := &EEBus{
+				log:     util.NewLogger("test"),
+				clients: map[string][]Device{ski: {old}},
+			}
+
+			var (
+				mu    sync.Mutex
+				trust []string // effective SHIP trust changes in order
+			)
+			record := func(s string) {
+				mu.Lock()
+				defer mu.Unlock()
+				trust = append(trust, s)
+			}
+
+			entered, release := make(chan struct{}), make(chan struct{})
+			hold := func() {
+				close(entered)
+				<-release
+			}
+
+			service := eebusmocks.NewServiceInterface(t)
+			service.EXPECT().RegisterRemoteService(identity).Run(func(shipapi.ServiceIdentity) {
+				record("register")
+				if tc.block == "register" {
+					hold()
+				}
+			}).Once()
+			service.EXPECT().UnregisterRemoteService(identity).Run(func(shipapi.ServiceIdentity) {
+				if tc.block == "unregister" {
+					hold()
+				}
+				record("unregister")
+			}).Maybe()
+			c.service = service
+
+			register := func() { require.NoError(t, c.RegisterDevice(ski, "", replacement)) }
+			unregister := func() { c.UnregisterDevice(ski, old) }
+
+			first, second := unregister, register
+			if tc.block == "register" {
+				first, second = register, unregister
+			}
+
+			var wg sync.WaitGroup
+			wg.Go(first)
+			<-entered
+
+			done := make(chan struct{})
+			wg.Go(func() {
+				second()
+				close(done)
+			})
+			select {
+			case <-done:
+			case <-time.After(100 * time.Millisecond):
+			}
+
+			close(release)
+			wg.Wait()
+
+			assert.Equal(t, []Device{replacement}, c.clients[ski])
+			mu.Lock()
+			defer mu.Unlock()
+			assert.Equal(t, "register", trust[len(trust)-1], "trust changes: %v", trust)
+		})
+	}
 }
