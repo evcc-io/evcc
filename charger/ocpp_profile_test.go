@@ -76,6 +76,15 @@ func TestOCPPChargingProfileValidation(t *testing.T) {
 	}
 }
 
+func TestOCPPRemoteStartRecoveryRequiresRemoteStart(t *testing.T) {
+	_, err := NewOCPPFromConfig(t.Context(), map[string]any{
+		"remotestartrecovery": true,
+		"forcepowerctrl":      true,
+		"connecttimeout":      "10ms",
+	})
+	require.ErrorContains(t, err, "remotestartrecovery requires remotestart")
+}
+
 func TestOCPPChargingProfileTemplates(t *testing.T) {
 	for _, name := range []string{"ocpp", "ocpp-autoaid"} {
 		for _, value := range []string{"", "TxDefaultProfile", "TxProfile"} {

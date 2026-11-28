@@ -20,6 +20,9 @@ func (conn *Connector) RemoteStartTransactionRequest(idTag string) error {
 }
 
 func (conn *Connector) SetChargingProfileRequest(profile *types.ChargingProfile) error {
+	if conn.profileStart != nil {
+		return conn.setStartProfile(profile)
+	}
 	return conn.cp.SetChargingProfileRequest(conn.id, profile)
 }
 
